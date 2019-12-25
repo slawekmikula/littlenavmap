@@ -32,7 +32,8 @@ enum ConnectSimType
   UNKNOWN,
   REMOTE,
   FSX_P3D,
-  XPLANE
+  XPLANE,
+  FLIGHTGEAR
 };
 
 }
@@ -54,6 +55,9 @@ public:
 
   /* Port number as set in the spin box */
   quint16 getRemotePort() const;
+
+  /* Flightgear UDP Port number as set in the spin box */
+  quint16 getUdpPort() const;
 
   /* Saves and restores all values */
   void saveState();

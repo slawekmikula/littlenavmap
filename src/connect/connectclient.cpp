@@ -29,6 +29,7 @@
 #include "settings/settings.h"
 #include "fs/sc/simconnecthandler.h"
 #include "fs/sc/xpconnecthandler.h"
+#include "fs/sc/fgconnecthandler.h"
 
 #include <QDataStream>
 #include <QTcpSocket>
@@ -56,10 +57,15 @@ ConnectClient::ConnectClient(MainWindow *parent)
   dataReader =
     new DataReaderThread(mainWindow, settings.getAndStoreValue(lnm::OPTIONS_DATAREADER_DEBUG, false).toBool());
 
-  if(simConnectHandler->isLoaded())
+  // Create Flightgear handler
+  fgConnectHandler = new atools::fs::sc::FgConnectHandler(dataReader);
+
+  if(simConnectHandler->isLoaded()) {
     dataReader->setHandler(simConnectHandler);
-  else
-    dataReader->setHandler(xpConnectHandler);
+  } else {
+    // FIXME
+    dataReader->setHandler(fgConnectHandler);
+  }
 
   // We were able to connect
   dataReader->setReconnectRateSec(DIRECT_RECONNECT_SEC);
@@ -102,6 +108,9 @@ ConnectClient::~ConnectClient()
 
   qDebug() << Q_FUNC_INFO << "delete xpConnectHandler";
   delete xpConnectHandler;
+
+  qDebug() << Q_FUNC_INFO << "delete fgConnectHandler";
+  delete fgConnectHandler;
 
   qDebug() << Q_FUNC_INFO << "delete dialog";
   delete dialog;
@@ -159,6 +168,8 @@ QString ConnectClient::simName() const
       return tr("X-Plane");
     else if(dataReader->getHandler() == simConnectHandler)
       return tr("FSX or Prepar3D");
+    else if(dataReader->getHandler() == fgConnectHandler)
+      return tr("FlightGear");
   }
   return QString();
 }
@@ -171,6 +182,8 @@ QString ConnectClient::simShortName() const
       return tr("XP");
     else if(dataReader->getHandler() == simConnectHandler)
       return tr("FSX/P3D");
+    else if(dataReader->getHandler() == fgConnectHandler)
+      return tr("FG");
   }
   return QString();
 }
@@ -291,8 +304,10 @@ atools::fs::sc::ConnectHandler *ConnectClient::handlerByDialogSettings()
 {
   if(dialog->getCurrentSimType() == cd::FSX_P3D)
     return simConnectHandler;
-  else
+  else if(dialog->getCurrentSimType() == cd::XPLANE)
     return xpConnectHandler;
+  else
+    return fgConnectHandler;
 }
 
 void ConnectClient::directUpdateRateChanged(cd::ConnectSimType type)
@@ -306,7 +321,8 @@ void ConnectClient::directUpdateRateChanged(cd::ConnectSimType type)
 void ConnectClient::fetchOptionsChanged(cd::ConnectSimType type)
 {
   if((dataReader->getHandler() == simConnectHandler && type == cd::FSX_P3D) ||
-     (dataReader->getHandler() == xpConnectHandler && type == cd::XPLANE))
+     (dataReader->getHandler() == xpConnectHandler && type == cd::XPLANE) ||
+     (dataReader->getHandler() == fgConnectHandler && type == cd::FLIGHTGEAR))
   {
     // The currently active value has changed
     atools::fs::sc::Options options = atools::fs::sc::NO_OPTION;

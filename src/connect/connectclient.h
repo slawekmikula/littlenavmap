@@ -36,6 +36,7 @@ namespace sc {
 class DataReaderThread;
 class SimConnectHandler;
 class XpConnectHandler;
+class FgConnectHandler;
 class ConnectHandler;
 class WeatherRequest;
 struct MetarResult;
@@ -140,6 +141,7 @@ private:
   atools::fs::sc::DataReaderThread *dataReader = nullptr;
   atools::fs::sc::SimConnectHandler *simConnectHandler = nullptr;
   atools::fs::sc::XpConnectHandler *xpConnectHandler = nullptr;
+  atools::fs::sc::FgConnectHandler *fgConnectHandler = nullptr;
 
   /* Have to keep it since it is read multiple times */
   atools::fs::sc::SimConnectData *simConnectData = nullptr;

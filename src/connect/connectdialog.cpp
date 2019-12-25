@@ -79,6 +79,7 @@ ConnectDialog::ConnectDialog(QWidget *parent, bool simConnectAvailable)
 
   connect(ui->radioButtonConnectDirectFsx, &QRadioButton::toggled, this, &ConnectDialog::updateButtonStates);
   connect(ui->radioButtonConnectDirectXp, &QRadioButton::toggled, this, &ConnectDialog::updateButtonStates);
+  connect(ui->radioButtonConnectDirectFg, &QRadioButton::toggled, this, &ConnectDialog::updateButtonStates);
 
   connect(ui->comboBoxConnectHostname, &QComboBox::editTextChanged, this, &ConnectDialog::updateButtonStates);
 
@@ -171,7 +172,9 @@ bool ConnectDialog::isAutoConnect() const
 
 bool ConnectDialog::isAnyConnectDirect() const
 {
-  return ui->radioButtonConnectDirectFsx->isChecked() || ui->radioButtonConnectDirectXp->isChecked();
+  return ui->radioButtonConnectDirectFsx->isChecked() ||
+          ui->radioButtonConnectDirectXp->isChecked() ||
+          ui->radioButtonConnectDirectFg->isChecked();
 }
 
 bool ConnectDialog::isFetchAiAircraft(cd::ConnectSimType type) const
@@ -204,6 +207,8 @@ cd::ConnectSimType ConnectDialog::getCurrentSimType() const
     return cd::XPLANE;
   else if(ui->radioButtonConnectRemote->isChecked())
     return cd::REMOTE;
+  else if(ui->radioButtonConnectDirectFg->isChecked())
+    return cd::FLIGHTGEAR;
   else
     return cd::UNKNOWN;
 }
@@ -248,6 +253,11 @@ quint16 ConnectDialog::getRemotePort() const
   return static_cast<quint16>(ui->spinBoxConnectPort->value());
 }
 
+quint16 ConnectDialog::getUdpPort() const
+{
+  return static_cast<quint16>(ui->spinBoxFlightgearUdpPort->value());
+}
+
 void ConnectDialog::saveState()
 {
   atools::gui::WidgetState widgetState(lnm::NAVCONNECT_REMOTE);
@@ -257,7 +267,8 @@ void ConnectDialog::saveState()
                     ui->radioButtonConnectRemote,
                     ui->radioButtonConnectDirectFsx, ui->radioButtonConnectDirectXp,
                     ui->checkBoxConnectFetchAiAircraftXp, ui->checkBoxConnectFetchAiAircraftFsx,
-                    ui->checkBoxConnectFetchAiShipFsx});
+                    ui->checkBoxConnectFetchAiShipFsx,
+                    ui->radioButtonConnectDirectFg, ui->spinBoxFlightgearUdpPort});
 
   // Save combo entries separately
   QStringList entries;
@@ -284,7 +295,8 @@ void ConnectDialog::restoreState()
                        ui->radioButtonConnectRemote,
                        ui->radioButtonConnectDirectFsx, ui->radioButtonConnectDirectXp,
                        ui->checkBoxConnectFetchAiAircraftXp, ui->checkBoxConnectFetchAiAircraftFsx,
-                       ui->checkBoxConnectFetchAiShipFsx});
+                       ui->checkBoxConnectFetchAiShipFsx,
+                       ui->radioButtonConnectDirectFg, ui->spinBoxFlightgearUdpPort});
 
   updateButtonStates();
 }
