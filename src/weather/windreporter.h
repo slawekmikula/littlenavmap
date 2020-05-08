@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -214,6 +214,8 @@ private:
   /* Wind positions as a result of querying the rectangle for caching */
   query::SimpleRectCache<atools::grib::WindPos> windPosCache;
   int cachedLevel = wind::NONE;
+
+  bool downloadErrorReported = false;
 };
 
 #endif // LNM_WINDREPORTER_H

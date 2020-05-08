@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -63,9 +63,17 @@ public:
   void getAirportById(map::MapAirport& airport, int airportId);
   map::MapAirport getAirportById(int airportId);
 
+  /* get airport by ident which also might be the X-Plane internal id */
   void getAirportByIdent(map::MapAirport& airport, const QString& ident);
   map::MapAirport getAirportByIdent(const QString& ident);
-  void getAirportFuzzy(map::MapAirport& airport, map::MapAirport airportFrom);
+
+  /* get airport by ICAO id if table airport has column icao */
+  void getAirportByIcao(map::MapAirport& airport, const QString& icao);
+  map::MapAirport getAirportByIcao(const QString& icao);
+
+  /* Try to get airport by ident, icao or position as a fallback if pos is valid */
+  void getAirportFuzzy(map::MapAirport& airport, const QString& ident, const QString& icao,
+                       const atools::geo::Pos& pos);
 
   atools::geo::Pos getAirportPosByIdent(const QString& ident);
 
@@ -205,7 +213,7 @@ private:
   QCache<int, QList<map::MapStart> > startCache;
   QCache<int, QList<map::MapHelipad> > helipadCache;
 
-  QCache<QString, map::MapAirport> airportIdentCache;
+  QCache<QString, map::MapAirport> airportIdentCache, airportIcaoCache;
   QCache<int, map::MapAirport> airportIdCache;
   QCache<NearestCacheKeyAirport, map::MapSearchResultIndex> nearestAirportCache;
 
@@ -217,7 +225,7 @@ private:
                         *parkingTypeAndNumberQuery = nullptr,
                         *parkingNameQuery = nullptr;
 
-  atools::sql::SqlQuery *airportByIdentQuery = nullptr, *airportByPosQuery = nullptr,
+  atools::sql::SqlQuery *airportByIdentQuery = nullptr, *airportByIcaoQuery = nullptr, *airportByPosQuery = nullptr,
                         *airportCoordsByIdentQuery = nullptr, *airportByRectAndProcQuery = nullptr,
                         *runwayEndByIdQuery = nullptr, *runwayEndByNameQuery = nullptr, *airportByIdQuery = nullptr,
                         *airportAdminByIdQuery = nullptr, *airportProcByIdentQuery = nullptr,

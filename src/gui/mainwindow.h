@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -192,6 +192,7 @@ public:
   void showAircraftPerformance();
   void showLogbookSearch();
   void showUserpointSearch();
+  void showRouteCalc();
 
 signals:
   /* Emitted when window is shown the first time */
@@ -250,14 +251,8 @@ private:
   void routeOpenRecent(const QString& routeFile);
 
   /* Flight plan save functions */
-  bool routeSave();
-  bool routeSaveAsPln();
-  bool routeSaveAsFlp();
-  bool routeSaveAsFlightGear();
-  bool routeSaveAsFms(atools::fs::pln::FileFormat format);
-  bool routeSaveAsFms3();
-  bool routeSaveAsFms11();
-  bool routeExportClean();
+  bool routeSaveLnm();
+  bool routeSaveAsLnm();
 
   void routeCenter();
   bool routeCheckForChanges();
@@ -306,9 +301,6 @@ private:
   void updateAirspaceTypes(map::MapAirspaceFilter types);
   void resetWindowLayout();
 
-  bool routeSaveCheckWarnings(bool& saveAs, atools::fs::pln::FileFormat fileFormat);
-  bool routeSaveCheckFMS11Warnings();
-
   /* Question dialog and then delete map and profile trail */
   void deleteAircraftTrack(bool quiet = false);
 
@@ -335,6 +327,7 @@ private:
   void actionShortcutUserpointSearchTriggered();
   void actionShortcutLogbookSearchTriggered();
   void actionShortcutFlightPlanTriggered();
+  void actionShortcutCalcRouteTriggered();
   void actionShortcutAircraftPerformanceTriggered();
   void actionShortcutAirportInformationTriggered();
   void actionShortcutAirportWeatherTriggered();

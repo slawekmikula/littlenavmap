@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "gui/widgetstate.h"
 #include "gui/dialog.h"
 #include "query/mapquery.h"
+#include "query/airwaytrackquery.h"
 #include "query/airportquery.h"
 #include "route/route.h"
 #include "common/mapcolors.h"
@@ -171,7 +172,8 @@ void InfoController::currentInfoTabChanged(int id)
       break;
 
     case ic::INFO_NAVAID:
-      updateNavaidInternal(currentSearchResult, true /* bearing changed */, false /* scroll to top */);
+      updateNavaidInternal(currentSearchResult, true /* bearing changed */, false /* scroll to top */,
+                           false /* force update */);
       break;
 
     case ic::INFO_USERPOINT:
@@ -293,12 +295,12 @@ void InfoController::anchorClicked(const QUrl& url)
         else if(type == map::AIRWAY)
         {
           // Show full airways by id ================================================
-          map::MapAirway airway = mapQuery->getAirwayById(id);
+          map::MapAirway airway = NavApp::getAirwayTrackQuery()->getAirwayById(id);
 
           // Get all airway segments and the bounding rectangle
           atools::geo::Rect bounding;
           QList<map::MapAirway> airways;
-          mapQuery->getAirwayFull(airways, bounding, airway.name, airway.fragment);
+          NavApp::getAirwayTrackQuery()->getAirwayFull(airways, bounding, airway.name, airway.fragment);
 
           QList<QList<map::MapAirway> > airwayHighlights = mapWidget->getAirwayHighlights();
           airwayHighlights.append(airways);
@@ -334,7 +336,7 @@ void InfoController::saveState()
   atools::gui::WidgetState(lnm::INFOWINDOW_WIDGET).save(ui->tabWidgetLegend);
 
   // Store currently shown map objects in a string list containing id and type
-  map::MapObjectRefList refs;
+  map::MapObjectRefVector refs;
   for(const map::MapAirport& airport  : currentSearchResult.airports)
     refs.append({airport.id, map::AIRPORT});
 
@@ -363,7 +365,7 @@ void InfoController::saveState()
   atools::settings::Settings& settings = atools::settings::Settings::instance();
   QStringList refList;
   for(const map::MapObjectRef& ref : refs)
-    refList.append(QString("%1;%2").arg(ref.id).arg(ref.type));
+    refList.append(QString("%1;%2").arg(ref.id).arg(ref.objType));
   settings.setValue(lnm::INFOWINDOW_CURRENTMAPOBJECTS, refList.join(";"));
 
   // Save airspaces =====================================================
@@ -775,8 +777,7 @@ void InfoController::showInformationInternal(map::MapSearchResult result, map::M
   }
 
   // Navaids ================================================================
-  if(!result.vors.isEmpty() || !result.ndbs.isEmpty() || !result.waypoints.isEmpty() || !result.ils.isEmpty() ||
-     !result.airways.isEmpty())
+  if(result.hasVor() || result.hasNdb() || result.hasWaypoints() || result.hasIls() || result.hasAirways())
     // if any navaids are to be shown clear search result before
     currentSearchResult.clear(map::NAV_ALL | map::ILS | map::AIRWAY | map::RUNWAYEND);
 
@@ -784,7 +785,7 @@ void InfoController::showInformationInternal(map::MapSearchResult result, map::M
     // if any userpoints are to be shown clear search result before
     currentSearchResult.clear(map::USERPOINT);
 
-  foundNavaid = updateNavaidInternal(result, false /* bearing changed */, scrollToTop);
+  foundNavaid = updateNavaidInternal(result, false /* bearing changed */, scrollToTop, forceUpdate);
   foundUserpoint = updateUserpointInternal(result, false /* bearing changed */, scrollToTop);
 
   // Show dock windows if needed
@@ -913,7 +914,8 @@ void InfoController::showInformationInternal(map::MapSearchResult result, map::M
   }
 }
 
-bool InfoController::updateNavaidInternal(const map::MapSearchResult& result, bool bearingChanged, bool scrollToTop)
+bool InfoController::updateNavaidInternal(const map::MapSearchResult& result, bool bearingChanged, bool scrollToTop,
+                                          bool forceUpdate)
 {
   HtmlBuilder html(true);
   Ui::MainWindow *ui = NavApp::getMainUi();
@@ -926,7 +928,7 @@ bool InfoController::updateNavaidInternal(const map::MapSearchResult& result, bo
   html.tdAtts({
     {"align", "right"}, {"valign", "top"}
   });
-  html.b().a(tr("Remove Airway Highlights"), QString("lnm://do?hideairways"),
+  html.b().a(tr("Remove Airway and Track Highlights"), QString("lnm://do?hideairways"),
              ahtml::LINK_NO_UL).bEnd().tdEnd().trEnd().tableEnd();
 
   for(const map::MapVor& vor : result.vors)
@@ -994,7 +996,7 @@ bool InfoController::updateNavaidInternal(const map::MapSearchResult& result, bo
     foundNavaid = true;
   }
 
-  if(foundNavaid)
+  if(foundNavaid || forceUpdate)
     atools::gui::util::updateTextEdit(ui->textBrowserNavaidInfo, html.getHtml(),
                                       scrollToTop, !scrollToTop /* keep selection */);
 
@@ -1046,6 +1048,21 @@ void InfoController::styleChanged()
 {
   tabHandlerInfo->styleChanged();
   tabHandlerAircraft->styleChanged();
+  showInformationInternal(currentSearchResult, map::NONE, false /* Show windows */, false /* scroll to top */,
+                          true /* forceUpdate */);
+}
+
+void InfoController::tracksChanged()
+{
+  // Remove tracks from current result since the ids might change
+  currentSearchResult.airways.erase(std::remove_if(currentSearchResult.airways.begin(),
+                                                   currentSearchResult.airways.end(),
+                                                   [ = ](const map::MapAirway& airway) -> bool
+  {
+    return airway.isTrack();
+  }), currentSearchResult.airways.end());
+
+  // Update all tabs and force update
   showInformationInternal(currentSearchResult, map::NONE, false /* Show windows */, false /* scroll to top */,
                           true /* forceUpdate */);
 }
@@ -1198,7 +1215,8 @@ void InfoController::simDataChanged(atools::fs::sc::SimConnectData data)
                               false /* force weather update */);
 
       if(tabHandlerInfo->getCurrentTabId() == ic::INFO_NAVAID)
-        updateNavaidInternal(currentSearchResult, true /* bearing changed */, false /* scroll to top */);
+        updateNavaidInternal(currentSearchResult, true /* bearing changed */, false /* scroll to top */,
+                             false /* force update */);
 
       if(tabHandlerInfo->getCurrentTabId() == ic::INFO_USERPOINT)
         updateUserpointInternal(currentSearchResult, true /* bearing changed */, false /* scroll to top */);
@@ -1310,33 +1328,36 @@ void InfoController::setTextEditFontSize(QTextEdit *textEdit, float origSize, in
 
 QStringList InfoController::getAirportTextFull(const QString& ident) const
 {
-  QStringList retval;
   map::MapAirport airport;
   airportQuery->getAirportByIdent(airport, ident);
 
-  map::WeatherContext weatherContext;
-  mainWindow->buildWeatherContext(weatherContext, airport);
+  QStringList retval;
+  if(airport.isValid())
+  {
+    map::WeatherContext weatherContext;
+    mainWindow->buildWeatherContext(weatherContext, airport);
 
-  atools::util::HtmlBuilder html(mapcolors::webTableBackgroundColor, mapcolors::webTableAltBackgroundColor);
-  HtmlInfoBuilder builder(mainWindow, true /*info*/, true /*print*/);
-  builder.airportText(airport, weatherContext, html, nullptr);
-  retval.append(html.getHtml());
+    atools::util::HtmlBuilder html(mapcolors::webTableBackgroundColor, mapcolors::webTableAltBackgroundColor);
+    HtmlInfoBuilder builder(mainWindow, true /*info*/, true /*print*/);
+    builder.airportText(airport, weatherContext, html, nullptr);
+    retval.append(html.getHtml());
 
-  html.clear();
-  builder.runwayText(airport, html);
-  retval.append(html.getHtml());
+    html.clear();
+    builder.runwayText(airport, html);
+    retval.append(html.getHtml());
 
-  html.clear();
-  builder.comText(airport, html);
-  retval.append(html.getHtml());
+    html.clear();
+    builder.comText(airport, html);
+    retval.append(html.getHtml());
 
-  html.clear();
-  builder.procedureText(airport, html);
-  retval.append(html.getHtml());
+    html.clear();
+    builder.procedureText(airport, html);
+    retval.append(html.getHtml());
 
-  html.clear();
-  builder.weatherText(weatherContext, airport, html);
-  retval.append(html.getHtml());
+    html.clear();
+    builder.weatherText(weatherContext, airport, html);
+    retval.append(html.getHtml());
+  }
 
   return retval;
 }

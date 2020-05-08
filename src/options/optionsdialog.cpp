@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -1842,7 +1842,7 @@ void OptionsDialog::userAirspacePathSelectClicked()
   QString defaultPath = ui->lineEditCacheUserAirspacePath->text();
 
   if(defaultPath.isEmpty())
-    defaultPath = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first();
+    defaultPath = atools::documentsDir();
 
   QString path = atools::gui::Dialog(mainWindow).openDirectoryDialog(
     tr("Select Directory for User Airspaces"), lnm::DATABASE_USER_AIRSPACE_PATH, defaultPath);

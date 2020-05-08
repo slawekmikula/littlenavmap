@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -703,7 +703,7 @@ QString UserdataController::xplaneUserWptDatPath()
 {
   QString xpBasePath = NavApp::getSimulatorBasePath(atools::fs::FsPaths::XPLANE11);
   if(xpBasePath.isEmpty())
-    xpBasePath = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first();
+    xpBasePath = atools::documentsDir();
   else
     xpBasePath = atools::buildPathNoCase({xpBasePath, "Custom Data"});
   return xpBasePath;
@@ -716,10 +716,9 @@ QString UserdataController::garminGtnUserWptPath()
   QString gtnPath(qgetenv("GTNSIMDATA"));
   path = gtnPath.isEmpty() ? "C:\\ProgramData\\Garmin\\Trainers\\GTN" : gtnPath;
 #elif DEBUG_INFORMATION
-  path = atools::buildPath({QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first(),
-                            "Garmin", "Trainers", "GTN"});
+  path = atools::buildPath({atools::documentsDir(), "Garmin", "Trainers", "GTN"});
 #else
-  path = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first();
+  path = atools::documentsDir();
 #endif
   return path;
 }

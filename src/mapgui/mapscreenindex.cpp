@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -32,6 +32,7 @@
 #include "mapgui/mapmarkhandler.h"
 #include "common/maptools.h"
 #include "query/mapquery.h"
+#include "query/airwaytrackquery.h"
 #include "query/airportquery.h"
 #include "common/coordinateconverter.h"
 #include "common/constants.h"
@@ -53,6 +54,7 @@ MapScreenIndex::MapScreenIndex(MapPaintWidget *mapPaintWidgetParam, MapPaintLaye
   : mapPaintWidget(mapPaintWidgetParam), paintLayer(mapPaintLayer)
 {
   mapQuery = NavApp::getMapQuery();
+  airwayQuery = NavApp::getAirwayTrackQuery();
   airportQuery = NavApp::getAirportQuerySim();
 }
 
@@ -299,20 +301,44 @@ void MapScreenIndex::updateAirwayScreenGeometryInternal(QSet<int>& ids, const Ma
       if(paintLayer->getMapLayer()->isAirway() && (showJet || showVictor))
       {
         // Airways are visible on map - get them from the cache/database
-        const QList<MapAirway> *airways = mapQuery->getAirways(curBox, paintLayer->getMapLayer(), false);
+        QList<MapAirway> airways;
+        airwayQuery->getAirways(airways, curBox, paintLayer->getMapLayer(), false);
 
-        for(int i = 0; i < airways->size(); i++)
+        for(int i = 0; i < airways.size(); i++)
         {
-          const MapAirway& airway = airways->at(i);
+          const MapAirway& airway = airways.at(i);
           if(ids.contains(airway.id))
             continue;
 
-          if((airway.type == map::VICTOR && !showVictor) || (airway.type == map::JET && !showJet))
+          if((airway.type == map::AIRWAY_VICTOR && !showVictor) ||
+             (airway.type == map::AIRWAY_JET && !showJet))
             // Not visible by map setting
             continue;
 
           updateLineScreenGeometry(airwayLines, airway.id, LineString(airway.from, airway.to), curBox, conv);
           ids.insert(airway.id);
+        }
+      }
+
+      bool showTrack = paintLayer->getShownMapObjects().testFlag(map::TRACK);
+      if(paintLayer->getMapLayer()->isTrack() && showTrack)
+      {
+        // Airways are visible on map - get them from the cache/database
+        QList<MapAirway> tracks;
+        airwayQuery->getTracks(tracks, curBox, paintLayer->getMapLayer(), false);
+
+        for(int i = 0; i < tracks.size(); i++)
+        {
+          const MapAirway& track = tracks.at(i);
+          if(ids.contains(track.id))
+            continue;
+
+          if(track.isTrack() && !showTrack)
+            // Not visible by map setting
+            continue;
+
+          updateLineScreenGeometry(airwayLines, track.id, LineString(track.from, track.to), curBox, conv);
+          ids.insert(track.id);
         }
       }
     }
@@ -587,7 +613,7 @@ void MapScreenIndex::getAllNearest(int xs, int ys, int maxDistance, map::MapSear
   // Get objects from cache - already present objects will be skipped
   mapQuery->getNearestScreenObjects(conv, mapLayer, mapLayerEffective->isAirportDiagram(),
                                     shown & (map::AIRPORT_ALL | map::VOR | map::NDB | map::WAYPOINT | map::MARKER |
-                                             map::AIRWAYJ | map::AIRWAYV | map::USERPOINT | map::LOGBOOK),
+                                             map::AIRWAYJ | map::TRACK | map::AIRWAYV | map::USERPOINT | map::LOGBOOK),
                                     xs, ys, maxDistance, result);
 
   // Update all incomplete objects, especially from search
@@ -823,7 +849,7 @@ void MapScreenIndex::getNearestIls(int xs, int ys, int maxDistance, map::MapSear
 void MapScreenIndex::getNearestAirways(int xs, int ys, int maxDistance, map::MapSearchResult& result) const
 {
   for(int id : nearestLineIds(airwayLines, xs, ys, maxDistance, true /* lineDistanceOnly */))
-    result.airways.append(mapQuery->getAirwayById(id));
+    result.airways.append(airwayQuery->getAirwayById(id));
 }
 
 int MapScreenIndex::getNearestRouteLegIndex(int xs, int ys, int maxDistance) const

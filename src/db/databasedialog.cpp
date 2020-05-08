@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -49,7 +49,9 @@ DatabaseDialog::DatabaseDialog(QWidget *parent, const SimulatorTypeMap& pathMap)
   if(!keys.contains(FsPaths::XPLANE11))
     keys.append(FsPaths::XPLANE11);
 
-  std::sort(keys.begin(), keys.end());
+  std::sort(keys.begin(), keys.end(), [](FsPaths::SimulatorType t1, FsPaths::SimulatorType t2) {
+    return FsPaths::typeToShortName(t1) < FsPaths::typeToShortName(t2);
+  });
 
   // Add an item to the combo box for each installed simulator
   for(atools::fs::FsPaths::SimulatorType type : keys)
@@ -219,7 +221,8 @@ void DatabaseDialog::updateWidgets()
   ui->lineEditDatabaseBasePath->blockSignals(false);
 
   ui->checkBoxReadAddOnXml->setEnabled(currentFsType == atools::fs::FsPaths::P3D_V3 ||
-                                       currentFsType == atools::fs::FsPaths::P3D_V4);
+                                       currentFsType == atools::fs::FsPaths::P3D_V4 ||
+                                       currentFsType == atools::fs::FsPaths::P3D_V5);
 
   // Disable everything if no installed simulators are found
   // (normally not needed since the action is already disabled)

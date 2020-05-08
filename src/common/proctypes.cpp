@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -629,7 +629,7 @@ bool MapProcedureLeg::noDistanceDisplay() const
 
 proc::LegSpecialType specialType(const QString& arincDescrCode)
 {
-  QChar idx3(atools::strAt(arincDescrCode, 3));
+  QChar idx3(atools::charAt(arincDescrCode, 3));
   if(idx3 == 'A' /* IAF */ || idx3 == 'C' /* IAF and hold */ || idx3 == 'D' /* IAF with final approach course fix */)
     return proc::IAF;
 

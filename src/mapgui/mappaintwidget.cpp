@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -298,7 +298,7 @@ void MapPaintWidget::setShowMapFeatures(map::MapObjectTypes type, bool show)
 {
   paintLayer->setShowMapObjects(type, show);
 
-  if(type & map::AIRWAYV || type & map::AIRWAYJ)
+  if(type & map::AIRWAYV || type & map::AIRWAYJ || type & map::TRACK)
     screenIndex->updateAirwayScreenGeometry(getCurrentViewBoundingBox());
 
   if(type & map::AIRSPACE)

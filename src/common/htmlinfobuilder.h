@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -27,6 +27,7 @@
 class RouteLeg;
 class MapQuery;
 class AirportQuery;
+class WaypointTrackQuery;
 class InfoQuery;
 class WeatherReporter;
 class Route;
@@ -382,6 +383,8 @@ private:
   /* Add wind text for flight plan waypoints */
   void routeWindText(atools::util::HtmlBuilder& html, const Route& route, int index) const;
 
+  QString identRegionText(const QString& ident, const QString& region) const;
+
   /* Airport, navaid and userpoint icon size */
   QSize symbolSize = QSize(18, 18);
 
@@ -393,6 +396,7 @@ private:
 
   QWidget *parentWidget = nullptr;
   MapQuery *mapQuery;
+  WaypointTrackQuery *waypointQuery;
   AirportQuery *airportQuerySim, *airportQueryNav;
   InfoQuery *infoQuery;
   atools::fs::util::MorseCode *morse;

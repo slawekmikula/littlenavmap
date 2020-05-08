@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -505,6 +505,11 @@ bool ConnectClient::isConnected() const
     return (socket != nullptr && socket->isOpen()) || dataReader->isConnected();
   else
     return socket != nullptr && socket->isOpen();
+}
+
+bool ConnectClient::isSimConnect() const
+{
+  return dataReader != nullptr && dataReader->isFsxHandler();
 }
 
 bool ConnectClient::isConnectedNetwork() const

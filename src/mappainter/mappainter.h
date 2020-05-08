@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -38,13 +38,15 @@ class GeoDataLineString;
 class GeoPainter;
 }
 
-class SymbolPainter;
-class MapLayer;
-class MapQuery;
 class AirportQuery;
+class AirwayTrackQuery;
+class MapLayer;
+class MapPaintWidget;
+class MapQuery;
 class MapScale;
 class MapWidget;
-class MapPaintWidget;
+class SymbolPainter;
+class WaypointTrackQuery;
 
 namespace map {
 struct MapAirport;
@@ -269,6 +271,8 @@ protected:
   SymbolPainter *symbolPainter;
   MapPaintWidget *mapPaintWidget;
   MapQuery *mapQuery;
+  AirwayTrackQuery *airwayQuery;
+  WaypointTrackQuery *waypointQuery;
   AirportQuery *airportQuery;
   MapScale *scale;
 

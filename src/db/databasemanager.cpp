@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@
 #include "io/fileroller.h"
 #include "atools.h"
 #include "sql/sqlexception.h"
+#include "track/trackmanager.h"
 
 #include <QDebug>
 #include <QElapsedTimer>
@@ -194,6 +195,7 @@ DatabaseManager::DatabaseManager(MainWindow *parent)
   {
     // Open only for instantiation in main window and not in main function
     SqlDatabase::addDatabase(DATABASE_TYPE, DATABASE_NAME_USER);
+    SqlDatabase::addDatabase(DATABASE_TYPE, DATABASE_NAME_TRACK);
     SqlDatabase::addDatabase(DATABASE_TYPE, DATABASE_NAME_LOGBOOK);
     SqlDatabase::addDatabase(DATABASE_TYPE, DATABASE_NAME_ONLINE);
 
@@ -204,6 +206,7 @@ DatabaseManager::DatabaseManager(MainWindow *parent)
 
     // Variable databases (user can edit or program downloads data)
     databaseUser = new SqlDatabase(DATABASE_NAME_USER);
+    databaseTrack = new SqlDatabase(DATABASE_NAME_TRACK);
     databaseLogbook = new SqlDatabase(DATABASE_NAME_LOGBOOK);
     databaseOnline = new SqlDatabase(DATABASE_NAME_ONLINE);
 
@@ -240,6 +243,14 @@ DatabaseManager::DatabaseManager(MainWindow *parent)
       transaction.commit();
     }
 
+    // Open track database =================================
+    openWriteableDatabase(databaseTrack, "track", "track", false /* backup */);
+    trackManager = new TrackManager(databaseTrack, databaseNav);
+    if(!trackManager->hasSchema())
+      trackManager->createSchema();
+    else
+      trackManager->updateSchema();
+
     // Open online network database ==============================
     atools::settings::Settings& settings = atools::settings::Settings::instance();
     bool verbose = settings.getAndStoreValue(lnm::OPTIONS_WHAZZUP_PARSER_DEBUG, false).toBool();
@@ -259,11 +270,13 @@ DatabaseManager::~DatabaseManager()
   delete databaseDialog;
   delete progressDialog;
   delete userdataManager;
+  delete trackManager;
   delete logdataManager;
   delete onlinedataManager;
 
   closeAllDatabases();
   closeUserDatabase();
+  closeTrackDatabase();
   closeLogDatabase();
   closeUserAirspaceDatabase();
   closeOnlineDatabase();
@@ -272,6 +285,7 @@ DatabaseManager::~DatabaseManager()
   delete databaseNav;
   delete databaseMora;
   delete databaseUser;
+  delete databaseTrack;
   delete databaseLogbook;
   delete databaseOnline;
   delete databaseUserAirspace;
@@ -282,6 +296,7 @@ DatabaseManager::~DatabaseManager()
   SqlDatabase::removeDatabase(DATABASE_NAME_NAV);
   SqlDatabase::removeDatabase(DATABASE_NAME_MORA);
   SqlDatabase::removeDatabase(DATABASE_NAME_USER);
+  SqlDatabase::removeDatabase(DATABASE_NAME_TRACK);
   SqlDatabase::removeDatabase(DATABASE_NAME_LOGBOOK);
   SqlDatabase::removeDatabase(DATABASE_NAME_DLG_INFO_TEMP);
   SqlDatabase::removeDatabase(DATABASE_NAME_TEMP);
@@ -601,7 +616,9 @@ void DatabaseManager::insertSimSwitchActions()
   // Sort keys to avoid random order
   QList<FsPaths::SimulatorType> keys = simulators.keys();
   QList<FsPaths::SimulatorType> sims;
-  std::sort(keys.begin(), keys.end());
+  std::sort(keys.begin(), keys.end(), [](FsPaths::SimulatorType t1, FsPaths::SimulatorType t2) {
+    return FsPaths::typeToShortName(t1) < FsPaths::typeToShortName(t2);
+  });
 
   // Add real simulators first
   for(atools::fs::FsPaths::SimulatorType type : keys)
@@ -699,7 +716,7 @@ void DatabaseManager::insertSimSwitchAction(atools::fs::FsPaths::SimulatorType t
   if(type == currentFsType)
   {
     QSignalBlocker blocker(action);
-    Q_UNUSED(blocker);
+    Q_UNUSED(blocker)
     action->setChecked(true);
   }
 
@@ -800,7 +817,7 @@ void DatabaseManager::switchSimFromMainMenu()
   for(QAction *act : actions)
   {
     QSignalBlocker blocker(act);
-    Q_UNUSED(blocker);
+    Q_UNUSED(blocker)
     act->setChecked(act->data().value<atools::fs::FsPaths::SimulatorType>() == currentFsType);
   }
 }
@@ -866,6 +883,11 @@ void DatabaseManager::openWriteableDatabase(atools::sql::SqlDatabase *database, 
 void DatabaseManager::closeUserDatabase()
 {
   closeDatabaseFile(databaseUser);
+}
+
+void DatabaseManager::closeTrackDatabase()
+{
+  closeDatabaseFile(databaseTrack);
 }
 
 void DatabaseManager::closeUserAirspaceDatabase()
@@ -1124,7 +1146,8 @@ bool DatabaseManager::runInternal()
       }
       else
       {
-        QString sceneryCfgCodec = selectedFsType == atools::fs::FsPaths::P3D_V4 ? "UTF-8" : QString();
+        QString sceneryCfgCodec = (selectedFsType == atools::fs::FsPaths::P3D_V4 ||
+                                   selectedFsType == atools::fs::FsPaths::P3D_V5) ? "UTF-8" : QString();
         if(!atools::fs::NavDatabase::isSceneryConfigValid(databaseDialog->getSceneryConfigFile(), sceneryCfgCodec, err))
         {
           atools::gui::Dialog::warning(databaseDialog, tr("Cannot read scenery configuration \"%1\". Reason: %2.").
@@ -1310,7 +1333,8 @@ bool DatabaseManager::loadScenery(atools::sql::SqlDatabase *db)
   try
   {
     atools::fs::NavDatabase nd(&navDatabaseOpts, db, &errors, GIT_REVISION);
-    QString sceneryCfgCodec = selectedFsType == atools::fs::FsPaths::P3D_V4 ? "UTF-8" : QString();
+    QString sceneryCfgCodec = (selectedFsType == atools::fs::FsPaths::P3D_V4 ||
+                               selectedFsType == atools::fs::FsPaths::P3D_V5) ? "UTF-8" : QString();
     nd.create(sceneryCfgCodec);
   }
   catch(atools::Exception& e)

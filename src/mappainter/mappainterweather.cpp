@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@ void MapPainterWeather::render(PaintContext *context)
     return;
 
   atools::util::PainterContextSaver saver(context->painter);
-  Q_UNUSED(saver);
+  Q_UNUSED(saver)
 
   // Get airports from cache/database for the bounding rectangle and add them to the map
   const GeoDataLatLonAltBox& curBox = context->viewport->viewLatLonAltBox();
@@ -72,17 +72,39 @@ void MapPainterWeather::render(PaintContext *context)
       visibleAirportWeather.append({&airport, QPointF(x, y)});
   }
 
+  // ================================
+  // Limit weather display to the 10 most important/biggest airports if connected via network or SimConnect
+  if(NavApp::isConnectedNetwork() || NavApp::isSimConnect())
+  {
+    visibleAirportWeather.erase(std::remove_if(visibleAirportWeather.begin(), visibleAirportWeather.end(),
+                                               [](const PaintAirportType& ap) -> bool
+    {
+      return ap.airport->empty() || !ap.airport->hard() || ap.airport->closed();
+    }), visibleAirportWeather.end());
+
+    std::sort(visibleAirportWeather.begin(), visibleAirportWeather.end(),
+              [](const PaintAirportType& ap1, const PaintAirportType& ap2) {
+      return ap1.airport->longestRunwayLength > ap2.airport->longestRunwayLength;
+    });
+    visibleAirportWeather = visibleAirportWeather.mid(0, 10);
+  }
+
   // Sort by airport display order
   std::sort(visibleAirportWeather.begin(), visibleAirportWeather.end(), sortAirportFunction);
 
+  WeatherReporter *reporter = NavApp::getWeatherReporter();
   for(const PaintAirportType& airportWeather: visibleAirportWeather)
   {
-    float x = static_cast<float>(airportWeather.point.x());
-    float y = static_cast<float>(airportWeather.point.y());
-    drawAirportWeather(context,
-                       NavApp::getWeatherReporter()->getAirportWeather(airportWeather.airport->ident,
-                                                                       airportWeather.airport->position,
-                                                                       context->weatherSource), x, y);
+    atools::fs::weather::Metar metar =
+      reporter->getAirportWeather(airportWeather.airport->ident,
+                                  airportWeather.airport->position, context->weatherSource);
+
+    if(metar.isValid())
+    {
+      float x = static_cast<float>(airportWeather.point.x());
+      float y = static_cast<float>(airportWeather.point.y());
+      drawAirportWeather(context, metar, x, y);
+    }
   }
 }
 

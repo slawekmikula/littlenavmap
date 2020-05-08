@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -67,6 +67,9 @@ public:
 
   /* true if connected to Little Navconnect or the simulator */
   bool isConnected() const;
+
+  /* true if connection is using SimConnect for FSX/P3D */
+  bool isSimConnect() const;
 
   /* Connected to Little Navconnect */
   bool isConnectedNetwork() const;

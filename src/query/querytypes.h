@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 
 #include "sql/sqlrecord.h"
 #include "sql/sqlquery.h"
+#include "common/maptypes.h"
 
 #include <QList>
 
@@ -40,6 +41,7 @@ class SqlQuery;
 class MapLayer;
 
 namespace query {
+
 void bindRect(const Marble::GeoDataLatLonBox& rect, atools::sql::SqlQuery *query, const QString& prefix = QString());
 void bindRect(const atools::geo::Rect& rect, atools::sql::SqlQuery *query, const QString& prefix = QString());
 
@@ -98,8 +100,11 @@ bool SimpleRectCache<TYPE>::updateCache(const Marble::GeoDataLatLonBox& rect, co
   // Store bounding rectangle and inflate it
   Marble::GeoDataLatLonBox cur(curRect);
   query::inflateQueryRect(cur, factor, increment);
-
+#ifndef DEBUG_DISABLE_RECT_CACHE
   if(curRect.isEmpty() || !cur.contains(rect) || !funcSameLayer(curMapLayer, mapLayer))
+#else
+  Q_UNUSED(funcSameLayer)
+#endif
   {
     // Rectangle not covered by loaded data or new layer selected
     list.clear();
@@ -197,6 +202,30 @@ const atools::sql::SqlRecordVector *cachedRecordVector(QCache<ID, atools::sql::S
   return nullptr;
 }
 
+/* Key for nearestCache combining all query parameters */
+struct NearestCacheKeyNavaid
+{
+  atools::geo::Pos pos;
+  float distanceNm;
+  map::MapObjectTypes type;
+
+  bool operator==(const query::NearestCacheKeyNavaid& other) const
+  {
+    return pos == other.pos && std::abs(distanceNm - other.distanceNm) < 0.01 && type == other.type;
+  }
+
+  bool operator!=(const query::NearestCacheKeyNavaid& other) const
+  {
+    return !operator==(other);
+  }
+
+};
+
+inline uint qHash(const query::NearestCacheKeyNavaid& key)
+{
+  return qHash(key.pos) ^ qHash(key.type) ^ ::qHash(key.distanceNm);
 }
+
+} // namespace query
 
 #endif // LNM_QUERYTYPES_H

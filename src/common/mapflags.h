@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -80,8 +80,7 @@ enum MapObjectType
   HELIPAD = 1 << 25, /* Helipads on airports */
   COMPASS_ROSE = 1 << 26, /* Compass rose */
   USERPOINT = 1 << 27, /* A user defined waypoint - not used to define if should be drawn or not */
-
-  // AIRSPACE_ONLINE = 1 << 28, /* Online network center - not used in display map flags */
+  TRACK = 1 << 28,  /* NAT, PACOTS or AUSOTS track */
   AIRCRAFT_ONLINE = 1 << 29, /* Online network client/aircraft */
 
   LOGBOOK = 1 << 30, /* Logbook entry */

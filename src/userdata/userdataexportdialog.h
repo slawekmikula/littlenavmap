@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,8 @@ namespace Ui {
 class UserdataExportDialog;
 }
 
+class QAbstractButton;
+
 /* Simple dialog asking for export options before exporting userdata to the various formats */
 class UserdataExportDialog :
   public QDialog
@@ -41,6 +43,8 @@ public:
   void restoreState();
 
 private:
+  void buttonBoxClicked(QAbstractButton *button);
+
   Ui::UserdataExportDialog *ui;
 };
 

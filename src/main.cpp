@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -115,15 +115,15 @@ int main(int argc, char *argv[])
     // QT_OPENGL does not work - so do this ourselves
     if(renderOpt == "desktop")
     {
-      QApplication::setAttribute(Qt::AA_UseDesktopOpenGL, false);
+      QApplication::setAttribute(Qt::AA_UseDesktopOpenGL, true);
       QApplication::setAttribute(Qt::AA_UseOpenGLES, false);
-      QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL, true);
+      QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL, false);
     }
     else if(renderOpt == "angle")
     {
       QApplication::setAttribute(Qt::AA_UseDesktopOpenGL, false);
-      QApplication::setAttribute(Qt::AA_UseOpenGLES, false);
-      QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL, true);
+      QApplication::setAttribute(Qt::AA_UseOpenGLES, true);
+      QApplication::setAttribute(Qt::AA_UseSoftwareOpenGL, false);
     }
     else if(renderOpt == "software")
     {

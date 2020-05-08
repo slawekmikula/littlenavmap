@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -87,17 +87,15 @@ const QLatin1Literal ACTIONS_SHOW_DELETE_MARKS("Actions/DeleteMarks");
 const QLatin1Literal ACTIONS_SHOW_RESET_PERF("Actions/ResetPerformanceColl");
 const QLatin1Literal ACTIONS_SHOW_SEARCH_CENTER_NULL("Actions/SearchCenterNull");
 const QLatin1Literal ACTIONS_SHOW_WEATHER_DOWNLOAD_FAIL("Actions/DownloadFailed");
+const QLatin1Literal ACTIONS_SHOW_TRACK_DOWNLOAD_FAIL("Actions/TrackDownloadFailed");
+const QLatin1Literal ACTIONS_SHOW_TRACK_DOWNLOAD_SUCCESS("Actions/TrackDownloadSuccess");
 const QLatin1Literal ACTIONS_SHOW_LOGBOOK_CONVERSION("Actions/LogbookConversion");
 const QLatin1Literal ACTIONS_SHOW_USER_AIRSPACE_NOTE("Actions/UserAirspaceNote");
 
 const QLatin1Literal ACTIONS_SHOW_NAVDATA_WARNING("Actions/ShowNavdataWarning");
 const QLatin1Literal ACTIONS_SHOW_CRUISE_ZERO_WARNING("Actions/ShowCruiseZeroWarning");
 
-const QLatin1Literal ACTIONS_SHOW_FS9_FSC_WARNING("Actions/ShowFs9Warning");
-const QLatin1Literal ACTIONS_SHOW_FLP_WARNING("Actions/ShowFlpWarning");
-const QLatin1Literal ACTIONS_SHOW_FMS3_WARNING("Actions/ShowFms3Warning");
-const QLatin1Literal ACTIONS_SHOW_FMS11_WARNING("Actions/ShowFms11Warning");
-const QLatin1Literal ACTIONS_SHOW_FLIGHTGEAR_WARNING("Actions/ShowFlightGearWarning");
+const QLatin1Literal ACTIONS_SHOW_SAVE_WARNING("Actions/ShowSaveWarning");
 
 /* Other setting key names */
 const QLatin1Literal DATABASE_BASEPATH("Database/BasePath");
@@ -164,6 +162,7 @@ const QLatin1Literal TRAFFIC_PATTERN_DIALOG_COLOR("Route/TrafficPatternDialogCol
 const QLatin1Literal HOLD_DIALOG("Route/HoldDialog");
 const QLatin1Literal HOLD_DIALOG_COLOR("Route/HoldDialogColor");
 const QLatin1Literal CUSTOM_PROCEDURE_DIALOG("Route/CustomProcedureDialog");
+const QLatin1Literal ROUTE_CALC_DIALOG("Route/RouteCalcDialog");
 const QLatin1Literal SEARCHTAB_AIRPORT_WIDGET("SearchPaneAirport/Widget");
 const QLatin1Literal SEARCHTAB_WIDGET_TABS("SearchPaneAirport/WidgetTabs");
 const QLatin1Literal SEARCHTAB_NAV_WIDGET("SearchPaneNav/Widget");
@@ -255,6 +254,7 @@ const QLatin1Literal OPTIONS_CONNECTCLIENT_DEBUG("Options/ConnectClientDebug");
 const QLatin1Literal OPTIONS_WHAZZUP_PARSER_DEBUG("Options/WhazzupParserDebug");
 const QLatin1Literal OPTIONS_DATAREADER_DEBUG("Options/DataReaderDebug");
 const QLatin1Literal OPTIONS_WEATHER_DEBUG("Options/WeatherDebug");
+const QLatin1Literal OPTIONS_TRACK_DEBUG("Options/TrackDebug");
 const QLatin1Literal OPTIONS_WEATHER_LEVELS("Options/WeatherLevels");
 const QLatin1Literal OPTIONS_WEATHER_INDEX_SIZE("Options/WeatherIndexSize");
 const QLatin1Literal OPTIONS_WIND_DEBUG("Options/WindDebug");
@@ -263,6 +263,14 @@ const QLatin1Literal OPTIONS_VERSION("Options/Version");
 const QLatin1Literal OPTIONS_NO_USER_AGENT("Options/NoUserAgent");
 const QLatin1Literal OPTIONS_WEATHER_UPDATE("Options/WeatherUpdate");
 const QLatin1Literal OPTIONS_PROFILE_SIMPLYFY("Options/SimplifyProfile");
+
+/* Track download URLs */
+const QLatin1Literal OPTIONS_TRACK_NAT_URL("Track/NatUrl");
+const QLatin1Literal OPTIONS_TRACK_NAT_PARAM("Track/NatUrlParam");
+const QLatin1Literal OPTIONS_TRACK_PACOTS_URL("Track/PacotsUrl");
+const QLatin1Literal OPTIONS_TRACK_PACOTS_PARAM("Track/PacotsUrlParam");
+const QLatin1Literal OPTIONS_TRACK_AUSOTS_URL("Track/AusotsUrl");
+const QLatin1Literal OPTIONS_TRACK_AUSOTS_PARAM("Track/AusotsUrlParam");
 
 /* Used to override  default URL */
 const QLatin1Literal OPTIONS_UPDATE_URL("Update/Url");
@@ -281,8 +289,9 @@ const QLatin1Literal OPTIONS_GUI_OVERRIDE_LOCALE("OptionsDialog/Widget_checkBoxO
 /* File dialog patterns */
 #if defined(Q_OS_WIN32)
 const QLatin1Literal FILE_PATTERN_SCENERYCONFIG("(*.cfg)");
-const QLatin1Literal FILE_PATTERN_FLIGHTPLAN_LOAD("(*.pln *.flp *.fms *.fgfp)");
-const QLatin1Literal FILE_PATTERN_FLIGHTPLAN_SAVE("(*.pln)");
+const QLatin1Literal FILE_PATTERN_FLIGHTPLAN_LOAD("(*.lnmpln *.pln *.flp *.fms *.fgfp)");
+const QLatin1Literal FILE_PATTERN_LNMPLN("(*.lnmpln)");
+const QLatin1Literal FILE_PATTERN_PLN("(*.pln)");
 const QLatin1Literal FILE_PATTERN_GFP("(*.gfp)");
 const QLatin1Literal FILE_PATTERN_TXT("(*.txt)");
 const QLatin1Literal FILE_PATTERN_RTE("(*.rte)");
@@ -315,8 +324,9 @@ const QLatin1Literal FILE_PATTERN_GRIB("(*.grib)");
 /* Use more or less case insensitive patterns for Linux */
 const QLatin1Literal FILE_PATTERN_SCENERYCONFIG("(*.cfg *.Cfg *.CFG)");
 const QLatin1Literal FILE_PATTERN_FLIGHTPLAN_LOAD(
-  "(*.pln *.Pln *.PLN *.flp *.Flp *.FLP *.fms *.Fms *.FMS *.fgfp *.Fgfp *.FGFP)");
-const QLatin1Literal FILE_PATTERN_FLIGHTPLAN_SAVE("(*.pln *.Pln *.PLN)");
+  "(*.lnmpln *.LNMPLN *.Lnmpln *.LNMpln *.pln *.Pln *.PLN *.flp *.Flp *.FLP *.fms *.Fms *.FMS *.fgfp *.Fgfp *.FGFP)");
+const QLatin1Literal FILE_PATTERN_LNMPLN("(*.lnmpln *.LNMPLN *.Lnmpln *.LNMpln)");
+const QLatin1Literal FILE_PATTERN_PLN("(*.pln *.Pln *.PLN)");
 const QLatin1Literal FILE_PATTERN_GFP("(*.gfp *.Gfp *.GFP)");
 const QLatin1Literal FILE_PATTERN_TXT("(*.txt *.Txt *.TXT)");
 const QLatin1Literal FILE_PATTERN_RTE("(*.rte *.Rte *.RTE)");

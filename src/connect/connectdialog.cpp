@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -157,6 +157,26 @@ void ConnectDialog::updateButtonStates()
     setDisabled(ui->comboBoxConnectHostname->currentText().isEmpty());
   else
     ui->buttonBoxConnect->button(QDialogButtonBox::Ok)->setDisabled(false);
+
+  enableWidgets();
+}
+
+void ConnectDialog::enableWidgets()
+{
+  ui->labelConnectHostname->setEnabled(ui->radioButtonConnectRemote->isChecked());
+  ui->labelConnectPort->setEnabled(ui->radioButtonConnectRemote->isChecked());
+  ui->comboBoxConnectHostname->setEnabled(ui->radioButtonConnectRemote->isChecked());
+  ui->pushButtonConnectDeleteHostname->setEnabled(ui->radioButtonConnectRemote->isChecked());
+  ui->spinBoxConnectPort->setEnabled(ui->radioButtonConnectRemote->isChecked());
+
+  ui->spinBoxConnectUpdateRateFsx->setEnabled(ui->radioButtonConnectDirectFsx->isChecked());
+  ui->labelConnectUpdateRateFsx->setEnabled(ui->radioButtonConnectDirectFsx->isChecked());
+  ui->checkBoxConnectFetchAiAircraftFsx->setEnabled(ui->radioButtonConnectDirectFsx->isChecked());
+  ui->checkBoxConnectFetchAiShipFsx->setEnabled(ui->radioButtonConnectDirectFsx->isChecked());
+
+  ui->labelConnectUpdateRateXp->setEnabled(ui->radioButtonConnectDirectXp->isChecked());
+  ui->spinBoxConnectUpdateRateXp->setEnabled(ui->radioButtonConnectDirectXp->isChecked());
+  ui->checkBoxConnectFetchAiAircraftXp->setEnabled(ui->radioButtonConnectDirectXp->isChecked());
 }
 
 void ConnectDialog::setConnected(bool connected)

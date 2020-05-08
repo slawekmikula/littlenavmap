@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,22 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *****************************************************************************/
 
-#ifndef LITTLENAVMAP_ROUTENETWORKRADIO_H
-#define LITTLENAVMAP_ROUTENETWORKRADIO_H
+#include "routestring/routestringtypes.h"
 
-#include "route/routenetwork.h"
+#include <QRegularExpression>
 
-namespace  atools {
-namespace sql {
-class SqlDatabase;
-}
-}
+namespace rs {
 
-/* Creates a route network that uses the radio navaid routing tables */
-class RouteNetworkRadio :
-  public RouteNetwork
+QStringList cleanRouteString(const QString& string)
 {
-public:
-  RouteNetworkRadio(atools::sql::SqlDatabase *sqlDb);
-  virtual ~RouteNetworkRadio();
+  static const QRegularExpression REGEXP("[^A-Z0-9/\\.]");
 
-};
+  QString cleanstr = string.toUpper();
+  cleanstr.replace(REGEXP, " ");
 
-#endif // LITTLENAVMAP_ROUTENETWORKRADIO_H
+  QStringList list = cleanstr.simplified().split(" ");
+  list.removeAll(QString());
+  return list;
+}
+
+} // namespace rs

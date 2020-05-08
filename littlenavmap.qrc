@@ -258,5 +258,9 @@
         <file>resources/icons/windpointer.svg</file>
         <file>resources/icons/zoomin.svg</file>
         <file>resources/icons/zoomout.svg</file>
+        <file>resources/icons/routecalc.svg</file>
+        <file>resources/icons/routecalcdock.svg</file>
+        <file>resources/icons/routetrack.svg</file>
+        <file>resources/icons/airwaytrack.svg</file>
     </qresource>
 </RCC>

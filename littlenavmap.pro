@@ -1,5 +1,5 @@
 #*****************************************************************************
-# Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+# Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -177,6 +177,21 @@ DEFINES += QT_NO_CAST_FROM_BYTEARRAY
 DEFINES += QT_NO_CAST_TO_ASCII
 
 # =======================================================================
+# Include build_options.pro with additional variables
+
+exists($$PWD/../build_options.pro) {
+   include($$PWD/../build_options.pro)
+
+   !isEqual(QUIET, "true") {
+     message($$PWD/../build_options.pro found.)
+   }
+} else {
+   !isEqual(QUIET, "true") {
+     message($$PWD/../build_options.pro not found.)
+   }
+}
+
+# =======================================================================
 # Print values when running qmake
 
 !isEqual(QUIET, "true") {
@@ -200,6 +215,7 @@ message(QT_INSTALL_PLUGINS: $$[QT_INSTALL_PLUGINS])
 message(QT_INSTALL_TRANSLATIONS: $$[QT_INSTALL_TRANSLATIONS])
 message(QT_INSTALL_BINS: $$[QT_INSTALL_BINS])
 message(CONFIG: $$CONFIG)
+message(DEFINES: $$DEFINES)
 message(-----------------------------------)
 }
 
@@ -255,7 +271,7 @@ SOURCES += \
   src/logbook/logdataconverter.cpp \
   src/logbook/logdatadialog.cpp \
   src/logbook/logstatisticsdialog.cpp \
-  src/main.cpp\
+  src/main.cpp \
   src/mapgui/aprongeometrycache.cpp \
   src/mapgui/imageexportdialog.cpp \
   src/mapgui/mapfunctions.cpp \
@@ -298,29 +314,34 @@ SOURCES += \
   src/profile/profilewidget.cpp \
   src/query/airportquery.cpp \
   src/query/airspacequery.cpp \
+  src/query/airwayquery.cpp \
+  src/query/airwaytrackquery.cpp \
   src/query/infoquery.cpp \
   src/query/mapquery.cpp \
   src/query/procedurequery.cpp \
   src/query/querytypes.cpp \
+  src/query/waypointquery.cpp \
+  src/query/waypointtrackquery.cpp \
   src/route/customproceduredialog.cpp \
   src/route/flightplanentrybuilder.cpp \
   src/route/parkingdialog.cpp \
   src/route/route.cpp \
   src/route/routealtitude.cpp \
   src/route/routealtitudeleg.cpp \
+  src/route/routecalcwindow.cpp \
   src/route/routecommand.cpp \
   src/route/routecontroller.cpp \
-  src/route/routeexport.cpp \
-  src/route/routeexportdata.cpp \
-  src/route/routeexportdialog.cpp \
-  src/route/routefinder.cpp \
+  src/route/routeextractor.cpp \
+  src/route/routeflags.cpp \
   src/route/routeleg.cpp \
-  src/route/routenetwork.cpp \
-  src/route/routenetworkairway.cpp \
-  src/route/routenetworkradio.cpp \
-  src/route/routestring.cpp \
-  src/route/routestringdialog.cpp \
   src/route/userwaypointdialog.cpp \
+  src/routeexport/routeexport.cpp \
+  src/routeexport/routeexportdata.cpp \
+  src/routeexport/routeexportdialog.cpp \
+  src/routestring/routestringdialog.cpp \
+  src/routestring/routestringreader.cpp \
+  src/routestring/routestringtypes.cpp \
+  src/routestring/routestringwriter.cpp \
   src/search/abstractsearch.cpp \
   src/search/airporticondelegate.cpp \
   src/search/airportsearch.cpp \
@@ -340,18 +361,20 @@ SOURCES += \
   src/search/sqlproxymodel.cpp \
   src/search/userdatasearch.cpp \
   src/search/usericondelegate.cpp \
+  src/track/trackcontroller.cpp \
+  src/track/trackmanager.cpp \
   src/userdata/userdatacontroller.cpp \
   src/userdata/userdatadialog.cpp \
   src/userdata/userdataexportdialog.cpp \
   src/userdata/userdataicons.cpp \
   src/weather/weatherreporter.cpp \
   src/weather/windreporter.cpp \
-  src/web/webcontroller.cpp \
   src/web/requesthandler.cpp \
+  src/web/webapp.cpp \
+  src/web/webcontroller.cpp \
+  src/web/webflags.cpp \
   src/web/webmapcontroller.cpp \
-    src/web/webtools.cpp \
-    src/web/webflags.cpp \
-    src/web/webapp.cpp
+  src/web/webtools.cpp
 
 HEADERS  += \
   src/airspace/airspacecontroller.h \
@@ -444,29 +467,34 @@ HEADERS  += \
   src/profile/profilewidget.h \
   src/query/airportquery.h \
   src/query/airspacequery.h \
+  src/query/airwayquery.h \
+  src/query/airwaytrackquery.h \
   src/query/infoquery.h \
   src/query/mapquery.h \
   src/query/procedurequery.h \
   src/query/querytypes.h \
+  src/query/waypointquery.h \
+  src/query/waypointtrackquery.h \
   src/route/customproceduredialog.h \
   src/route/flightplanentrybuilder.h \
   src/route/parkingdialog.h \
   src/route/route.h \
   src/route/routealtitude.h \
   src/route/routealtitudeleg.h \
+  src/route/routecalcwindow.h \
   src/route/routecommand.h \
   src/route/routecontroller.h \
-  src/route/routeexport.h \
-  src/route/routeexportdata.h \
-  src/route/routeexportdialog.h \
-  src/route/routefinder.h \
+  src/route/routeextractor.h \
+  src/route/routeflags.h \
   src/route/routeleg.h \
-  src/route/routenetwork.h \
-  src/route/routenetworkairway.h \
-  src/route/routenetworkradio.h \
-  src/route/routestring.h \
-  src/route/routestringdialog.h \
   src/route/userwaypointdialog.h \
+  src/routeexport/routeexport.h \
+  src/routeexport/routeexportdata.h \
+  src/routeexport/routeexportdialog.h \
+  src/routestring/routestringdialog.h \
+  src/routestring/routestringreader.h \
+  src/routestring/routestringtypes.h \
+  src/routestring/routestringwriter.h \
   src/search/abstractsearch.h \
   src/search/airporticondelegate.h \
   src/search/airportsearch.h \
@@ -486,18 +514,20 @@ HEADERS  += \
   src/search/sqlproxymodel.h \
   src/search/userdatasearch.h \
   src/search/usericondelegate.h \
+  src/track/trackcontroller.h \
+  src/track/trackmanager.h \
   src/userdata/userdatacontroller.h \
   src/userdata/userdatadialog.h \
   src/userdata/userdataexportdialog.h \
   src/userdata/userdataicons.h \
   src/weather/weatherreporter.h \
   src/weather/windreporter.h \
-  src/web/webcontroller.h \
   src/web/requesthandler.h \
+  src/web/webapp.h \
+  src/web/webcontroller.h \
+  src/web/webflags.h \
   src/web/webmapcontroller.h \
-    src/web/webtools.h \
-    src/web/webflags.h \
-    src/web/webapp.h
+  src/web/webtools.h
 
 FORMS += \
   src/connect/connectdialog.ui \
@@ -518,9 +548,9 @@ FORMS += \
   src/print/printdialog.ui \
   src/route/customproceduredialog.ui \
   src/route/parkingdialog.ui \
-  src/route/routeexportdialog.ui \
-  src/route/routestringdialog.ui \
   src/route/userwaypointdialog.ui \
+  src/routeexport/routeexportdialog.ui \
+  src/routestring/routestringdialog.ui \
   src/userdata/userdatadialog.ui \
   src/userdata/userdataexportdialog.ui
 
@@ -534,6 +564,7 @@ TRANSLATIONS = littlenavmap_fr.ts \
                littlenavmap_nl.ts \
                littlenavmap_de.ts \
                littlenavmap_es.ts \
+               littlenavmap_zh.ts \
                littlenavmap_pt_BR.ts
 
 OTHER_FILES += \

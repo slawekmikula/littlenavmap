@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@
 class AircraftPerfController;
 class AircraftTrack;
 class AirportQuery;
+class AirwayTrackQuery;
+class WaypointTrackQuery;
+class TrackController;
 class AirspaceController;
 class AirspaceQuery;
 class ConnectClient;
@@ -58,6 +61,7 @@ class WeatherReporter;
 class WebController;
 class WindReporter;
 class MapMarkHandler;
+class TrackManager;
 
 namespace atools {
 namespace gui {
@@ -143,6 +147,8 @@ public:
   static bool isFetchAiAircraft();
   static bool isFetchAiShip();
   static bool isConnected();
+  static bool isConnectedNetwork();
+  static bool isSimConnect();
   static bool isConnectedAndAircraft();
   static bool isUserAircraftValid();
 
@@ -195,6 +201,7 @@ public:
   static QString getCurrentSimulatorShortName();
   static QString getCurrentSimulatorName();
   static bool hasSidStarInDatabase();
+  static bool hasRouteTypeInDatabase();
   static bool hasDataInDatabase();
 
   /* Simulator scenery data */
@@ -212,6 +219,8 @@ public:
 
   static atools::fs::userdata::LogdataManager *getLogdataManager();
   static LogdataSearch *getLogdataSearch();
+
+  static atools::sql::SqlDatabase *getDatabaseTrack();
 
   static atools::sql::SqlDatabase *getDatabaseUser();
   static atools::sql::SqlDatabase *getDatabaseUserAirspace();
@@ -280,6 +289,12 @@ public:
   static SearchController *getSearchController();
   static const atools::fs::perf::AircraftPerf& getAircraftPerformance();
 
+  static TrackController *getTrackController();
+  static bool hasTracks();
+  static TrackManager *getTrackManager();
+  static AirwayTrackQuery *getAirwayTrackQuery();
+  static WaypointTrackQuery *getWaypointTrackQuery();
+
   static AirspaceController *getAirspaceController();
   static bool hasAnyAirspaces();
 
@@ -308,6 +323,7 @@ public:
   static MapMarkHandler *getMapMarkHandler();
 
   static void showFlightPlan();
+  static void showRouteCalc();
   static void showAircraftPerformance();
   static void showLogbookSearch();
   static void showUserpointSearch();
@@ -334,6 +350,7 @@ private:
   static MapMarkHandler *mapMarkHandler;
   static LogdataController *logdataController;
   static OnlinedataController *onlinedataController;
+  static TrackController *trackController;
   static AircraftPerfController *aircraftPerfController;
   static AirspaceController *airspaceController;
 

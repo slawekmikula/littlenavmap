@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@
 #include "query/procedurequery.h"
 #include "connect/connectclient.h"
 #include "query/mapquery.h"
+#include "query/waypointtrackquery.h"
 #include "query/airportquery.h"
 #include "db/databasemanager.h"
 #include "fs/db/databasemeta.h"
@@ -45,8 +46,10 @@
 #include "gui/errorhandler.h"
 #include "airspace/airspacecontroller.h"
 #include "mapgui/mapmarkhandler.h"
-#include "route/routestring.h"
+#include "routestring/routestringwriter.h"
+#include "track/trackcontroller.h"
 
+#include "query/waypointquery.h"
 #include "ui_mainwindow.h"
 
 #include <marble/MarbleModel.h>
@@ -75,6 +78,7 @@ UserdataController *NavApp::userdataController = nullptr;
 MapMarkHandler *NavApp::mapMarkHandler = nullptr;
 LogdataController *NavApp::logdataController = nullptr;
 OnlinedataController *NavApp::onlinedataController = nullptr;
+TrackController *NavApp::trackController = nullptr;
 AircraftPerfController *NavApp::aircraftPerfController = nullptr;
 AirspaceController *NavApp::airspaceController = nullptr;
 VehicleIcons *NavApp::vehicleIcons = nullptr;
@@ -115,7 +119,8 @@ void NavApp::init(MainWindow *mainWindowParam)
 
   NavApp::mainWindow = mainWindowParam;
   databaseManager = new DatabaseManager(mainWindow);
-  databaseManager->openAllDatabases();
+  databaseManager->openAllDatabases(); // Only readonly databases
+
   userdataController = new UserdataController(databaseManager->getUserdataManager(), mainWindow);
   logdataController = new LogdataController(databaseManager->getLogdataManager(), mainWindow);
   mapMarkHandler = new MapMarkHandler(mainWindow);
@@ -142,6 +147,8 @@ void NavApp::init(MainWindow *mainWindowParam)
   onlinedataController = new OnlinedataController(databaseManager->getOnlinedataManager(), mainWindow);
   onlinedataController->initQueries();
 
+  trackController = new TrackController(databaseManager->getTrackManager(), mainWindow);
+
   aircraftPerfController = new AircraftPerfController(mainWindow);
 
   mapQuery = new MapQuery(databaseManager->getDatabaseSim(), databaseManager->getDatabaseNav(),
@@ -160,7 +167,9 @@ void NavApp::init(MainWindow *mainWindowParam)
   airportQueryNav = new AirportQuery(databaseManager->getDatabaseNav(), true /* nav */);
   airportQueryNav->initQueries();
 
-  infoQuery = new InfoQuery(databaseManager->getDatabaseSim(), databaseManager->getDatabaseNav());
+  infoQuery = new InfoQuery(databaseManager->getDatabaseSim(),
+                            databaseManager->getDatabaseNav(),
+                            databaseManager->getDatabaseTrack());
   infoQuery->initQueries();
 
   procedureQuery = new ProcedureQuery(databaseManager->getDatabaseNav());
@@ -207,6 +216,10 @@ void NavApp::deInit()
   qDebug() << Q_FUNC_INFO << "delete onlinedataController";
   delete onlinedataController;
   onlinedataController = nullptr;
+
+  qDebug() << Q_FUNC_INFO << "delete airwayController";
+  delete trackController;
+  trackController = nullptr;
 
   qDebug() << Q_FUNC_INFO << "delete aircraftPerfController";
   delete aircraftPerfController;
@@ -298,6 +311,7 @@ void NavApp::preDatabaseLoad()
   mapQuery->deInitQueries();
   procedureQuery->deInitQueries();
   airspaceController->preDatabaseLoad();
+  trackController->preDatabaseLoad();
 
   delete databaseMetaSim;
   databaseMetaSim = nullptr;
@@ -354,6 +368,7 @@ void NavApp::postDatabaseLoad()
   infoQuery->initQueries();
   procedureQuery->initQueries();
   airspaceController->postDatabaseLoad();
+  trackController->postDatabaseLoad();
   loadingDatabase = false;
 }
 
@@ -375,6 +390,16 @@ bool NavApp::isFetchAiShip()
 bool NavApp::isConnected()
 {
   return NavApp::getConnectClient()->isConnected();
+}
+
+bool NavApp::isConnectedNetwork()
+{
+  return NavApp::getConnectClient()->isConnectedNetwork();
+}
+
+bool NavApp::isSimConnect()
+{
+  return NavApp::getConnectClient()->isSimConnect();
 }
 
 bool NavApp::isConnectedAndAircraft()
@@ -417,6 +442,16 @@ MapQuery *NavApp::getMapQuery()
   return mapQuery;
 }
 
+AirwayTrackQuery *NavApp::getAirwayTrackQuery()
+{
+  return trackController->getAirwayTrackQuery();
+}
+
+WaypointTrackQuery *NavApp::getWaypointTrackQuery()
+{
+  return trackController->getWaypointTrackQuery();
+}
+
 atools::geo::Pos NavApp::getAirportPos(const QString& ident)
 {
   return airportQuerySim->getAirportPosByIdent(ident);
@@ -444,7 +479,8 @@ Route& NavApp::getRoute()
 
 QString NavApp::getRouteString()
 {
-  return RouteString::createStringForRoute(getRouteConst(), NavApp::getRouteCruiseSpeedKts(), rs::DEFAULT_OPTIONS);
+  return RouteStringWriter().createStringForRoute(getRouteConst(), NavApp::getRouteCruiseSpeedKts(),
+                                                  rs::DEFAULT_OPTIONS);
 }
 
 const atools::geo::Rect& NavApp::getRouteRect()
@@ -527,6 +563,11 @@ bool NavApp::hasSidStarInDatabase()
   return databaseMetaNav != nullptr ? databaseMetaNav->hasSidStar() : false;
 }
 
+bool NavApp::hasRouteTypeInDatabase()
+{
+  return databaseMetaNav != nullptr ? databaseMetaNav->hasRouteType() : false;
+}
+
 bool NavApp::hasDataInDatabase()
 {
   return databaseMetaSim != nullptr ? databaseMetaSim->hasData() : false;
@@ -562,9 +603,19 @@ UserdataSearch *NavApp::getUserdataSearch()
   return mainWindow->getSearchController()->getUserdataSearch();
 }
 
+TrackManager *NavApp::getTrackManager()
+{
+  return databaseManager->getTrackManager();
+}
+
 LogdataSearch *NavApp::getLogdataSearch()
 {
   return mainWindow->getSearchController()->getLogdataSearch();
+}
+
+atools::sql::SqlDatabase *NavApp::getDatabaseTrack()
+{
+  return getDatabaseManager()->getDatabaseTrack();
 }
 
 atools::fs::userdata::LogdataManager *NavApp::getLogdataManager()
@@ -585,6 +636,11 @@ MapMarkHandler *NavApp::getMapMarkHandler()
 void NavApp::showFlightPlan()
 {
   mainWindow->showFlightPlan();
+}
+
+void NavApp::showRouteCalc()
+{
+  mainWindow->showRouteCalc();
 }
 
 void NavApp::showAircraftPerformance()
@@ -610,6 +666,16 @@ LogdataController *NavApp::getLogdataController()
 OnlinedataController *NavApp::getOnlinedataController()
 {
   return onlinedataController;
+}
+
+TrackController *NavApp::getTrackController()
+{
+  return trackController;
+}
+
+bool NavApp::hasTracks()
+{
+  return trackController->hasTracks();
 }
 
 AircraftPerfController *NavApp::getAircraftPerfController()

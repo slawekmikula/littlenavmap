@@ -1,5 +1,5 @@
 /*****************************************************************************
-* Copyright 2015-2019 Alexander Barthel alex@littlenavmap.org
+* Copyright 2015-2020 Alexander Barthel alex@littlenavmap.org
 *
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -77,10 +77,6 @@ public:
   /* Get magvar from all known objects */
   void updateMagvar();
 
-  /* Change user defined waypoint name and position */
-  void updateUserName(const QString& name);
-  void updateUserPosition(const atools::geo::Pos& pos);
-
   /* Set parking and start position. Does not modify the flight plan entry.
    * Parking clears start and vice versa. */
   void setDepartureParking(const map::MapParking& departureParking);
@@ -98,6 +94,9 @@ public:
 
   /* Get ident of airport or navaid. Source can be flight plan entry or database. */
   QString getIdent() const;
+
+  /* Comment section from flight plan entry */
+  QString getComment() const;
 
   QString getRegion() const;
 
@@ -268,6 +267,9 @@ public:
     return type & map::PROCEDURE;
   }
 
+  /* User defined waypoint */
+  bool isUser() const;
+
   float getGroundAltitude() const
   {
     return groundAltitude;
@@ -322,6 +324,18 @@ public:
 
   /* true if airway given but not found in database. Also true if one-way direction is violated */
   bool isAirwaySetAndInvalid(float altitudeFt, QStringList *errors = nullptr) const;
+
+  bool isTrack() const
+  {
+    return airway.isValid() && airway.isTrack();
+  }
+
+  bool isAirway() const
+  {
+    return airway.isValid() && airway.isAirway();
+  }
+
+  void clearAirwayOrTrack();
 
   const atools::fs::pln::FlightplanEntry& getFlightplanEntry() const;
 
