@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>1280</width>
-    <height>1362</height>
+    <height>1365</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -48,55 +48,13 @@
      </property>
      <addaction name="actionClearKmlMenu"/>
     </widget>
-    <widget class="QMenu" name="menuEXport">
+    <widget class="QMenu" name="menuExportFlightplanToOnlineFormats">
      <property name="title">
-      <string>E&amp;xport Flight Plan to Garmin Formats</string>
+      <string>E&amp;xport Flight Plan to Other Formats</string>
      </property>
-     <addaction name="actionRouteSaveAsGfp"/>
-     <addaction name="actionRouteSaveAsRxpGtn"/>
-     <addaction name="actionRouteSaveAsRxpGns"/>
-    </widget>
-    <widget class="QMenu" name="menuE_xport_Flight_Plan_to_Aircraft_Formats">
-     <property name="title">
-      <string>E&amp;xport Flight Plan to Aircraft Formats</string>
-     </property>
-     <addaction name="actionRouteSaveAsFlp"/>
-     <addaction name="actionRouteSaveAsRte"/>
-     <addaction name="actionRouteSaveAsTxt"/>
-     <addaction name="actionRouteSaveAsFpr"/>
-     <addaction name="actionRouteSaveAsFpl"/>
-     <addaction name="actionRouteSaveAsCorteIn"/>
-     <addaction name="actionRouteSaveAsIFly"/>
-     <addaction name="actionRouteSaveAsProSim"/>
-     <addaction name="actionRouteSaveAsBbsAirbus"/>
-     <addaction name="actionRouteSaveAsLeveldRte"/>
-     <addaction name="actionRouteSaveAsFeelthereFpl"/>
-     <addaction name="actionRouteSaveAsQwRte"/>
-     <addaction name="actionRouteSaveAsMdr"/>
-     <addaction name="actionRouteSaveAsTfdi"/>
-    </widget>
-    <widget class="QMenu" name="menuExportFlightplanToOtherFormats">
-     <property name="title">
-      <string>E&amp;xport Flight Plan to other Formats</string>
-     </property>
-     <addaction name="separator"/>
-     <addaction name="actionRouteSaveAsUfmc"/>
-     <addaction name="actionRouteSaveAsXFmc"/>
-     <addaction name="separator"/>
-     <addaction name="actionRouteSaveAsEfbr"/>
-     <addaction name="separator"/>
-     <addaction name="actionRouteSaveAsFms3"/>
-     <addaction name="actionRouteSaveAsPlnAnnotated"/>
-     <addaction name="separator"/>
      <addaction name="actionRouteSaveAsHtml"/>
      <addaction name="actionRouteSaveAsGpx"/>
      <addaction name="separator"/>
-     <addaction name="actionRouteShowSkyVector"/>
-    </widget>
-    <widget class="QMenu" name="menuExportFlightplanToOnlineFormats">
-     <property name="title">
-      <string>E&amp;xport Flight Plan to Online Formats</string>
-     </property>
      <addaction name="actionRouteSaveAsVfp"/>
      <addaction name="actionRouteSaveAsIvap"/>
      <addaction name="actionRouteSaveAsXIvap"/>
@@ -123,12 +81,13 @@
     <addaction name="actionRouteSaveAsFms11"/>
     <addaction name="actionRouteSaveAsFlightGear"/>
     <addaction name="separator"/>
-    <addaction name="menuE_xport_Flight_Plan_to_Aircraft_Formats"/>
-    <addaction name="menuEXport"/>
+    <addaction name="actionRouteShowSkyVector"/>
     <addaction name="menuExportFlightplanToOnlineFormats"/>
-    <addaction name="menuExportFlightplanToOtherFormats"/>
     <addaction name="separator"/>
     <addaction name="menuExportOptions"/>
+    <addaction name="separator"/>
+    <addaction name="actionRouteSaveAll"/>
+    <addaction name="actionRouteSaveAllOptions"/>
     <addaction name="separator"/>
     <addaction name="actionLoadKml"/>
     <addaction name="menuRecentKml"/>
@@ -521,6 +480,7 @@
    <addaction name="actionRouteNew"/>
    <addaction name="actionRouteOpen"/>
    <addaction name="actionRouteSave"/>
+   <addaction name="actionRouteSaveAll"/>
    <addaction name="separator"/>
    <addaction name="actionRouteResetAll"/>
   </widget>
@@ -945,22 +905,6 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QCheckBox" name="checkBoxAirportAddonSearch">
-               <property name="toolTip">
-                <string>Add-on airports</string>
-               </property>
-               <property name="statusTip">
-                <string>Add-on airports</string>
-               </property>
-               <property name="text">
-                <string>Add&amp;on</string>
-               </property>
-               <property name="tristate">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
              <item row="2" column="0">
               <layout class="QHBoxLayout" name="horizontalLayoutAirportRatingSearch">
                <property name="spacing">
@@ -1028,6 +972,22 @@
                </item>
               </layout>
              </item>
+             <item row="1" column="0">
+              <widget class="QCheckBox" name="checkBoxAirportAddonSearch">
+               <property name="toolTip">
+                <string>Add-on airports</string>
+               </property>
+               <property name="statusTip">
+                <string>Add-on airports</string>
+               </property>
+               <property name="text">
+                <string>Add&amp;on</string>
+               </property>
+               <property name="tristate">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
             </layout>
            </item>
            <item>
@@ -1048,7 +1008,62 @@
              <property name="spacing">
               <number>2</number>
              </property>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="comboBoxAirportHelipadSearch">
+               <property name="toolTip">
+                <string>Airports that have helipads</string>
+               </property>
+               <property name="statusTip">
+                <string>Airports that have helipads</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Any or no Helipad</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>At least one Helipad</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Only Helipads</string>
+                </property>
+               </item>
+              </widget>
+             </item>
              <item row="0" column="0">
+              <widget class="QComboBox" name="comboBoxAirportGateSearch">
+               <property name="toolTip">
+                <string>Airports that have certain gate parking types</string>
+               </property>
+               <property name="statusTip">
+                <string>Airports that have certain gate parking types</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Any or no Gate</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>At least Gate Small</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>At least Gate Medium</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>At least Gate Heavy</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="1" column="0" colspan="2">
               <widget class="QComboBox" name="comboBoxAirportRampSearch">
                <property name="toolTip">
                 <string>Airports that have certain ramp parking types</string>
@@ -1093,61 +1108,6 @@
                </item>
               </widget>
              </item>
-             <item row="1" column="0">
-              <widget class="QComboBox" name="comboBoxAirportGateSearch">
-               <property name="toolTip">
-                <string>Airports that have certain gate parking types</string>
-               </property>
-               <property name="statusTip">
-                <string>Airports that have certain gate parking types</string>
-               </property>
-               <item>
-                <property name="text">
-                 <string>Any or no Gate</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>At least Gate Small</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>At least Gate Medium</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>At least Gate Heavy</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QComboBox" name="comboBoxAirportHelipadSearch">
-               <property name="toolTip">
-                <string>Airports that have helipads</string>
-               </property>
-               <property name="statusTip">
-                <string>Airports that have helipads</string>
-               </property>
-               <item>
-                <property name="text">
-                 <string>Any or no Helipad</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>At least one Helipad</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Only Helipads</string>
-                </property>
-               </item>
-              </widget>
-             </item>
             </layout>
            </item>
            <item>
@@ -1177,7 +1137,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Runways: &amp;Min:</string>
+                <string>&amp;Runways:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -1187,7 +1147,7 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="4">
+             <item row="0" column="3">
               <widget class="QSpinBox" name="spinBoxAirportRunwaysMaxSearch">
                <property name="toolTip">
                 <string>Airports that have no runway that is longer than this value</string>
@@ -1202,7 +1162,7 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %distshort%</string>
+                <string> %distshort% max</string>
                </property>
                <property name="maximum">
                 <number>50000</number>
@@ -1227,7 +1187,7 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %distshort%</string>
+                <string> %distshort% min</string>
                </property>
                <property name="maximum">
                 <number>50000</number>
@@ -1240,26 +1200,7 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="3">
-              <widget class="QLabel" name="labelAirportRunwayMaxSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string comment="Max runway length">&amp;Max:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="buddy">
-                <cstring>spinBoxAirportRunwaysMaxSearch</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3" colspan="2">
+             <item row="1" column="2" colspan="2">
               <widget class="QComboBox" name="comboBoxAirportSurfaceSearch">
                <property name="toolTip">
                 <string>Airports that have certain runway surfaces</string>
@@ -1344,7 +1285,7 @@
                 </sizepolicy>
                </property>
                <property name="text">
-                <string>Elevation: &amp;Min:</string>
+                <string>&amp;Elevation:</string>
                </property>
                <property name="buddy">
                 <cstring>spinBoxAirportAltitudeMinSearch</cstring>
@@ -1363,7 +1304,7 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %alt%</string>
+                <string> %alt% min</string>
                </property>
                <property name="minimum">
                 <number>-1500</number>
@@ -1380,22 +1321,6 @@
               </widget>
              </item>
              <item>
-              <widget class="QLabel" name="labelAirportAltMinSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string comment="Max elevation">&amp;Max:</string>
-               </property>
-               <property name="buddy">
-                <cstring>spinBoxAirportAltitudeMaxSearch</cstring>
-               </property>
-              </widget>
-             </item>
-             <item>
               <widget class="QSpinBox" name="spinBoxAirportAltitudeMaxSearch">
                <property name="toolTip">
                 <string>Maximum elevation for airport</string>
@@ -1407,7 +1332,7 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %alt%</string>
+                <string> %alt% max</string>
                </property>
                <property name="minimum">
                 <number>-500</number>
@@ -1464,26 +1389,7 @@
                 <string>Search for all airports within the given distance limits around the distance search center</string>
                </property>
                <property name="text">
-                <string>&amp;Distance</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelAirportDistMinSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>M&amp;in:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="buddy">
-                <cstring>spinBoxAirportDistMinSearch</cstring>
+                <string>&amp;Distance:</string>
                </property>
               </widget>
              </item>
@@ -1502,29 +1408,13 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %dist%</string>
+                <string> %dist% min</string>
                </property>
                <property name="maximum">
                 <number>8000</number>
                </property>
                <property name="singleStep">
                 <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelAirportDistMaxSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string comment="Max distance">Ma&amp;x:</string>
-               </property>
-               <property name="buddy">
-                <cstring>spinBoxAirportDistMaxSearch</cstring>
                </property>
               </widget>
              </item>
@@ -1546,7 +1436,7 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %dist%</string>
+                <string> %dist% max</string>
                </property>
                <property name="minimum">
                 <number>100</number>
@@ -1575,7 +1465,7 @@
                </property>
                <item>
                 <property name="text">
-                 <string>Any Direction</string>
+                 <string>Any Dir.</string>
                 </property>
                </item>
                <item>
@@ -1716,6 +1606,9 @@
              <property name="text">
               <string/>
              </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
              <property name="textInteractionFlags">
               <set>Qt::TextSelectableByMouse</set>
              </property>
@@ -1725,6 +1618,9 @@
             <widget class="QLabel" name="labelAirportSearchOverride">
              <property name="text">
               <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
              </property>
              <property name="textInteractionFlags">
               <set>Qt::TextSelectableByMouse</set>
@@ -1985,57 +1881,72 @@
              <property name="spacing">
               <number>2</number>
              </property>
-             <item row="3" column="3">
-              <widget class="QSpinBox" name="spinBoxNavMaxRangeSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="comboBoxNavNavAidSearch">
                <property name="toolTip">
-                <string>Minimum range of a VOR or NDB</string>
+                <string>Navaid categories</string>
                </property>
                <property name="statusTip">
-                <string>Minimum range of a VOR or NDB</string>
+                <string>Navaid categories</string>
                </property>
-               <property name="showGroupSeparator" stdset="0">
-                <bool>true</bool>
-               </property>
-               <property name="suffix">
-                <string> %dist%</string>
-               </property>
-               <property name="minimum">
-                <number>0</number>
-               </property>
-               <property name="maximum">
-                <number>400</number>
-               </property>
-               <property name="singleStep">
-                <number>10</number>
-               </property>
-               <property name="value">
-                <number>0</number>
-               </property>
+               <item>
+                <property name="text">
+                 <string>All Navaids</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>All VOR/VORTAC/TACAN</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>All VOR/VORTAC/TACAN/NDB</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Only VOR-DME</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Only VOR</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Only DME</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Only VORTAC</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Only TACAN</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>All NDB</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>All Waypoints</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>All Waypoints on Airways</string>
+                </property>
+               </item>
               </widget>
              </item>
-             <item row="3" column="2">
-              <widget class="QLabel" name="labelNavMaxRangeSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>Min &amp;Range:</string>
-               </property>
-               <property name="buddy">
-                <cstring>spinBoxNavMaxRangeSearch</cstring>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="2" colspan="2">
+             <item row="3" column="1">
               <widget class="QComboBox" name="comboBoxNavTypeSearch">
                <property name="toolTip">
                 <string>Navaid types</string>
@@ -2105,69 +2016,54 @@
                </item>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QComboBox" name="comboBoxNavNavAidSearch">
+             <item row="2" column="2">
+              <widget class="QLabel" name="labelNavMaxRangeSearch">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="text">
+                <string>Min &amp;Range:</string>
+               </property>
+               <property name="buddy">
+                <cstring>spinBoxNavMaxRangeSearch</cstring>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
+              <widget class="QSpinBox" name="spinBoxNavMaxRangeSearch">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="toolTip">
-                <string>Navaid categories</string>
+                <string>Minimum range of a VOR or NDB</string>
                </property>
                <property name="statusTip">
-                <string>Navaid categories</string>
+                <string>Minimum range of a VOR or NDB</string>
                </property>
-               <item>
-                <property name="text">
-                 <string>All Navaids</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>All VOR/VORTAC/TACAN</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>All VOR/VORTAC/TACAN/NDB</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Only VOR-DME</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Only VOR</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Only DME</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Only VORTAC</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Only TACAN</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>All NDB</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>All Waypoints</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>All Waypoints on Airways</string>
-                </property>
-               </item>
+               <property name="showGroupSeparator" stdset="0">
+                <bool>true</bool>
+               </property>
+               <property name="suffix">
+                <string> %dist%</string>
+               </property>
+               <property name="minimum">
+                <number>0</number>
+               </property>
+               <property name="maximum">
+                <number>400</number>
+               </property>
+               <property name="singleStep">
+                <number>10</number>
+               </property>
+               <property name="value">
+                <number>0</number>
+               </property>
               </widget>
              </item>
             </layout>
@@ -2211,26 +2107,7 @@
                 <string>Search for all navaids within the given distance limits around the distance search center</string>
                </property>
                <property name="text">
-                <string>&amp;Distance</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelNavDistMinSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>&amp;Min:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-               </property>
-               <property name="buddy">
-                <cstring>spinBoxNavDistMinSearch</cstring>
+                <string>&amp;Distance:</string>
                </property>
               </widget>
              </item>
@@ -2249,29 +2126,13 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %dist%</string>
+                <string> %dist% min</string>
                </property>
                <property name="maximum">
                 <number>3000</number>
                </property>
                <property name="singleStep">
                 <number>100</number>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLabel" name="labelNavDistMaxSearch">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="text">
-                <string>&amp;Max:</string>
-               </property>
-               <property name="buddy">
-                <cstring>spinBoxNavDistMaxSearch</cstring>
                </property>
               </widget>
              </item>
@@ -2293,7 +2154,7 @@
                 <bool>true</bool>
                </property>
                <property name="suffix">
-                <string> %dist%</string>
+                <string> %dist% max</string>
                </property>
                <property name="minimum">
                 <number>100</number>
@@ -2322,7 +2183,7 @@
                </property>
                <item>
                 <property name="text">
-                 <string>Any Direction</string>
+                 <string>Any Dir.</string>
                 </property>
                </item>
                <item>
@@ -2463,6 +2324,9 @@
              <property name="text">
               <string/>
              </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
              <property name="textInteractionFlags">
               <set>Qt::TextSelectableByMouse</set>
              </property>
@@ -2472,6 +2336,9 @@
             <widget class="QLabel" name="labelNavSearchOverride">
              <property name="text">
               <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
              </property>
              <property name="textInteractionFlags">
               <set>Qt::TextSelectableByMouse</set>
@@ -3050,6 +2917,9 @@
            <property name="text">
             <string/>
            </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
            <property name="textInteractionFlags">
             <set>Qt::TextSelectableByMouse</set>
            </property>
@@ -3089,7 +2959,7 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QLineEdit" name="lineEditLogdataDeparture">
+            <widget class="QLineEdit" name="lineEditLogdataAirport">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
                <horstretch>1</horstretch>
@@ -3097,38 +2967,17 @@
               </sizepolicy>
              </property>
              <property name="toolTip">
-              <string>Departure airport ICAO code</string>
+              <string>Departure or destination airport ICAO code.
+Will match any visited airport.</string>
              </property>
              <property name="statusTip">
-              <string>Departure airport ICAO code</string>
+              <string>Departure or destination airport ICAO code. </string>
              </property>
              <property name="maxLength">
               <number>8</number>
              </property>
              <property name="placeholderText">
-              <string>Departure ICAO</string>
-             </property>
-             <property name="clearButtonEnabled">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="lineEditLogdataDestination">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>1</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string>Destination airport ICAO code</string>
-             </property>
-             <property name="statusTip">
-              <string>Destination airport ICAO code</string>
-             </property>
-             <property name="placeholderText">
-              <string>Destination ICAO</string>
+              <string>Airport ICAO</string>
              </property>
              <property name="clearButtonEnabled">
               <bool>true</bool>
@@ -3313,7 +3162,7 @@
           </widget>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayoutLogdataMore">
+          <layout class="QVBoxLayout" name="verticalLayoutLogdataMore">
            <property name="spacing">
             <number>2</number>
            </property>
@@ -3321,86 +3170,153 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QLineEdit" name="lineEditLogdataAircraftModel">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>1</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+            <layout class="QHBoxLayout" name="horizontalLayout_7">
+             <property name="spacing">
+              <number>2</number>
              </property>
-             <property name="toolTip">
-              <string>Aircraft model name</string>
+             <property name="topMargin">
+              <number>0</number>
              </property>
-             <property name="statusTip">
-              <string>Aircraft model name</string>
-             </property>
-             <property name="placeholderText">
-              <string>Aircraft Model</string>
-             </property>
-             <property name="clearButtonEnabled">
-              <bool>true</bool>
-             </property>
-            </widget>
+             <item>
+              <widget class="QLineEdit" name="lineEditLogdataDeparture">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Departure airport ICAO code</string>
+               </property>
+               <property name="statusTip">
+                <string>Departure airport ICAO code</string>
+               </property>
+               <property name="maxLength">
+                <number>8</number>
+               </property>
+               <property name="placeholderText">
+                <string>Departure ICAO</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEditLogdataDestination">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Destination airport ICAO code</string>
+               </property>
+               <property name="statusTip">
+                <string>Destination airport ICAO code</string>
+               </property>
+               <property name="placeholderText">
+                <string>Destination ICAO</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <widget class="QLineEdit" name="lineEditLogdataAircraftRegistration">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>1</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <property name="spacing">
+              <number>2</number>
              </property>
-             <property name="toolTip">
-              <string/>
+             <property name="topMargin">
+              <number>0</number>
              </property>
-             <property name="statusTip">
-              <string/>
-             </property>
-             <property name="placeholderText">
-              <string>Aircraft Registration</string>
-             </property>
-             <property name="clearButtonEnabled">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="lineEditLogdataSimulator">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>1</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="toolTip">
-              <string/>
-             </property>
-             <property name="statusTip">
-              <string/>
-             </property>
-             <property name="placeholderText">
-              <string>Simulator</string>
-             </property>
-             <property name="clearButtonEnabled">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLineEdit" name="lineEditLogdataDescription">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>2</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="placeholderText">
-              <string>Description</string>
-             </property>
-             <property name="clearButtonEnabled">
-              <bool>true</bool>
-             </property>
-            </widget>
+             <item>
+              <widget class="QLineEdit" name="lineEditLogdataAircraftModel">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string>Aircraft model name</string>
+               </property>
+               <property name="statusTip">
+                <string>Aircraft model name</string>
+               </property>
+               <property name="placeholderText">
+                <string>Aircraft Model</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEditLogdataAircraftRegistration">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string/>
+               </property>
+               <property name="statusTip">
+                <string/>
+               </property>
+               <property name="placeholderText">
+                <string>Aircraft Registration</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEditLogdataSimulator">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>1</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="toolTip">
+                <string/>
+               </property>
+               <property name="statusTip">
+                <string/>
+               </property>
+               <property name="placeholderText">
+                <string>Simulator</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLineEdit" name="lineEditLogdataDescription">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                 <horstretch>2</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="placeholderText">
+                <string>Remarks</string>
+               </property>
+               <property name="clearButtonEnabled">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </item>
@@ -3434,7 +3350,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>Distance: &amp;Min:</string>
+              <string>Distance:</string>
              </property>
              <property name="buddy">
               <cstring>spinBoxLogdataMinDist</cstring>
@@ -3450,29 +3366,13 @@
               <string>Minimum flight plan distance</string>
              </property>
              <property name="suffix">
-              <string> %dist%</string>
+              <string> %dist% min</string>
              </property>
              <property name="maximum">
               <number>30000</number>
              </property>
              <property name="singleStep">
               <number>10</number>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="labelLogdataMaxDist">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>&amp;Max:</string>
-             </property>
-             <property name="buddy">
-              <cstring>spinBoxLogdataMaxDist</cstring>
              </property>
             </widget>
            </item>
@@ -3485,7 +3385,7 @@
               <string>Maximum flight plan distance</string>
              </property>
              <property name="suffix">
-              <string> %dist%</string>
+              <string> %dist% max</string>
              </property>
              <property name="maximum">
               <number>30000</number>
@@ -3555,6 +3455,9 @@
           <widget class="QLabel" name="labelLogdata">
            <property name="text">
             <string/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
            </property>
            <property name="textInteractionFlags">
             <set>Qt::TextSelectableByMouse</set>
@@ -3811,6 +3714,9 @@
           <widget class="QLabel" name="labelOnlineClientSearchStatus">
            <property name="text">
             <string/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
            </property>
            <property name="textInteractionFlags">
             <set>Qt::TextSelectableByMouse</set>
@@ -4071,6 +3977,9 @@
           <widget class="QLabel" name="labelOnlineCenterSearchStatus">
            <property name="text">
             <string/>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
            </property>
            <property name="textInteractionFlags">
             <set>Qt::TextSelectableByMouse</set>
@@ -6284,6 +6193,9 @@ unusable airways (e.g. due to altitude restrictions).</string>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
          </property>
+         <property name="buddy">
+          <cstring>pushButtonRouteCalcHelp</cstring>
+         </property>
         </widget>
        </item>
        <item alignment="Qt::AlignTop">
@@ -7064,7 +6976,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/mark.svg</normaloff>:/littlenavmap/resources/icons/mark.svg</iconset>
    </property>
    <property name="text">
-    <string>Set Center for Distance Search</string>
+    <string>Set Center for &amp;Distance Search</string>
    </property>
    <property name="toolTip">
     <string>Set center mark for distance search</string>
@@ -7079,7 +6991,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/mark.svg</normaloff>:/littlenavmap/resources/icons/mark.svg</iconset>
    </property>
    <property name="text">
-    <string>Set Center for Distance Search</string>
+    <string>Set Center for &amp;Distance Search</string>
    </property>
    <property name="toolTip">
     <string>Set center mark for distance search</string>
@@ -7268,7 +7180,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/home.svg</normaloff>:/littlenavmap/resources/icons/home.svg</iconset>
    </property>
    <property name="text">
-    <string>Set Home View</string>
+    <string>Set Home &amp;View</string>
    </property>
    <property name="toolTip">
     <string>Sets currently visible map view as home view</string>
@@ -7442,7 +7354,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/distancemeasure.svg</normaloff>:/littlenavmap/resources/icons/distancemeasure.svg</iconset>
    </property>
    <property name="text">
-    <string>Measure GC Distance from %1</string>
+    <string>Measure &amp;Distance from %1</string>
    </property>
    <property name="toolTip">
     <string>Measure great circle distance on map</string>
@@ -7457,7 +7369,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/rangerings.svg</normaloff>:/littlenavmap/resources/icons/rangerings.svg</iconset>
    </property>
    <property name="text">
-    <string>Show Range Rings</string>
+    <string>Show Range &amp;Rings</string>
    </property>
    <property name="toolTip">
     <string>Show range rings on map</string>
@@ -7472,7 +7384,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/navrange.svg</normaloff>:/littlenavmap/resources/icons/navrange.svg</iconset>
    </property>
    <property name="text">
-    <string>Show Navaid Range for %1</string>
+    <string>Show &amp;Navaid Range for %1</string>
    </property>
    <property name="toolTip">
     <string>Show range for navaid on map</string>
@@ -7490,28 +7402,13 @@ Best track will be selected automatically.</string>
     <string>&amp;Remove all Ranges, Measurements, Patterns and Holdings</string>
    </property>
    <property name="toolTip">
-    <string>Remove all range rings, measurements,  traffic patterns and holdings from map</string>
+    <string>Remove all range rings, measurements, traffic patterns and holdings from map</string>
    </property>
    <property name="statusTip">
-    <string>Remove all range rings, measurements,  traffic patterns and holdings from map</string>
+    <string>Remove all range rings, measurements, traffic patterns and holdings from map</string>
    </property>
    <property name="shortcut">
     <string>Alt+Shift+H</string>
-   </property>
-  </action>
-  <action name="actionMapMeasureRhumbDistance">
-   <property name="icon">
-    <iconset resource="../../littlenavmap.qrc">
-     <normaloff>:/littlenavmap/resources/icons/distancemeasurerhumb.svg</normaloff>:/littlenavmap/resources/icons/distancemeasurerhumb.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Measure Rhumb Distance from %1</string>
-   </property>
-   <property name="toolTip">
-    <string>Measure rhumb line distance on map</string>
-   </property>
-   <property name="statusTip">
-    <string>Measure rhumb line distance on map</string>
    </property>
   </action>
   <action name="actionMapShowSoftAirports">
@@ -7568,7 +7465,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/rangeringoff.svg</normaloff>:/littlenavmap/resources/icons/rangeringoff.svg</iconset>
    </property>
    <property name="text">
-    <string>Remove Range Ring</string>
+    <string>&amp;Remove Range Ring</string>
    </property>
    <property name="toolTip">
     <string>Remove this range ring</string>
@@ -7718,7 +7615,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/airportroutedest.svg</normaloff>:/littlenavmap/resources/icons/airportroutedest.svg</iconset>
    </property>
    <property name="text">
-    <string>Set %1 as Flight Plan Departure</string>
+    <string>Set %1 as &amp;Flight Plan Departure</string>
    </property>
    <property name="toolTip">
     <string>Set this as departure for the flight plan</string>
@@ -7733,7 +7630,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/airportroutestart.svg</normaloff>:/littlenavmap/resources/icons/airportroutestart.svg</iconset>
    </property>
    <property name="text">
-    <string>Set %1 as Flight Plan Destination</string>
+    <string>Set %1 as Flight Plan &amp;Destination</string>
    </property>
    <property name="toolTip">
     <string>Set this as destination for the flight plan</string>
@@ -7763,7 +7660,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routedeleteleg.svg</normaloff>:/littlenavmap/resources/icons/routedeleteleg.svg</iconset>
    </property>
    <property name="text">
-    <string>Delete selected Legs or Procedure</string>
+    <string>&amp;Delete selected Legs or Procedure</string>
    </property>
    <property name="toolTip">
     <string>Delete all selected flight plan legs</string>
@@ -7781,7 +7678,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routelegup.svg</normaloff>:/littlenavmap/resources/icons/routelegup.svg</iconset>
    </property>
    <property name="text">
-    <string>Move selected Legs Up</string>
+    <string>Move selected Legs &amp;Up</string>
    </property>
    <property name="toolTip">
     <string>Move selected flight plan legs up</string>
@@ -7799,7 +7696,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routelegdown.svg</normaloff>:/littlenavmap/resources/icons/routelegdown.svg</iconset>
    </property>
    <property name="text">
-    <string>Move selected Legs Down</string>
+    <string>Move selected Legs &amp;Down</string>
    </property>
    <property name="toolTip">
     <string>Move selected flight plan legs down</string>
@@ -7862,7 +7759,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/parkingstartset.svg</normaloff>:/littlenavmap/resources/icons/parkingstartset.svg</iconset>
    </property>
    <property name="text">
-    <string>Set %1 as Flight Plan Departure</string>
+    <string>Set %1 as &amp;Flight Plan Departure</string>
    </property>
    <property name="iconText">
     <string>Set as Flight Plan Departure</string>
@@ -8084,7 +7981,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/globals.svg</normaloff>:/littlenavmap/resources/icons/globals.svg</iconset>
    </property>
    <property name="text">
-    <string>Show Information for %1</string>
+    <string>Show &amp;Information for %1</string>
    </property>
    <property name="toolTip">
     <string>Show Information for airport or navaid</string>
@@ -8251,7 +8148,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/showonmap.svg</normaloff>:/littlenavmap/resources/icons/showonmap.svg</iconset>
    </property>
    <property name="text">
-    <string>Show on Map</string>
+    <string>Show on &amp;Map</string>
    </property>
    <property name="toolTip">
     <string>Show the airport or navaid on the map</string>
@@ -8269,7 +8166,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/globals.svg</normaloff>:/littlenavmap/resources/icons/globals.svg</iconset>
    </property>
    <property name="text">
-    <string>Show Information</string>
+    <string>Show &amp;Information</string>
    </property>
    <property name="toolTip">
     <string>Show information about the airport or navaid</string>
@@ -8287,7 +8184,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/globals.svg</normaloff>:/littlenavmap/resources/icons/globals.svg</iconset>
    </property>
    <property name="text">
-    <string>Show Information</string>
+    <string>Show &amp;Information</string>
    </property>
    <property name="toolTip">
     <string>Show information about the selected entry</string>
@@ -8305,7 +8202,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/showonmap.svg</normaloff>:/littlenavmap/resources/icons/showonmap.svg</iconset>
    </property>
    <property name="text">
-    <string>Show on Map</string>
+    <string>Show on &amp;Map</string>
    </property>
    <property name="toolTip">
     <string>Show the selected entry on the map</string>
@@ -8571,7 +8468,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routestring.svg</normaloff>:/littlenavmap/resources/icons/routestring.svg</iconset>
    </property>
    <property name="text">
-    <string>Copy Flight Plan Route Description to the Clipboard</string>
+    <string>&amp;Copy Flight Plan Route Description to the Clipboard</string>
    </property>
    <property name="toolTip">
     <string>Copy flight plan route description to the clipboard</string>
@@ -8596,17 +8493,6 @@ Best track will be selected automatically.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+N</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsGfp">
-   <property name="text">
-    <string>Export Flight Plan as &amp;Garmin GTN GFP ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as Garmin Flight Plan format usable by the Flight1 GTN 650/750</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as Garmin Flight Plan format usable by the Flight1 GTN 650/750</string>
    </property>
   </action>
   <action name="actionRouteAdjustAltitude">
@@ -8723,17 +8609,6 @@ Best track will be selected automatically.</string>
    </property>
    <property name="statusTip">
     <string>Show the offline help also including the legend in a PDF viewer</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsRte">
-   <property name="text">
-    <string>Export Flight Plan as PMDG &amp;RTE ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as RTE file usable by PMDG aircraft</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as RTE file usable by PMDG aircraft</string>
    </property>
   </action>
   <action name="actionInfoApproachExpandAll">
@@ -8974,7 +8849,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routeactiveleg.svg</normaloff>:/littlenavmap/resources/icons/routeactiveleg.svg</iconset>
    </property>
    <property name="text">
-    <string>Activate Flight Plan Leg</string>
+    <string>&amp;Activate Flight Plan Leg</string>
    </property>
    <property name="toolTip">
     <string>Activate Flight Plan Leg</string>
@@ -9053,17 +8928,6 @@ Best track will be selected automatically.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+A</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsFlp">
-   <property name="text">
-    <string>Export Flight Plan as &amp;FLP ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Export flight plan as FLP file usable by the Aerosoft Airbus and other add-on aircraft</string>
-   </property>
-   <property name="statusTip">
-    <string>Export flight plan as FLP file usable by the Aerosoft Airbus and other add-on aircraft</string>
    </property>
   </action>
   <action name="actionShowAirspaces">
@@ -9207,28 +9071,6 @@ Best track will be selected automatically.</string>
     <enum>QAction::NoRole</enum>
    </property>
   </action>
-  <action name="actionRouteSaveAsTxt">
-   <property name="text">
-    <string>Export Flight Plan as &amp;TXT ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as Text File usable by JARDesign or Rotate Simulations aircraft</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as Text File usable by JARDesign or Rotate Simulations aircraft</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsFms3">
-   <property name="text">
-    <string>Export Flight Plan as X-Plane FMS &amp;3 ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as FMS 3 file usable by all X-Plane versions</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as FMS 3 file usable by all X-Plane versions</string>
-   </property>
-  </action>
   <action name="actionRouteSaveAsFms11">
    <property name="icon">
     <iconset resource="../../littlenavmap.qrc">
@@ -9245,61 +9087,6 @@ Best track will be selected automatically.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+X</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsFpr">
-   <property name="text">
-    <string>Export Flight Plan as &amp;Majestic Dash FPR ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as FPR file usable Majestic Software MJC8 Q400</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as FPR file usable Majestic Software MJC8 Q400</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsFpl">
-   <property name="text">
-    <string>Export Flight Plan as IXEG &amp;FPL ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as FPL file usable by the IXEG Boeing</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as FPL file usable by the IXEG Boeing</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsCorteIn">
-   <property name="text">
-    <string>Export Flight Plan to &amp;corte.in for Flight Factor Airbus ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Append flight plan to the corte.in file for the Flight Factor Airbus</string>
-   </property>
-   <property name="statusTip">
-    <string>Append flight plan to the corte.in file for the Flight Factor Airbus</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsRxpGtn">
-   <property name="text">
-    <string>Export Flight Plan as &amp;GFP for Reality XP GTN ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as GFP file usable by the Reality XP GTN 750/650 Touch</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as GFP file usable by the Reality XP GTN 750/650 Touch</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsRxpGns">
-   <property name="text">
-    <string>Export Flight Plan to &amp;FPL for the Reality XP GNS ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as FPL file usable by the Reality XP GNS 530W/430W V2</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as FPL file usable by the Reality XP GNS 530W/430W V2</string>
    </property>
   </action>
   <action name="actionMapShowCompassRose">
@@ -9685,61 +9472,6 @@ Best track will be selected automatically.</string>
     <string>Centers the selected center on the map</string>
    </property>
   </action>
-  <action name="actionRouteSaveAsIFly">
-   <property name="text">
-    <string>Export Flight Plan as &amp;FLTPLAN for iFly ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as FLTPLAN file usable by iFly aircraft</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as FLTPLAN file usable by iFly aircraft</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsXFmc">
-   <property name="text">
-    <string>Export Flight Plan for &amp;X-FMC ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as FPL file usable by X-FMC</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as FPL file usable by X-FMC</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsUfmc">
-   <property name="text">
-    <string>Export Flight Plan for &amp;UFMC ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as UFMC file</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as UFMC file</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsProSim">
-   <property name="text">
-    <string>Export Flight Plan for &amp;ProSim ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Append flight plan to the companyroutes.xml file for ProSim</string>
-   </property>
-   <property name="statusTip">
-    <string>Append flight plan to the companyroutes.xml file for ProSim</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsBbsAirbus">
-   <property name="text">
-    <string>Export Flight Plan as PLN for &amp;BBS Airbus ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as PLN file usable by the Blackbox Simulations Airbus</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as PLN file usable by the Blackbox Simulations Airbus</string>
-   </property>
-  </action>
   <action name="actionRouteShowSkyVector">
    <property name="text">
     <string>Show Flight Plan in Sky&amp;Vector ...</string>
@@ -9786,7 +9518,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/mark.svg</normaloff>:/littlenavmap/resources/icons/mark.svg</iconset>
    </property>
    <property name="text">
-    <string>Set Center for Distance Search</string>
+    <string>Set Center for &amp;Distance Search</string>
    </property>
    <property name="toolTip">
     <string>Set center mark for distance search</string>
@@ -10024,7 +9756,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/trafficpattern.svg</normaloff>:/littlenavmap/resources/icons/trafficpattern.svg</iconset>
    </property>
    <property name="text">
-    <string>Display Airport Traffic Pattern at %1</string>
+    <string>Display Airport &amp;Traffic Pattern at %1</string>
    </property>
    <property name="toolTip">
     <string>Show Airport traffic pattern for a runway at this airport</string>
@@ -10039,7 +9771,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/trafficpatternoff.svg</normaloff>:/littlenavmap/resources/icons/trafficpatternoff.svg</iconset>
    </property>
    <property name="text">
-    <string>Remove Airport Traffic Pattern</string>
+    <string>Remove Airport &amp;Traffic Pattern</string>
    </property>
    <property name="toolTip">
     <string>Remove this airport traffic pattern</string>
@@ -10370,7 +10102,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/globals.svg</normaloff>:/littlenavmap/resources/icons/globals.svg</iconset>
    </property>
    <property name="text">
-    <string>Show Information for %1</string>
+    <string>Show &amp;Information for %1</string>
    </property>
    <property name="toolTip">
     <string>Show Information for airport</string>
@@ -10388,7 +10120,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/search.svg</normaloff>:/littlenavmap/resources/icons/search.svg</iconset>
    </property>
    <property name="text">
-    <string>Show %1 in Search</string>
+    <string>Show %1 in &amp;Search</string>
    </property>
    <property name="toolTip">
     <string>Show airport in search window</string>
@@ -10403,7 +10135,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/showonmap.svg</normaloff>:/littlenavmap/resources/icons/showonmap.svg</iconset>
    </property>
    <property name="text">
-    <string>Show %1 on Map</string>
+    <string>Show %1 on &amp;Map</string>
    </property>
    <property name="toolTip">
     <string>Show the airport on the map</string>
@@ -10687,61 +10419,6 @@ Best track will be selected automatically.</string>
    </property>
    <property name="statusTip">
     <string>Save current map view as an image for AviTab</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsLeveldRte">
-   <property name="text">
-    <string>Export Flight Plan as Level-D &amp;RTE ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as RTE file usable by Level-D aircraft</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as RTE file usable by Level-D aircraft</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsFeelthereFpl">
-   <property name="text">
-    <string>Export Flight Plan as FeelThere &amp;FPL ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as FPL file usable by FeelThere aircraft</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as FPL file usable by FeelThere aircraft</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsEfbr">
-   <property name="text">
-    <string>Export Flight Plan as &amp;EFBR ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as EFBR file usable by the AivlaSoft EFB</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as EFBR file usable by the AivlaSoft EFB</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsQwRte">
-   <property name="text">
-    <string>Export Flight Plan as QualityWings &amp;RTE ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as RTE file usable by QualityWings Aircraft</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as RTE file usable by QualityWings Aircraft</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsMdr">
-   <property name="text">
-    <string>Export Flight Plan as Maddog X &amp;MDR ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as MDR file usable by the Leonardo Maddog X</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as MDR file usable by the Leonardo Maddog X</string>
    </property>
   </action>
   <action name="actionRunWebserver">
@@ -11156,7 +10833,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/hold.svg</normaloff>:/littlenavmap/resources/icons/hold.svg</iconset>
    </property>
    <property name="text">
-    <string>Display Holding at %1</string>
+    <string>Display &amp;Holding at %1</string>
    </property>
    <property name="toolTip">
     <string>Display holding at this position or navaid</string>
@@ -11171,7 +10848,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/holdoff.svg</normaloff>:/littlenavmap/resources/icons/holdoff.svg</iconset>
    </property>
    <property name="text">
-    <string>Remove Holding</string>
+    <string>&amp;Remove Holding</string>
    </property>
    <property name="toolTip">
     <string>Remove this holding</string>
@@ -11188,7 +10865,7 @@ Best track will be selected automatically.</string>
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Distance search options</string>
+    <string>&amp;Distance search options</string>
    </property>
    <property name="toolTip">
     <string>Show distance search options</string>
@@ -11206,17 +10883,6 @@ Best track will be selected automatically.</string>
    </property>
    <property name="statusTip">
     <string>Saves all options and window layout now</string>
-   </property>
-  </action>
-  <action name="actionRouteSaveAsTfdi">
-   <property name="text">
-    <string>Export Flight Plan for TFDi Design 717 ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Save flight plan as XML file usable by the TFDi Design 717</string>
-   </property>
-   <property name="statusTip">
-    <string>Save flight plan as XML file usable by the TFDi Design 717</string>
    </property>
   </action>
   <action name="actionRouteResetAll">
@@ -11243,7 +10909,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routestring.svg</normaloff>:/littlenavmap/resources/icons/routestring.svg</iconset>
    </property>
    <property name="text">
-    <string>Edit Flight Plan Position</string>
+    <string>Edit Flight Plan &amp;Position</string>
    </property>
    <property name="toolTip">
     <string>Edit name and coordinates of user defined flight plan position</string>
@@ -11268,7 +10934,7 @@ Best track will be selected automatically.</string>
   </action>
   <action name="actionRouteSaveAsXIvap">
    <property name="text">
-    <string>Export Flight Plan as X-IvAp FPL ...</string>
+    <string>Export Flight Plan as &amp;X-IvAp FPL ...</string>
    </property>
    <property name="toolTip">
     <string>Save flight plan as FPL file for X-IvAp</string>
@@ -11279,7 +10945,7 @@ Best track will be selected automatically.</string>
   </action>
   <action name="actionRouteSaveAsHtml">
    <property name="text">
-    <string>Export Flight Plan as HTML Page ...</string>
+    <string>Export Flight Plan as &amp;HTML Page ...</string>
    </property>
    <property name="toolTip">
     <string>Export the flight plan as a HTML page</string>
@@ -11305,7 +10971,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routecalc.svg</normaloff>:/littlenavmap/resources/icons/routecalc.svg</iconset>
    </property>
    <property name="text">
-    <string>Calculate Flight Plan</string>
+    <string>&amp;Calculate Flight Plan</string>
    </property>
    <property name="toolTip">
     <string>Calculate a flight plan between departure and destination</string>
@@ -11323,7 +10989,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/routecalc.svg</normaloff>:/littlenavmap/resources/icons/routecalc.svg</iconset>
    </property>
    <property name="text">
-    <string>Calculate Flight Plan between legs</string>
+    <string>&amp;Calculate Flight Plan between legs</string>
    </property>
    <property name="toolTip">
     <string>Calculate flight plan between selected legs</string>
@@ -11421,17 +11087,6 @@ Best track will be selected automatically.</string>
     <string>Ctrl+Shift+P</string>
    </property>
   </action>
-  <action name="actionRouteSaveAsPlnAnnotated">
-   <property name="text">
-    <string>Export Flight Plan &amp;as annotated PLN ...</string>
-   </property>
-   <property name="toolTip">
-    <string>Export Flight Plan as annotated PLN for older Little Navmap versions</string>
-   </property>
-   <property name="statusTip">
-    <string>Export Flight Plan as annotated PLN for older Little Navmap versions</string>
-   </property>
-  </action>
   <action name="actionRouteSaveAirwayWaypoints">
    <property name="checkable">
     <bool>true</bool>
@@ -11444,6 +11099,169 @@ Best track will be selected automatically.</string>
    </property>
    <property name="statusTip">
     <string>Export waypoints instead of airway information</string>
+   </property>
+  </action>
+  <action name="actionRouteSaveAll">
+   <property name="icon">
+    <iconset resource="../../littlenavmap.qrc">
+     <normaloff>:/littlenavmap/resources/icons/filesaveall.svg</normaloff>:/littlenavmap/resources/icons/filesaveall.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Multiexport Flight Plan</string>
+   </property>
+   <property name="toolTip">
+    <string>Multiexport Flight Plan into several formats</string>
+   </property>
+   <property name="statusTip">
+    <string>Multiexport Flight Plan into several formats</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+M</string>
+   </property>
+  </action>
+  <action name="actionRouteSaveAllOptions">
+   <property name="icon">
+    <iconset resource="../../littlenavmap.qrc">
+     <normaloff>:/littlenavmap/resources/icons/filesaveallopts.svg</normaloff>:/littlenavmap/resources/icons/filesaveallopts.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Multiexport Flight Plan &amp;Options ...</string>
+   </property>
+   <property name="toolTip">
+    <string>Configure the Export for Flight Plans into several formats</string>
+   </property>
+   <property name="statusTip">
+    <string>Configure the Export for Flight Plans into several formats</string>
+   </property>
+  </action>
+  <action name="actionSearchShowInformationAirport">
+   <property name="icon">
+    <iconset resource="../../littlenavmap.qrc">
+     <normaloff>:/littlenavmap/resources/icons/globals.svg</normaloff>:/littlenavmap/resources/icons/globals.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Show &amp;Information for Airport</string>
+   </property>
+   <property name="toolTip">
+    <string>Show information about the airport</string>
+   </property>
+   <property name="statusTip">
+    <string>Show information about the airport</string>
+   </property>
+  </action>
+  <action name="actionSearchShowOnMapAirport">
+   <property name="icon">
+    <iconset resource="../../littlenavmap.qrc">
+     <normaloff>:/littlenavmap/resources/icons/showonmap.svg</normaloff>:/littlenavmap/resources/icons/showonmap.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Show Airport on &amp;Map</string>
+   </property>
+   <property name="toolTip">
+    <string>Show the airport on the map</string>
+   </property>
+   <property name="statusTip">
+    <string>Show the airport on the map</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataShowDirect">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show &amp;direct connection</string>
+   </property>
+   <property name="toolTip">
+    <string>Show a line between departure and destination for selected entries on the map</string>
+   </property>
+   <property name="statusTip">
+    <string>Show a line between departure and destination for selected entries on the map</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataShowRoute">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show &amp;flight plan preview</string>
+   </property>
+   <property name="toolTip">
+    <string>Show the flight plan shape of the selected entries on the map</string>
+   </property>
+   <property name="statusTip">
+    <string>Show the flight plan shape of the selected entries on the map</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataShowTrack">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show aircraft &amp;trail</string>
+   </property>
+   <property name="toolTip">
+    <string>Show the aircraft trail of selected entries on the map</string>
+   </property>
+   <property name="statusTip">
+    <string>Show the aircraft trail of selected entries on the map</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataSavePlanAs">
+   <property name="text">
+    <string>&amp;Save Flight Plan as ...</string>
+   </property>
+   <property name="iconText">
+    <string>Save flight plan as a new file</string>
+   </property>
+   <property name="toolTip">
+    <string>Save flight plan as a new file</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataOpenPlan">
+   <property name="text">
+    <string>&amp;Open Flight Plan</string>
+   </property>
+   <property name="iconText">
+    <string>Open flight plan as current</string>
+   </property>
+   <property name="toolTip">
+    <string>Open flight plan as current</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataSavePerfAs">
+   <property name="text">
+    <string>Save Aircraft &amp;Perfomance as ...</string>
+   </property>
+   <property name="iconText">
+    <string>Save aircraft perfomance as a new file</string>
+   </property>
+   <property name="toolTip">
+    <string>Save aircraft perfomance as a new file</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataOpenPerf">
+   <property name="text">
+    <string>Open &amp;Aircraft Performance</string>
+   </property>
+   <property name="iconText">
+    <string>Open aircraft performance as current</string>
+   </property>
+   <property name="toolTip">
+    <string>Open Aircraft Performance as current</string>
+   </property>
+  </action>
+  <action name="actionSearchLogdataSaveGpxAs">
+   <property name="text">
+    <string>Save &amp;GPX Trail as ...</string>
+   </property>
+   <property name="iconText">
+    <string>Save aircraft trail into GPX file</string>
+   </property>
+   <property name="toolTip">
+    <string>Save aircraft trail into GPX file</string>
    </property>
   </action>
  </widget>
@@ -11489,12 +11307,9 @@ Best track will be selected automatically.</string>
   <tabstop>checkBoxAirportApprSearch</tabstop>
   <tabstop>checkBoxAirportClosedSearch</tabstop>
   <tabstop>checkBoxAirportJetASearch</tabstop>
-  <tabstop>comboBoxAirportRampSearch</tabstop>
   <tabstop>comboBoxAirportHelipadSearch</tabstop>
-  <tabstop>comboBoxAirportGateSearch</tabstop>
   <tabstop>spinBoxAirportRunwaysMinSearch</tabstop>
   <tabstop>spinBoxAirportRunwaysMaxSearch</tabstop>
-  <tabstop>comboBoxAirportSurfaceSearch</tabstop>
   <tabstop>spinBoxAirportAltitudeMinSearch</tabstop>
   <tabstop>spinBoxAirportAltitudeMaxSearch</tabstop>
   <tabstop>checkBoxAirportDistSearch</tabstop>
@@ -11513,8 +11328,6 @@ Best track will be selected automatically.</string>
   <tabstop>pushButtonNavHelpSearch</tabstop>
   <tabstop>toolButtonNavSearch</tabstop>
   <tabstop>comboBoxNavNavAidSearch</tabstop>
-  <tabstop>comboBoxNavTypeSearch</tabstop>
-  <tabstop>spinBoxNavMaxRangeSearch</tabstop>
   <tabstop>checkBoxNavDistSearch</tabstop>
   <tabstop>spinBoxNavDistMinSearch</tabstop>
   <tabstop>spinBoxNavDistMaxSearch</tabstop>
@@ -11542,8 +11355,6 @@ Best track will be selected automatically.</string>
   <tabstop>lineEditUserdataTags</tabstop>
   <tabstop>lineEditUserdataFilepath</tabstop>
   <tabstop>tableViewUserdata</tabstop>
-  <tabstop>lineEditLogdataDeparture</tabstop>
-  <tabstop>lineEditLogdataDestination</tabstop>
   <tabstop>lineEditLogdataAircraftType</tabstop>
   <tabstop>pushButtonLogdataAdd</tabstop>
   <tabstop>pushButtonLogdataEdit</tabstop>
@@ -11552,10 +11363,6 @@ Best track will be selected automatically.</string>
   <tabstop>pushButtonLogdataClearSelection</tabstop>
   <tabstop>pushButtonLogdataHelp</tabstop>
   <tabstop>toolButtonLogdata</tabstop>
-  <tabstop>lineEditLogdataAircraftModel</tabstop>
-  <tabstop>lineEditLogdataAircraftRegistration</tabstop>
-  <tabstop>lineEditLogdataSimulator</tabstop>
-  <tabstop>lineEditLogdataDescription</tabstop>
   <tabstop>spinBoxLogdataMinDist</tabstop>
   <tabstop>spinBoxLogdataMaxDist</tabstop>
   <tabstop>tableViewLogdata</tabstop>
@@ -11609,7 +11416,7 @@ Best track will be selected automatically.</string>
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroupRouteCalc"/>
   <buttongroup name="buttonGroupRouteCalcAirway"/>
+  <buttongroup name="buttonGroupRouteCalc"/>
  </buttongroups>
 </ui>

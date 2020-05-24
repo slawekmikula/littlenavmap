@@ -15,37 +15,4 @@
 * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 *****************************************************************************/
 
-#ifndef USERDATAEXPORTDIALOG_H
-#define USERDATAEXPORTDIALOG_H
-
-#include <QDialog>
-
-namespace Ui {
-class UserdataExportDialog;
-}
-
-class QAbstractButton;
-
-/* Simple dialog asking for export options before exporting userdata to the various formats */
-class UserdataExportDialog :
-  public QDialog
-{
-  Q_OBJECT
-
-public:
-  UserdataExportDialog(QWidget *parent, bool disableExportSelected, bool disableAppend);
-  ~UserdataExportDialog();
-
-  bool isAppendToFile() const;
-  bool isExportSelected() const;
-
-  void saveState();
-  void restoreState();
-
-private:
-  void buttonBoxClicked(QAbstractButton *button);
-
-  Ui::UserdataExportDialog *ui;
-};
-
-#endif // USERDATAEXPORTDIALOG_H
+#include "search/querybuilder.h"

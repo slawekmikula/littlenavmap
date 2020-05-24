@@ -72,6 +72,7 @@ const QLatin1Literal ACTIONS_SHOW_INVALID_PROC_WARNING("Actions/ShowInvalidProce
 const QLatin1Literal ACTIONS_SHOW_RESET_VIEW("Actions/ShowResetView");
 const QLatin1Literal ACTIONS_SHOWROUTE_PARKING_WARNING("Actions/ShowRouteParkingWarning");
 const QLatin1Literal ACTIONS_SHOWROUTE_WARNING("Actions/ShowRouteWarning");
+const QLatin1Literal ACTIONS_SHOWROUTE_WARNING_MULTI("Actions/ShowRouteWarningMulti");
 const QLatin1Literal ACTIONS_SHOWROUTE_NO_CYCLE_WARNING("Actions/ShowRouteNoCycleWarning");
 const QLatin1Literal ACTIONS_SHOWROUTE_ERROR("Actions/ShowRouteError");
 const QLatin1Literal ACTIONS_SHOWROUTE_PROC_ERROR("Actions/ShowRouteProcedureError");
@@ -96,6 +97,7 @@ const QLatin1Literal ACTIONS_SHOW_NAVDATA_WARNING("Actions/ShowNavdataWarning");
 const QLatin1Literal ACTIONS_SHOW_CRUISE_ZERO_WARNING("Actions/ShowCruiseZeroWarning");
 
 const QLatin1Literal ACTIONS_SHOW_SAVE_WARNING("Actions/ShowSaveWarning");
+const QLatin1Literal ACTIONS_SHOW_ZOOM_WARNING("Actions/ShowZoomsWarning");
 
 /* Other setting key names */
 const QLatin1Literal DATABASE_BASEPATH("Database/BasePath");
@@ -160,6 +162,9 @@ const QLatin1Literal ROUTEWINDOW_WIDGET_TABS("Route/WidgetTabs");
 const QLatin1Literal TRAFFIC_PATTERN_DIALOG("Route/TrafficPatternDialog");
 const QLatin1Literal TRAFFIC_PATTERN_DIALOG_COLOR("Route/TrafficPatternDialogColor");
 const QLatin1Literal HOLD_DIALOG("Route/HoldDialog");
+const QLatin1Literal ROUTE_EXPORT_DIALOG("RouteExport/RouteExportDialog");
+const QLatin1Literal ROUTE_EXPORT_DIALOG_ZOOM("RouteExport/RouteExportDialogZoom");
+const QLatin1Literal ROUTE_EXPORT_FORMATS("RouteExport/RouteExportFormats");
 const QLatin1Literal HOLD_DIALOG_COLOR("Route/HoldDialogColor");
 const QLatin1Literal CUSTOM_PROCEDURE_DIALOG("Route/CustomProcedureDialog");
 const QLatin1Literal ROUTE_CALC_DIALOG("Route/RouteCalcDialog");
@@ -205,7 +210,7 @@ const QLatin1Literal APPROACHTREE_AIRPORT("ApproachTree/Airport");
 const QLatin1Literal APPROACHTREE_SELECTED_APPR("ApproachTree/SeletedApproach");
 
 /* Export settings dialog */
-const QLatin1Literal USERDATA_EXPORT_DIALOG("UserdataExport/Widget");
+const QLatin1Literal USERDATA_EXPORT_CHOICE_DIALOG("UserdataExport/ChoiceDialog");
 /* Edit dialog */
 const QLatin1Literal USERDATA_EDIT_ADD_DIALOG("UserdataDialog/Widget");
 
@@ -219,6 +224,8 @@ const QLatin1Literal ROUTE_PARKING_DIALOG("Route/ParkingDialog");
 
 const QLatin1Literal LOGDATA_EDIT_ADD_DIALOG("LogdataDialog/Widget");
 const QLatin1Literal LOGDATA_STATS_DIALOG("LogdataStatsDialog/Widget");
+
+const QLatin1Literal LOGDATA_EXPORT_CSV("Logdata/CsvExport");
 
 /* Options dialog */
 const QLatin1Literal OPTIONS_DIALOG_WIDGET("OptionsDialog/Widget");
@@ -237,6 +244,7 @@ const QLatin1Literal OPTIONS_DIALOG_FLIGHTPLAN_PASSED_COLOR("OptionsDialog/Fligh
 const QLatin1Literal OPTIONS_DIALOG_TRAIL_COLOR("OptionsDialog/TrailColor");
 const QLatin1Literal OPTIONS_DIALOG_DISPLAY_OPTIONS("OptionsDialog/DisplayOptions");
 const QLatin1Literal OPTIONS_DIALOG_DISPLAY_OPTIONS_COMPASS_ROSE("OptionsDialog/DisplayOptionsCompassRose");
+const QLatin1Literal OPTIONS_DIALOG_DISPLAY_OPTIONS_MEASUREMENT("OptionsDialog/DisplayOptionsMeasurement");
 const QLatin1Literal OPTIONS_DIALOG_DISPLAY_OPTIONS_ROUTE("OptionsDialog/DisplayOptionsRoute");
 const QLatin1Literal OPTIONS_DIALOG_DISPLAY_OPTIONS_NAVAID("OptionsDialog/DisplayOptionsNavAid");
 const QLatin1Literal OPTIONS_DIALOG_GUI_STYLE_INDEX("OptionsDialog/GuiStyleIndex");
@@ -287,32 +295,12 @@ const QLatin1Literal OPTIONS_GUI_OVERRIDE_LANGUAGE("OptionsDialog/Widget_checkBo
 const QLatin1Literal OPTIONS_GUI_OVERRIDE_LOCALE("OptionsDialog/Widget_checkBoxOptionsGuiOverrideLocale");
 
 /* File dialog patterns */
-#if defined(Q_OS_WIN32)
+#if defined(Q_OS_WIN32) || defined(Q_OS_MACOS)
 const QLatin1Literal FILE_PATTERN_SCENERYCONFIG("(*.cfg)");
 const QLatin1Literal FILE_PATTERN_FLIGHTPLAN_LOAD("(*.lnmpln *.pln *.flp *.fms *.fgfp)");
 const QLatin1Literal FILE_PATTERN_LNMPLN("(*.lnmpln)");
-const QLatin1Literal FILE_PATTERN_PLN("(*.pln)");
-const QLatin1Literal FILE_PATTERN_GFP("(*.gfp)");
-const QLatin1Literal FILE_PATTERN_TXT("(*.txt)");
-const QLatin1Literal FILE_PATTERN_RTE("(*.rte)");
-const QLatin1Literal FILE_PATTERN_MDR("(*.mdr)");
-const QLatin1Literal FILE_PATTERN_FPR("(*.fpr)");
-const QLatin1Literal FILE_PATTERN_FPL("(*.fpl)");
-const QLatin1Literal FILE_PATTERN_CORTEIN("(corte.in)");
-const QLatin1Literal FILE_PATTERN_FLP("(*.flp)");
-const QLatin1Literal FILE_PATTERN_FLIGHTGEAR("(*.fgfp)");
-const QLatin1Literal FILE_PATTERN_FMS("(*.fms)");
-const QLatin1Literal FILE_PATTERN_UFMC("(*.ufmc)");
-const QLatin1Literal FILE_PATTERN_COMPANYROUTES_XML("(companyroutes.xml)");
-const QLatin1Literal FILE_PATTERN_FLTPLAN("(*.fltplan)");
-const QLatin1Literal FILE_PATTERN_BBS_PLN("(*.pln)");
-const QLatin1Literal FILE_PATTERN_VFP("(*.vfp)");
-const QLatin1Literal FILE_PATTERN_EFBR("(*.efbr)");
-const QLatin1Literal FILE_PATTERN_TFDI("(*.xml)");
-
-const QLatin1Literal FILE_PATTERN_GPX("(*.gpx)");
 const QLatin1Literal FILE_PATTERN_KML("(*.kml *.kmz)");
-const QLatin1Literal FILE_PATTERN_HTML("(*.html *.htm)");
+const QLatin1Literal FILE_PATTERN_GPX("(*.gpx)");
 
 const QLatin1Literal FILE_PATTERN_USERDATA_CSV("(*.csv)");
 const QLatin1Literal FILE_PATTERN_USER_FIX_DAT("(user_fix.dat)");
@@ -326,28 +314,8 @@ const QLatin1Literal FILE_PATTERN_SCENERYCONFIG("(*.cfg *.Cfg *.CFG)");
 const QLatin1Literal FILE_PATTERN_FLIGHTPLAN_LOAD(
   "(*.lnmpln *.LNMPLN *.Lnmpln *.LNMpln *.pln *.Pln *.PLN *.flp *.Flp *.FLP *.fms *.Fms *.FMS *.fgfp *.Fgfp *.FGFP)");
 const QLatin1Literal FILE_PATTERN_LNMPLN("(*.lnmpln *.LNMPLN *.Lnmpln *.LNMpln)");
-const QLatin1Literal FILE_PATTERN_PLN("(*.pln *.Pln *.PLN)");
-const QLatin1Literal FILE_PATTERN_GFP("(*.gfp *.Gfp *.GFP)");
-const QLatin1Literal FILE_PATTERN_TXT("(*.txt *.Txt *.TXT)");
-const QLatin1Literal FILE_PATTERN_RTE("(*.rte *.Rte *.RTE)");
-const QLatin1Literal FILE_PATTERN_MDR("(*.mdr *.Mdr *.MDR)");
-const QLatin1Literal FILE_PATTERN_FPR("(*.fpr *.Fpr *.FPR)");
-const QLatin1Literal FILE_PATTERN_FPL("(*.fpl *.Fpl *.FPL)");
-const QLatin1Literal FILE_PATTERN_CORTEIN("(corte.in Corte.in CORTE.IN)");
-const QLatin1Literal FILE_PATTERN_FLP("(*.flp *.Flp *.FLP)");
-const QLatin1Literal FILE_PATTERN_FLIGHTGEAR("(*.fgfp *.Fgfp *.FgFp *.FGFP)");
-const QLatin1Literal FILE_PATTERN_FMS("(*.fms *.Fms *.FMS)");
-const QLatin1Literal FILE_PATTERN_UFMC("(*.ufmc *.Ufmc *.UFMC)");
-const QLatin1Literal FILE_PATTERN_COMPANYROUTES_XML("(companyroutes.xml Companyroutes.xml COMPANYROUTES.XML)");
-const QLatin1Literal FILE_PATTERN_FLTPLAN("(*.fltplan *.Fltplan *.FLTPLAN)");
-const QLatin1Literal FILE_PATTERN_BBS_PLN("(*.pln *.Pln *.PLN)");
-const QLatin1Literal FILE_PATTERN_VFP("(*.vfp *.Vfp *.VFP)");
-const QLatin1Literal FILE_PATTERN_EFBR("(*.efbr *.Efbr *.EFBR)");
-const QLatin1Literal FILE_PATTERN_TFDI("(*.xml *.Xml *.XML)");
-
-const QLatin1Literal FILE_PATTERN_GPX("(*.gpx *.Gpx *.GPX)");
 const QLatin1Literal FILE_PATTERN_KML("(*.kml *.KML *.kmz *.KMZ)");
-const QLatin1Literal FILE_PATTERN_HTML("(*.html *.Html *.HTML)");
+const QLatin1Literal FILE_PATTERN_GPX("(*.gpx *.GPX *.Gpx)");
 
 const QLatin1Literal FILE_PATTERN_USERDATA_CSV("(*.csv *.Csv *.CSV)");
 const QLatin1Literal FILE_PATTERN_USER_FIX_DAT("(user_fix.dat)");

@@ -629,6 +629,18 @@ struct MapLogbookEntry
     return l;
   }
 
+  atools::geo::Line line() const
+  {
+    if(departurePos.isValid() && destinationPos.isValid())
+      return atools::geo::Line(departurePos, destinationPos);
+    else if(departurePos.isValid())
+      return atools::geo::Line(departurePos);
+    else if(destinationPos.isValid())
+      return atools::geo::Line(destinationPos);
+
+    return atools::geo::Line();
+  }
+
   atools::geo::Rect bounding() const
   {
     atools::geo::Rect rect(departurePos);
@@ -1083,8 +1095,6 @@ struct DistanceMarker
   QColor color; /* Line color depends on origin (airport or navaid type */
   atools::geo::Pos from, to;
   float magvar;
-
-  bool isRhumbLine;
 
   bool isValid() const
   {

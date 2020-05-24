@@ -153,6 +153,39 @@ void AircraftPerfController::edit()
   }
 }
 
+void AircraftPerfController::loadStr(const QString& string)
+{
+  qDebug() << Q_FUNC_INFO;
+
+  try
+  {
+    if(checkForChanges())
+    {
+      currentFilepath.clear();
+      perf->loadXmlStr(string);
+      changed = false;
+      windChangeTimer.stop();
+      mainWindow->showAircraftPerformance();
+      NavApp::setStatusMessage(tr("Aircraft performance loaded."));
+    }
+  }
+  catch(atools::Exception& e)
+  {
+    NavApp::deleteSplashScreen();
+    atools::gui::ErrorHandler(mainWindow).handleException(e);
+    noPerfLoaded();
+  }
+  catch(...)
+  {
+    NavApp::deleteSplashScreen();
+    atools::gui::ErrorHandler(mainWindow).handleUnknownException();
+    noPerfLoaded();
+  }
+
+  updateActionStates();
+  emit aircraftPerformanceChanged(perf);
+}
+
 void AircraftPerfController::loadFile(const QString& perfFile)
 {
   qDebug() << Q_FUNC_INFO;
@@ -226,7 +259,7 @@ void AircraftPerfController::restartCollection(bool quiet)
   if(!quiet)
     result = atools::gui::Dialog(mainWindow).
              showQuestionMsgBox(lnm::ACTIONS_SHOW_RESET_PERF,
-                                tr("Reset performance collection and loose all current values?"),
+                                tr("Reset performance collection and lose all current values?"),
                                 tr("Do not &show this dialog again."),
                                 QMessageBox::Yes | QMessageBox::No,
                                 QMessageBox::No, QMessageBox::Yes);
@@ -320,7 +353,7 @@ bool AircraftPerfController::save()
     bool retval = true;
     try
     {
-      perf->save(currentFilepath);
+      perf->saveXml(currentFilepath);
       fileHistory->addFile(currentFilepath);
       changed = false;
       NavApp::setStatusMessage(tr("Aircraft performance saved."));
@@ -345,23 +378,71 @@ bool AircraftPerfController::save()
   }
 }
 
-bool AircraftPerfController::saveAs()
+bool AircraftPerfController::saveAsStr(const QString& string)
 {
   qDebug() << Q_FUNC_INFO;
   bool retval = false;
-  QString perfFile = atools::gui::Dialog(mainWindow).saveFileDialog(
+
+  try
+  {
+    QString perfFile = saveAsFileDialog();
+    if(!perfFile.isEmpty())
+    {
+      QFile file(perfFile);
+      if(file.open(QIODevice::WriteOnly | QIODevice::Text))
+      {
+        QTextStream stream(&file);
+        stream.setCodec("UTF-8");
+        stream << string.toUtf8();
+        file.close();
+      }
+      else
+        atools::gui::ErrorHandler(mainWindow).handleIOError(file, tr("Cannot save file."));
+    }
+  }
+  catch(atools::Exception& e)
+  {
+    atools::gui::ErrorHandler(mainWindow).handleException(e);
+    retval = false;
+  }
+  catch(...)
+  {
+    atools::gui::ErrorHandler(mainWindow).handleUnknownException();
+    retval = false;
+  }
+  return retval;
+}
+
+QString AircraftPerfController::saveAsFileDialog() const
+{
+  return atools::gui::Dialog(mainWindow).saveFileDialog(
     tr("Save Aircraft Performance File"),
     tr("Aircraft Performance Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_AIRCRAFT_PERF),
     "lnmperf", "AircraftPerformance/",
     QString(), currentFilepath.isEmpty() ? perf->getName() + ".lnmperf" : QFileInfo(currentFilepath).fileName(),
     false /* confirm overwrite */, OptionData::instance().getFlags2() & opts2::PROPOSE_FILENAME);
+}
+
+QString AircraftPerfController::openFileDialog() const
+{
+  return atools::gui::Dialog(mainWindow).openFileDialog(
+    tr("Open Aircraft Performance File"),
+    tr("Aircraft Performance Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_AIRCRAFT_PERF),
+    "AircraftPerformance/");
+}
+
+bool AircraftPerfController::saveAs()
+{
+  qDebug() << Q_FUNC_INFO;
+  bool retval = false;
 
   try
   {
+    QString perfFile = saveAsFileDialog();
     if(!perfFile.isEmpty())
     {
       currentFilepath = perfFile;
-      perf->save(perfFile);
+      perf->saveXml(perfFile);
       changed = false;
       retval = true;
       fileHistory->addFile(perfFile);
@@ -608,7 +689,7 @@ void AircraftPerfController::updateReport()
     // Description and file =======================================================
     if(!perf->getDescription().isEmpty())
     {
-      html.p().b(tr("Performance File Description")).pEnd();
+      html.p().b(tr("Remarks")).pEnd();
       html.table(1, 2, 0, 100, html.getRowBackColor());
       html.tr().td(perf->getDescription(), atools::util::html::AUTOLINK).trEnd();
       html.tableEnd();
@@ -769,8 +850,7 @@ void AircraftPerfController::fuelReportFilepath(atools::util::HtmlBuilder& html,
 
 bool AircraftPerfController::isPerformanceFile(const QString& file)
 {
-  QStringList lines = atools::probeFile(file, 30);
-  return lines.contains("[options]") && lines.contains("[perf]");
+  return atools::fs::perf::AircraftPerf::detectFormat(file) != atools::fs::perf::FORMAT_NONE;
 }
 
 float AircraftPerfController::getFuelReserveAtDestinationLbs() const
@@ -1061,7 +1141,7 @@ void AircraftPerfController::fuelReport(atools::util::HtmlBuilder& html, bool pr
 
   if(print && !perf->getDescription().isEmpty())
   {
-    html.p().b(tr("Performance File Description")).pEnd();
+    html.p().b(tr("Remarks")).pEnd();
     html.table(1).row2(QString(), perf->getDescription()).tableEnd();
   }
 }

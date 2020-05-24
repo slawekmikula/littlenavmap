@@ -338,6 +338,8 @@ SOURCES += \
   src/routeexport/routeexport.cpp \
   src/routeexport/routeexportdata.cpp \
   src/routeexport/routeexportdialog.cpp \
+  src/routeexport/routeexportformat.cpp \
+  src/routeexport/routemultiexportdialog.cpp \
   src/routestring/routestringdialog.cpp \
   src/routestring/routestringreader.cpp \
   src/routestring/routestringtypes.cpp \
@@ -354,6 +356,7 @@ SOURCES += \
   src/search/onlineclientsearch.cpp \
   src/search/onlineserversearch.cpp \
   src/search/proceduresearch.cpp \
+  src/search/querybuilder.cpp \
   src/search/searchbasetable.cpp \
   src/search/searchcontroller.cpp \
   src/search/sqlcontroller.cpp \
@@ -365,7 +368,6 @@ SOURCES += \
   src/track/trackmanager.cpp \
   src/userdata/userdatacontroller.cpp \
   src/userdata/userdatadialog.cpp \
-  src/userdata/userdataexportdialog.cpp \
   src/userdata/userdataicons.cpp \
   src/weather/weatherreporter.cpp \
   src/weather/windreporter.cpp \
@@ -491,6 +493,8 @@ HEADERS  += \
   src/routeexport/routeexport.h \
   src/routeexport/routeexportdata.h \
   src/routeexport/routeexportdialog.h \
+  src/routeexport/routeexportformat.h \
+  src/routeexport/routemultiexportdialog.h \
   src/routestring/routestringdialog.h \
   src/routestring/routestringreader.h \
   src/routestring/routestringtypes.h \
@@ -507,6 +511,7 @@ HEADERS  += \
   src/search/onlineclientsearch.h \
   src/search/onlineserversearch.h \
   src/search/proceduresearch.h \
+  src/search/querybuilder.h \
   src/search/searchbasetable.h \
   src/search/searchcontroller.h \
   src/search/sqlcontroller.h \
@@ -518,7 +523,6 @@ HEADERS  += \
   src/track/trackmanager.h \
   src/userdata/userdatacontroller.h \
   src/userdata/userdatadialog.h \
-  src/userdata/userdataexportdialog.h \
   src/userdata/userdataicons.h \
   src/weather/weatherreporter.h \
   src/weather/windreporter.h \
@@ -550,9 +554,9 @@ FORMS += \
   src/route/parkingdialog.ui \
   src/route/userwaypointdialog.ui \
   src/routeexport/routeexportdialog.ui \
+  src/routeexport/routemultiexportdialog.ui \
   src/routestring/routestringdialog.ui \
-  src/userdata/userdatadialog.ui \
-  src/userdata/userdataexportdialog.ui
+  src/userdata/userdatadialog.ui
 
 RESOURCES += \
   littlenavmap.qrc

@@ -47,6 +47,7 @@ class MapScale;
 class MapWidget;
 class SymbolPainter;
 class WaypointTrackQuery;
+class AircraftTrack;
 
 namespace map {
 struct MapAirport;
@@ -83,6 +84,7 @@ struct PaintContext
 
   optsd::DisplayOptions dispOpts;
   optsd::DisplayOptionsRose dispOptsRose;
+  optsd::DisplayOptionsMeasurement dispOptsMeasurement;
   optsd::DisplayOptionsRoute dispOptsRoute;
   opts::Flags flags;
   opts2::Flags2 flags2;
@@ -133,6 +135,11 @@ struct PaintContext
   bool  dOptRose(const optsd::DisplayOptionsRose& opts) const
   {
     return dispOptsRose & opts;
+  }
+
+  bool  dOptMeasurement(const optsd::DisplayOptionsMeasurement& opts) const
+  {
+    return dispOptsMeasurement & opts;
   }
 
   bool  dOptRoute(const optsd::DisplayOptionsRoute& opts) const
@@ -207,7 +214,6 @@ protected:
                    float radiusNm, bool fast, int& xtext, int& ytext);
 
   /* Drawing functions for simple geometry */
-  void drawLineString(const PaintContext *context, const Marble::GeoDataLineString& linestring);
   void drawLineString(const PaintContext *context, const atools::geo::LineString& linestring);
   void drawLine(const PaintContext *context, const atools::geo::Line& line);
   void drawCircle(const PaintContext *context, const atools::geo::Pos& center, int radius);
@@ -263,6 +269,13 @@ protected:
   /* Interface method to QPixmapCache*/
   void getPixmap(QPixmap& pixmap, const QString& resource, int size);
 
+  /* Paint aircraft track or line string. Optimized for large amount of points */
+  void paintTrack(const PaintContext *context, const AircraftTrack& aircraftTrack);
+  void paintTrack(const PaintContext *context, const atools::geo::LineString& linestring);
+
+  /* Minimum length in pixel of a track segment to be drawn */
+  static Q_DECL_CONSTEXPR int TRACK_MIN_LINE_LENGTH = 5;
+
   /* Minimum points to use for a circle */
   const int CIRCLE_MIN_POINTS = 16;
   /* Maximum points to use for a circle */
@@ -275,6 +288,18 @@ protected:
   WaypointTrackQuery *waypointQuery;
   AirportQuery *airportQuery;
   MapScale *scale;
+
+private:
+  /* Adapter which allows passing AircraftTrack or a LineString to paintTrackInternal */
+  struct TrackAdapter
+  {
+    virtual const atools::geo::Pos& at(int i) const = 0;
+    virtual int size() const = 0;
+
+  };
+
+  /* Draw a long line with many small segments and optimize drawing */
+  void paintTrackInternal(const PaintContext *context, const TrackAdapter& linestring);
 
 };
 

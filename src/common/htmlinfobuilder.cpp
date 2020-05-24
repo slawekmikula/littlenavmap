@@ -511,7 +511,7 @@ void HtmlInfoBuilder::nearestMapObjectsTextRow(const MapAirport& airport, HtmlBu
                                                bool frequencyCol, bool airportCol) const
 {
   float distance = airport.position.distanceMeterTo(base->position);
-  float bearingTrue = normalizeCourse(airport.position.angleDegToRhumb(base->position));
+  float bearingTrue = normalizeCourse(airport.position.angleDegTo(base->position));
 
   QString url;
   if(base->objType == map::AIRPORT)
@@ -2066,6 +2066,8 @@ bool HtmlInfoBuilder::userpointText(MapUserpoint userpoint, HtmlBuilder& html) c
 
     if(info)
     {
+      html.row2(tr("Magnetic declination:"), map::magvarText(NavApp::getMagVar(userpoint.position)));
+
       if(!rec.isNull("visible_from"))
         html.row2If(tr("Visible from:"), Unit::distNm(rec.valueFloat("visible_from")));
 
@@ -2103,10 +2105,11 @@ bool HtmlInfoBuilder::logEntryText(MapLogbookEntry logEntry, HtmlBuilder& html) 
   if(!logEntry.isValid())
     return false;
 
-  atools::sql::SqlRecord rec = NavApp::getLogdataController()->getLogEntryRecordById(logEntry.id);
+  LogdataController *logdataController = NavApp::getLogdataController();
+  atools::sql::SqlRecord rec = logdataController->getLogEntryRecordById(logEntry.id);
 
   // Update the structure since it might not have the latest changes
-  logEntry = NavApp::getLogdataController()->getLogEntryById(logEntry.id);
+  logEntry = logdataController->getLogEntryById(logEntry.id);
 
   if(!rec.isEmpty() && logEntry.isValid())
   {
@@ -2271,14 +2274,26 @@ bool HtmlInfoBuilder::logEntryText(MapLogbookEntry logEntry, HtmlBuilder& html) 
       }
 
       // Files =======================================================
-      if(!rec.valueStr("flightplan_file").isEmpty() || !rec.valueStr("performance_file").isEmpty())
+      bool perf = logdataController->hasPerfAttached(logEntry.id);
+      bool route = logdataController->hasRouteAttached(logEntry.id);
+      bool track = logdataController->hasTrackAttached(logEntry.id);
+
+      if(!rec.valueStr("flightplan_file").isEmpty() || !rec.valueStr("performance_file").isEmpty() ||
+         perf || track || route)
       {
         html.p(tr("Files"), ahtml::BOLD);
         html.table();
-        html.row2If(tr("Flight plan:"), filepathTextShow(rec.valueStr("flightplan_file")),
+        html.row2If(tr("Flight plan:"),
+                    atools::strJoin({(route ? tr("Attached") : QString()),
+                                     filepathTextShow(rec.valueStr("flightplan_file"), tr("Referenced: "))},
+                                    tr("<br/>")),
                     ahtml::NO_ENTITIES | ahtml::SMALL);
-        html.row2If(tr("Aircraft performance:"), filepathTextShow(rec.valueStr("performance_file")),
+        html.row2If(tr("Aircraft performance:"),
+                    atools::strJoin({(route ? tr("Attached") : QString()),
+                                     filepathTextShow(rec.valueStr("performance_file"), tr("Referenced: "))},
+                                    tr("<br/>")),
                     ahtml::NO_ENTITIES | ahtml::SMALL);
+        html.row2If(tr("Aircraft trail:"), route ? tr("Attached") : QString(), ahtml::NO_ENTITIES | ahtml::SMALL);
         html.tableEnd();
       }
 
@@ -2818,7 +2833,7 @@ void HtmlInfoBuilder::userpointTextRoute(const MapUserpointRoute& userpoint, Htm
       html.row2If(tr("Flight Plan position:"), QString::number(userpoint.routeIndex + 1));
       html.row2If(tr("Region:"), userpoint.region);
       html.row2If(tr("Name:"), userpoint.name);
-      html.row2If(tr("Comment:"), userpoint.comment);
+      html.row2If(tr("Remarks:"), userpoint.comment);
       html.tableEnd();
     }
     else
@@ -3985,7 +4000,7 @@ void HtmlInfoBuilder::addAirportSceneryAndLinks(const MapAirport& airport, HtmlB
   }
 }
 
-QString HtmlInfoBuilder::filepathTextShow(const QString& filepath) const
+QString HtmlInfoBuilder::filepathTextShow(const QString& filepath, const QString& prefix) const
 {
   HtmlBuilder link(true);
 
@@ -3993,9 +4008,10 @@ QString HtmlInfoBuilder::filepathTextShow(const QString& filepath) const
     return QString();
 
   if(QFileInfo::exists(filepath))
-    link.a(filepath, QString("lnm://show?filepath=%1").arg(filepath), ahtml::LINK_NO_UL | ahtml::SMALL);
+    link.small(prefix).a(filepath, QString("lnm://show?filepath=%1").arg(filepath), ahtml::LINK_NO_UL | ahtml::SMALL);
   else
-    link.text(filepath, ahtml::SMALL);
+    link.small(prefix).small(filepath).
+    text(tr(" (File not found)"), ahtml::SMALL | ahtml::BOLD);
   return link.getHtml();
 }
 

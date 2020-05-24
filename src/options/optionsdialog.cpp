@@ -139,6 +139,23 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
     ui->splitterOptions->handle(1)->setStatusTip(ui->splitterOptions->handle(1)->toolTip());
   }
 
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsStartup);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsUserInterface);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsMapGeneral);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsMapNav);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsMapDisplay);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsMapDisplay2);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsMapDisplayOnline);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsUnits);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsSimAircraft);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsFlightPlan);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsWeather);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsWeatherUrls);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsOnline);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsWebServer);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsCacheFiles);
+  // ui->stackedWidgetOptions->removeWidget(ui->stackedWidgetOptionsScenery);
+
   /* *INDENT-OFF* */
   QListWidget*list = ui->listWidgetOptionPages;
   list->addItem(pageListItem(list, tr("Startup and Updates"), tr("Select what should be reloaded on startup and\nchange update settings."), ":/littlenavmap/resources/icons/littlenavmap.svg"));
@@ -151,7 +168,8 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
   list->addItem(pageListItem(list, tr("Units"), tr("Fuel, distance, speed and coordindate units as well as\noptions for course and heading display."), ":/littlenavmap/resources/icons/units.svg"));
   list->addItem(pageListItem(list, tr("Simulator Aircraft"), tr("Update and movement options for the user aircraft and trail."), ":/littlenavmap/resources/icons/aircraft.svg"));
   list->addItem(pageListItem(list, tr("Flight Plan"), tr("Options for flight plan calculation, saving and loading."), ":/littlenavmap/resources/icons/route.svg"));
-  list->addItem(pageListItem(list, tr("Weather"), tr("Define paths as well weather sources for information and tooltips."), ":/littlenavmap/resources/icons/weather.svg"));
+  list->addItem(pageListItem(list, tr("Weather"), tr("Change weather sources for information and tooltips."), ":/littlenavmap/resources/icons/weather.svg"));
+  list->addItem(pageListItem(list, tr("Weather URLs"), tr("Change web download addresses of weather sources."), ":/littlenavmap/resources/icons/weatherurl.svg"));
   list->addItem(pageListItem(list, tr("Online Flying"), tr("Select online flying services like VATSIM, IVAO or custom."), ":/littlenavmap/resources/icons/aircraft_online.svg"));
   list->addItem(pageListItem(list, tr("Web Server"), tr("Change settings for the internal web server."), ":/littlenavmap/resources/icons/web.svg"));
   list->addItem(pageListItem(list, tr("Cache and Files"), tr("Change map cache, select elevation data source and the path for user airspaces."), ":/littlenavmap/resources/icons/filesave.svg"));
@@ -181,10 +199,8 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
 
   QTreeWidgetItem *route = addTopItem(root, tr("Flight Plan"), tr("Select display options for the flight plan line."));
   addItem<optsd::DisplayOptionsRoute>(route, displayOptItemIndexRoute, tr("Distance"), tr("Show distance along flight plan leg."), optsd::ROUTE_DISTANCE, true);
-  addItem<optsd::DisplayOptionsRoute>(route, displayOptItemIndexRoute, tr("Magnetic rhumb course"), tr("Show magnetic rhumb line course at flight plan leg.\nIndicated with \"R\" if rhumb and great circle are selected."), optsd::ROUTE_MAG_COURSE_RHUMB, true);
-  addItem<optsd::DisplayOptionsRoute>(route, displayOptItemIndexRoute, tr("True rhumb course"), tr("Show true rhumb line course at flight plan leg.\nIndicated with \"R\" if both rhumb and great circle are selected."), optsd::ROUTE_TRUE_COURSE_RHUMB, false);
-  addItem<optsd::DisplayOptionsRoute>(route, displayOptItemIndexRoute, tr("Magnetic great circle course"), tr("Show magnetic great circle start course at flight plan leg.\nIndicated with \"GC\" if both rhumb and great circle are selected."), optsd::ROUTE_MAG_COURSE_GC, false);
-  addItem<optsd::DisplayOptionsRoute>(route, displayOptItemIndexRoute, tr("True great circle course"), tr("Show true great circle start course at flight plan leg.\nIndicated with \"GC\" if rhumb and great circle are selected."), optsd::ROUTE_TRUE_COURSE_GC, false);
+  addItem<optsd::DisplayOptionsRoute>(route, displayOptItemIndexRoute, tr("Magnetic great circle course"), tr("Show magnetic great circle start course at flight plan leg."), optsd::ROUTE_MAG_COURSE_GC, false);
+  addItem<optsd::DisplayOptionsRoute>(route, displayOptItemIndexRoute, tr("True great circle course"), tr("Show true great circle start course at flight plan leg."), optsd::ROUTE_TRUE_COURSE_GC, false);
 
   QTreeWidgetItem *userAircraft = addTopItem(root, tr("User Aircraft"), tr("Select text labels and other options for the user aircraft."));
   addItem<optsd::DisplayOptions>(userAircraft, displayOptItemIndex, tr("Registration"), QString(), optsd::ITEM_USER_AIRCRAFT_REGISTRATION);
@@ -220,6 +236,13 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
   addItem<optsd::DisplayOptionsRose>(compassRose, displayOptItemIndexRose, tr("Track Label"), tr("Show track label for user aircraft."), optsd::ROSE_TRACK_LABEL, true);
   addItem<optsd::DisplayOptionsRose>(compassRose, displayOptItemIndexRose, tr("Crab Angle Indicator"), tr("Show the crab angle for the user aircraft as a small magenta circle."), optsd::ROSE_CRAB_ANGLE, true);
   addItem<optsd::DisplayOptionsRose>(compassRose, displayOptItemIndexRose, tr("Course to Next Waypoint"), tr("Show the course to next waypoint for the user aircraft as a small magenta line."), optsd::ROSE_NEXT_WAYPOINT, true);
+
+  QTreeWidgetItem *measurement = addTopItem(root, tr("Measurement Lines"), tr("Select display options measurement lines."));
+  addItem<optsd::DisplayOptionsMeasurement>(measurement, displayOptItemIndexMeasurement, tr("Distance"), tr("Great circle distance for measurement line."), optsd::MEASUREMNENT_DIST, true);
+  addItem<optsd::DisplayOptionsMeasurement>(measurement, displayOptItemIndexMeasurement, tr("Magnetic Course"), tr("Show magnetic course for start and end of line."), optsd::MEASUREMNENT_MAG, true);
+  addItem<optsd::DisplayOptionsMeasurement>(measurement, displayOptItemIndexMeasurement, tr("True Course"), tr("Show true course for start and end of line."), optsd::MEASUREMNENT_TRUE, true);
+  addItem<optsd::DisplayOptionsMeasurement>(measurement, displayOptItemIndexMeasurement, tr("Navaid or airport ident"), tr("Show ident if attached to navaid or airport.\n"
+                                                                                                                           "Also show frequency if attached to a radio navaid. "), optsd::MEASUREMNENT_LABEL, true);
   /* *INDENT-ON* */
 
   rangeRingValidator = new RangeRingValidator;
@@ -246,6 +269,7 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
      ui->checkBoxOptionsMapTooltipAirspace,
      ui->checkBoxOptionsMapTooltipWind,
      ui->checkBoxOptionsMapClickAirport,
+     ui->checkBoxOptionsMapClickAirportProcs,
      ui->checkBoxOptionsMapClickNavaid,
      ui->checkBoxOptionsMapClickAirspace,
      ui->checkBoxOptionsMapUndock,
@@ -458,6 +482,9 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
           this, &OptionsDialog::weatherXplaneWindPathSelectClicked);
 
   // ===========================================================================
+  // Map
+  connect(ui->checkBoxOptionsMapClickAirport, &QCheckBox::toggled, this, &OptionsDialog::mapClickAirportProcsToggled);
+
   // Map navigation
   connect(ui->radioButtonOptionsMapNavDragMove, &QRadioButton::clicked, this, &OptionsDialog::updateNavOptions);
   connect(ui->radioButtonOptionsMapNavClickCenter, &QRadioButton::clicked, this, &OptionsDialog::updateNavOptions);
@@ -602,6 +629,7 @@ void OptionsDialog::open()
   updateWebServerStatus();
   eastWestRuleClicked();
   updateWidgetUnits();
+  mapClickAirportProcsToggled();
 
   QDialog::open();
 }
@@ -827,6 +855,7 @@ void OptionsDialog::saveState()
                            false /* save visibility */, true /* block signals */).save(widgets);
   saveDisplayOptItemStates(displayOptItemIndex, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS);
   saveDisplayOptItemStates(displayOptItemIndexRose, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_COMPASS_ROSE);
+  saveDisplayOptItemStates(displayOptItemIndexMeasurement, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_MEASUREMENT);
   saveDisplayOptItemStates(displayOptItemIndexRoute, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_ROUTE);
   saveDisplayOptItemStates(displayOptItemIndexNavAid, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_NAVAID);
 
@@ -886,6 +915,7 @@ void OptionsDialog::restoreState()
                            false /*save visibility*/, true /*block signals*/).restore(widgets);
   restoreOptionItemStates(displayOptItemIndex, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS);
   restoreOptionItemStates(displayOptItemIndexRose, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_COMPASS_ROSE);
+  restoreOptionItemStates(displayOptItemIndexMeasurement, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_MEASUREMENT);
   restoreOptionItemStates(displayOptItemIndexRoute, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_ROUTE);
   restoreOptionItemStates(displayOptItemIndexNavAid, lnm::OPTIONS_DIALOG_DISPLAY_OPTIONS_NAVAID);
 
@@ -944,8 +974,7 @@ void OptionsDialog::restoreOptionItemStates(const QHash<TYPE, QTreeWidgetItem *>
   {
     QString optName = optionPrefix + "_" + QString::number(dispOpt);
     if(settings.contains(optName))
-      index.value(dispOpt)->
-      setCheckState(0, settings.valueBool(optName, false) ? Qt::Checked : Qt::Unchecked);
+      index.value(dispOpt)->setCheckState(0, settings.valueBool(optName, false) ? Qt::Checked : Qt::Unchecked);
   }
 }
 
@@ -1273,8 +1302,8 @@ void OptionsDialog::widgetsToOptionData()
   data.displayOptions = optsd::ITEM_NONE;
   displayOptWidgetToOptionData(data.displayOptions, displayOptItemIndex);
 
-  data.displayOptionsRose = optsd::ROSE_NONE;
-  displayOptWidgetToOptionData(data.displayOptionsRose, displayOptItemIndexRose);
+  data.displayOptionsMeasurement = optsd::MEASUREMNENT_NONE;
+  displayOptWidgetToOptionData(data.displayOptionsMeasurement, displayOptItemIndexMeasurement);
 
   data.displayOptionsRoute = optsd::ROUTE_NONE;
   displayOptWidgetToOptionData(data.displayOptionsRoute, displayOptItemIndexRoute);
@@ -1352,6 +1381,7 @@ void OptionsDialog::widgetsToOptionData()
   data.displayTooltipOptions.setFlag(optsd::TOOLTIP_WIND, ui->checkBoxOptionsMapTooltipWind->isChecked());
 
   data.displayClickOptions.setFlag(optsd::CLICK_AIRPORT, ui->checkBoxOptionsMapClickAirport->isChecked());
+  data.displayClickOptions.setFlag(optsd::CLICK_AIRPORT_PROC, ui->checkBoxOptionsMapClickAirportProcs->isChecked());
   data.displayClickOptions.setFlag(optsd::CLICK_NAVAID, ui->checkBoxOptionsMapClickNavaid->isChecked());
   data.displayClickOptions.setFlag(optsd::CLICK_AIRSPACE, ui->checkBoxOptionsMapClickAirspace->isChecked());
 
@@ -1512,6 +1542,7 @@ void OptionsDialog::optionDataToWidgets(const OptionData& data)
   trailColor = data.trailColor;
   displayOptDataToWidget(data.displayOptions, displayOptItemIndex);
   displayOptDataToWidget(data.displayOptionsRose, displayOptItemIndexRose);
+  displayOptDataToWidget(data.displayOptionsMeasurement, displayOptItemIndexMeasurement);
   displayOptDataToWidget(data.displayOptionsRoute, displayOptItemIndexRoute);
   displayOptDataToWidget(data.displayOptionsNavAid, displayOptItemIndexNavAid);
 
@@ -1585,6 +1616,7 @@ void OptionsDialog::optionDataToWidgets(const OptionData& data)
   ui->checkBoxOptionsMapTooltipWind->setChecked(data.displayTooltipOptions.testFlag(optsd::TOOLTIP_WIND));
 
   ui->checkBoxOptionsMapClickAirport->setChecked(data.displayClickOptions.testFlag(optsd::CLICK_AIRPORT));
+  ui->checkBoxOptionsMapClickAirportProcs->setChecked(data.displayClickOptions.testFlag(optsd::CLICK_AIRPORT_PROC));
   ui->checkBoxOptionsMapClickNavaid->setChecked(data.displayClickOptions.testFlag(optsd::CLICK_NAVAID));
   ui->checkBoxOptionsMapClickAirspace->setChecked(data.displayClickOptions.testFlag(optsd::CLICK_AIRSPACE));
 
@@ -2237,4 +2269,9 @@ void OptionsDialog::updateWebOptionsFromGui()
     webController->setEncrypted(ui->checkBoxOptionsWebEncrypted->isChecked());
     webController->restartServer(true /* force */);
   }
+}
+
+void OptionsDialog::mapClickAirportProcsToggled()
+{
+  ui->checkBoxOptionsMapClickAirportProcs->setEnabled(ui->checkBoxOptionsMapClickAirport->isChecked());
 }

@@ -263,6 +263,8 @@ private:
   virtual map::MapSunShading sunShadingFromUi() override;
   void sunShadingToUi(map::MapSunShading sunShading);
 
+  virtual bool checkPos(const atools::geo::Pos& pos) override;
+
   /* Connect menu actions to overlays */
   void connectOverlayMenus();
 
@@ -285,8 +287,8 @@ private:
   void elevationDisplayTimerTimeout();
 
   /* Start a line measurement after context menu selection or click+modifier */
-  void addMeasurement(const atools::geo::Pos& pos, bool rhumb, const map::MapSearchResult& result);
-  void addMeasurement(const atools::geo::Pos& pos, bool rhumb, const map::MapAirport *airport, const map::MapVor *vor,
+  void addMeasurement(const atools::geo::Pos& pos, const map::MapSearchResult& result);
+  void addMeasurement(const atools::geo::Pos& pos, const map::MapAirport *airport, const map::MapVor *vor,
                       const map::MapNdb *ndb, const map::MapWaypoint *waypoint);
 
   /* Timer for takeoff and landing recognition fired */

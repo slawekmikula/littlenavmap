@@ -1146,14 +1146,14 @@ QDataStream& operator<<(QDataStream& dataStream, const map::RangeMarker& obj)
 QDataStream& operator>>(QDataStream& dataStream, map::DistanceMarker& obj)
 {
   bool dummy = true; // Value was removed
-  dataStream >> obj.text >> obj.color >> obj.from >> obj.to >> obj.magvar >> obj.isRhumbLine >> dummy;
+  dataStream >> obj.text >> obj.color >> obj.from >> obj.to >> obj.magvar >> dummy >> dummy;
   return dataStream;
 }
 
 QDataStream& operator<<(QDataStream& dataStream, const map::DistanceMarker& obj)
 {
-  bool dummyMagvar = true; // Value was removed
-  dataStream << obj.text << obj.color << obj.from << obj.to << obj.magvar << obj.isRhumbLine << dummyMagvar;
+  bool dummy = false; // Value was removed
+  dataStream << obj.text << obj.color << obj.from << obj.to << obj.magvar << dummy << dummy;
   return dataStream;
 }
 
@@ -1345,7 +1345,12 @@ QString airwayAltTextShort(const MapAirway& airway, bool addUnit, bool narrow)
 
 QString airportText(const MapAirport& airport, int elideName)
 {
-  return QObject::tr("Airport %1 (%2)").arg(atools::elideTextShort(airport.name, elideName)).arg(airport.ident);
+  if(!airport.isValid())
+    return QObject::tr("Airport");
+  else if(airport.name.isEmpty())
+    return QObject::tr("Airport %1").arg(airport.ident);
+  else
+    return QObject::tr("Airport %1 (%2)").arg(atools::elideTextShort(airport.name, elideName)).arg(airport.ident);
 }
 
 QString airportTextShort(const MapAirport& airport)

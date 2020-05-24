@@ -324,9 +324,15 @@ MainWindow::MainWindow()
     updateLegend();
     updateWindowTitle();
 
+    // Update clock every second =====================
     clockTimer.setInterval(1000);
     connect(&clockTimer, &QTimer::timeout, this, &MainWindow::updateClock);
     clockTimer.start();
+
+    // Reset render status - change to done after ten seconds =====================
+    renderStatusTimer.setInterval(5000);
+    renderStatusTimer.setSingleShot(true);
+    connect(&renderStatusTimer, &QTimer::timeout, this, &MainWindow::renderStatusReset);
 
     qDebug() << Q_FUNC_INFO << "Constructor done";
   }
@@ -942,6 +948,7 @@ void MainWindow::connectAllSlots()
           perfController, &AircraftPerfController::routeAltitudeChanged);
 
   // Route export signals =======================================================
+  connect(routeExport, &RouteExport::optionsUpdated, this, &MainWindow::updateActionStates);
   connect(routeExport, &RouteExport::showRect, mapWidget, &MapPaintWidget::showRect);
   connect(routeExport, &RouteExport::selectDepartureParking, routeController, &RouteController::selectDepartureParking);
 
@@ -1004,6 +1011,9 @@ void MainWindow::connectAllSlots()
   connect(logSearch, &SearchBaseTable::showRect, mapWidget, &MapPaintWidget::showRect);
   connect(logSearch, &SearchBaseTable::showInformation, infoController, &InfoController::showInformation);
   connect(logSearch, &SearchBaseTable::selectionChanged, this, &MainWindow::searchSelectionChanged);
+  connect(logSearch, &SearchBaseTable::routeSetDeparture, routeController, &RouteController::routeSetDeparture);
+  connect(logSearch, &SearchBaseTable::routeSetDestination, routeController, &RouteController::routeSetDestination);
+  connect(logSearch, &SearchBaseTable::routeAddAlternate, routeController, &RouteController::routeAddAlternate);
 
   // User data ===================================================================================
   UserdataController *userdataController = NavApp::getUserdataController();
@@ -1161,42 +1171,23 @@ void MainWindow::connectAllSlots()
   connect(ui->actionRouteSaveAs, &QAction::triggered, this, &MainWindow::routeSaveAsLnm);
 
   // Flight plan export actions =====================================================================
-  connect(ui->actionRouteSaveAsFlp, &QAction::triggered, routeExport, &RouteExport::routeExportFlp);
-  connect(ui->actionRouteSaveAsPln, &QAction::triggered, routeExport, &RouteExport::routeExportPln);
-  connect(ui->actionRouteSaveAsPlnAnnotated, &QAction::triggered, routeExport, &RouteExport::routeExportPlnAnnotated);
-  connect(ui->actionRouteSaveAsFms11, &QAction::triggered, routeExport, &RouteExport::routeExportFms11);
-  connect(ui->actionRouteSaveAsFms3, &QAction::triggered, routeExport, &RouteExport::routeExportFms3);
-  connect(ui->actionRouteSaveAsFlightGear, &QAction::triggered, routeExport, &RouteExport::routeExportFlightgear);
+  /* *INDENT-OFF* */
+  connect(ui->actionRouteSaveAsPln, &QAction::triggered, [ = ]() { routeExport->routeExportPlnMan(); });
+  connect(ui->actionRouteSaveAsFms11, &QAction::triggered, [ = ]() { routeExport->routeExportFms11Man(); });
+  connect(ui->actionRouteSaveAsFlightGear, &QAction::triggered, [ = ]() { routeExport->routeExportFlightgearMan(); });
+  connect(ui->actionRouteSaveAll, &QAction::triggered, [ = ]() { routeExport->routeMultiExport(); });
+  connect(ui->actionRouteSaveAllOptions, &QAction::triggered, [ = ]() { routeExport->routeMulitExportOptions(); });
 
-  connect(ui->actionRouteSaveAsGfp, &QAction::triggered, routeExport, &RouteExport::routeExportGfp);
-  connect(ui->actionRouteSaveAsTxt, &QAction::triggered, routeExport, &RouteExport::routeExportTxt);
-  connect(ui->actionRouteSaveAsRte, &QAction::triggered, routeExport, &RouteExport::routeExportRte);
-  connect(ui->actionRouteSaveAsFpr, &QAction::triggered, routeExport, &RouteExport::routeExportFpr);
-  connect(ui->actionRouteSaveAsFpl, &QAction::triggered, routeExport, &RouteExport::routeExportFpl);
-  connect(ui->actionRouteSaveAsCorteIn, &QAction::triggered, routeExport, &RouteExport::routeExportCorteIn);
-  connect(ui->actionRouteSaveAsGpx, &QAction::triggered, routeExport, &RouteExport::routeExportGpx);
-  connect(ui->actionRouteSaveAsHtml, &QAction::triggered, routeExport, &RouteExport::routeExportHtml);
-  connect(ui->actionRouteShowSkyVector, &QAction::triggered, this, &MainWindow::openInSkyVector);
-
-  connect(ui->actionRouteSaveAsRxpGns, &QAction::triggered, routeExport, &RouteExport::routeExportRxpGns);
-  connect(ui->actionRouteSaveAsRxpGtn, &QAction::triggered, routeExport, &RouteExport::routeExportRxpGtn);
-
-  connect(ui->actionRouteSaveAsIFly, &QAction::triggered, routeExport, &RouteExport::routeExportFltplan);
-  connect(ui->actionRouteSaveAsXFmc, &QAction::triggered, routeExport, &RouteExport::routeExportXFmc);
-  connect(ui->actionRouteSaveAsUfmc, &QAction::triggered, routeExport, &RouteExport::routeExportUFmc);
-  connect(ui->actionRouteSaveAsProSim, &QAction::triggered, routeExport, &RouteExport::routeExportProSim);
-  connect(ui->actionRouteSaveAsBbsAirbus, &QAction::triggered, routeExport, &RouteExport::routeExportBbs);
-  connect(ui->actionRouteSaveAsLeveldRte, &QAction::triggered, routeExport, &RouteExport::routeExportLeveldRte);
-  connect(ui->actionRouteSaveAsFeelthereFpl, &QAction::triggered, routeExport, &RouteExport::routeExportFeelthereFpl);
-  connect(ui->actionRouteSaveAsEfbr, &QAction::triggered, routeExport, &RouteExport::routeExportEfbr);
-  connect(ui->actionRouteSaveAsQwRte, &QAction::triggered, routeExport, &RouteExport::routeExportQwRte);
-  connect(ui->actionRouteSaveAsMdr, &QAction::triggered, routeExport, &RouteExport::routeExportMdr);
-  connect(ui->actionRouteSaveAsTfdi, &QAction::triggered, routeExport, &RouteExport::routeExportTfdi);
+  connect(ui->actionRouteSaveAsGpx, &QAction::triggered, [ = ]() { routeExport->routeExportGpxMan(); });
+  connect(ui->actionRouteSaveAsHtml, &QAction::triggered, [ = ]() { routeExport->routeExportHtmlMan(); });
 
   // Online export options
-  connect(ui->actionRouteSaveAsVfp, &QAction::triggered, routeExport, &RouteExport::routeExportVfp);
-  connect(ui->actionRouteSaveAsIvap, &QAction::triggered, routeExport, &RouteExport::routeExportIvap);
-  connect(ui->actionRouteSaveAsXIvap, &QAction::triggered, routeExport, &RouteExport::routeExportXIvap);
+  connect(ui->actionRouteSaveAsVfp, &QAction::triggered, [ = ]() { routeExport->routeExportVfpMan(); });
+  connect(ui->actionRouteSaveAsIvap, &QAction::triggered, [ = ]() { routeExport->routeExportIvapMan(); });
+  connect(ui->actionRouteSaveAsXIvap, &QAction::triggered, [ = ]() { routeExport->routeExportXIvapMan(); });
+  /* *INDENT-ON* */
+
+  connect(ui->actionRouteShowSkyVector, &QAction::triggered, this, &MainWindow::openInSkyVector);
 
   connect(routeFileHistory, &FileHistoryHandler::fileSelected, this, &MainWindow::routeOpenRecent);
 
@@ -1237,7 +1228,7 @@ void MainWindow::connectAllSlots()
   connect(mapWidget, &MapWidget::showInSearch, searchController, &SearchController::showInSearch);
   // Connect the map widget to the position label.
   connect(mapWidget, &MapPaintWidget::distanceChanged, this, &MainWindow::distanceChanged);
-  connect(mapWidget, &MapPaintWidget::renderStatusChanged, this, &MainWindow::renderStatusChanged);
+  connect(mapWidget, &MapPaintWidget::renderStateChanged, this, &MainWindow::renderStatusChanged);
   connect(mapWidget, &MapPaintWidget::updateActionStates, this, &MainWindow::updateActionStates);
   connect(mapWidget, &MapWidget::showInformation, infoController, &InfoController::showInformation);
   connect(mapWidget, &MapWidget::showProcedures,
@@ -1307,6 +1298,17 @@ void MainWindow::connectAllSlots()
   connect(ui->actionMapShowTracks, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapShowRoute, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapHideRangeRings, &QAction::triggered, this, &MainWindow::clearRangeRingsAndDistanceMarkers);
+
+  connect(ui->actionSearchLogdataShowDirect, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+  connect(ui->actionSearchLogdataShowRoute, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+  connect(ui->actionSearchLogdataShowTrack, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+
+  connect(ui->actionSearchLogdataShowDirect, &QAction::toggled,
+          logdataController, &LogdataController::displayOptionsChanged);
+  connect(ui->actionSearchLogdataShowRoute, &QAction::toggled,
+          logdataController, &LogdataController::displayOptionsChanged);
+  connect(ui->actionSearchLogdataShowTrack, &QAction::toggled,
+          logdataController, &LogdataController::displayOptionsChanged);
 
   connect(ui->actionMapShowAirportWeather, &QAction::toggled, infoController, &InfoController::updateAirportWeather);
 
@@ -1587,7 +1589,7 @@ void MainWindow::actionShortcutLogbookSearchTriggered()
   qDebug() << Q_FUNC_INFO;
   dockHandler->activateWindow(ui->dockWidgetSearch);
   searchController->setCurrentSearchTabId(si::SEARCH_LOG);
-  ui->lineEditLogdataDeparture->setFocus();
+  ui->lineEditLogdataAirport->setFocus();
 }
 
 void MainWindow::actionShortcutFlightPlanTriggered()
@@ -1821,26 +1823,54 @@ void MainWindow::distanceChanged()
   mapDistanceLabel->setText(text);
 }
 
-void MainWindow::renderStatusChanged(RenderStatus status)
+void MainWindow::renderStatusReset()
 {
-  QString prefix =
-    mapWidget->model()->workOffline() ? atools::util::HtmlBuilder::errorMessage(tr("Offline.")) : QString();
+  // Force reset to complete to avoid forever "Waiting"
+  renderStatusUpdateLabel(Marble::Complete, false /* forceUpdate */);
+}
 
-  switch(status)
+void MainWindow::renderStatusUpdateLabel(RenderStatus status, bool forceUpdate)
+{
+  if(status != lastRenderStatus || forceUpdate)
   {
-    case Marble::Complete:
-      renderStatusLabel->setText(prefix + tr("Done."));
-      break;
-    case Marble::WaitingForUpdate:
-      renderStatusLabel->setText(prefix + tr("Waiting for Update ..."));
-      break;
-    case Marble::WaitingForData:
-      renderStatusLabel->setText(prefix + tr("Waiting for Data ..."));
-      break;
-    case Marble::Incomplete:
-      renderStatusLabel->setText(prefix + tr("Incomplete."));
-      break;
+    QString suffix = mapWidget->model()->workOffline() ?
+                     tr(" ") + atools::util::HtmlBuilder::errorMessage(tr("Offline")) :
+                     QString();
+
+    if(mapWidget->getCurrentThemeIndex() >= map::CUSTOM)
+      renderStatusLabel->setText(suffix);
+    else
+    {
+      switch(status)
+      {
+        case Marble::Complete:
+          renderStatusLabel->setText(tr("Done") + suffix);
+          break;
+        case Marble::WaitingForUpdate:
+          renderStatusLabel->setText(tr("Updating") + suffix);
+          break;
+        case Marble::WaitingForData:
+          renderStatusLabel->setText(tr("Loading") + suffix);
+          break;
+        case Marble::Incomplete:
+          renderStatusLabel->setText(tr("Incomplete") + suffix);
+          break;
+      }
+    }
+    lastRenderStatus = status;
   }
+}
+
+void MainWindow::renderStatusChanged(const RenderState& state)
+{
+  RenderStatus status = state.status();
+  renderStatusUpdateLabel(status, false /* forceUpdate */);
+
+  if(status == Marble::WaitingForUpdate || status == Marble::WaitingForData)
+    // Reset forever lasting waiting status if Marble cannot fetch tiles
+    renderStatusTimer.start();
+  else if(status == Marble::Complete || status == Marble::Incomplete)
+    renderStatusTimer.stop();
 }
 
 void MainWindow::routeResetAll()
@@ -1851,13 +1881,14 @@ void MainWindow::routeResetAll()
     DELETE_TRAIL,
     DELETE_ACTIVE_LEG,
     RESTART_PERF,
-    RESTART_LOGBOOK
+    RESTART_LOGBOOK,
+    REMOVE_MARKS
   };
 
   qDebug() << Q_FUNC_INFO;
 
   // Create a dialog with four checkboxes
-  ChoiceDialog choiceDialog(this, QApplication::applicationName() + tr(" - Reset for new Flight"),
+  ChoiceDialog choiceDialog(this, QApplication::applicationName() + tr(" - Reset for new Flight"), QString(),
                             tr("Select items to reset for a new flight"),
                             lnm::RESET_FOR_NEW_FLIGHT_DIALOG, "RESET.html");
 
@@ -1870,31 +1901,25 @@ void MainWindow::routeResetAll()
                    tr("Restarts the background aircraft performance collection"), true);
   choiceDialog.add(RESTART_LOGBOOK, tr("Reset flight detection in &logbook"),
                    tr("Reset the logbook to detect takeoff and landing for new logbook entries"), true);
+  choiceDialog.add(REMOVE_MARKS, tr("&Remove all Ranges, Measurements, Patterns and Holdings"),
+                   tr("Remove all range rings, measurements, traffic patterns and holdings from map"), false);
+
   choiceDialog.restoreState();
 
   if(choiceDialog.exec() == QDialog::Accepted)
   {
-    for(int choice :  choiceDialog.getCheckedIds())
-    {
-      switch(static_cast<Choice>(choice))
-      {
-        case EMPTY_FLIGHT_PLAN:
-          routeNew();
-          break;
-        case DELETE_TRAIL:
-          deleteAircraftTrack(true /* do not ask questions */);
-          break;
-        case DELETE_ACTIVE_LEG:
-          NavApp::getRouteController()->resetActiveLeg();
-          break;
-        case RESTART_PERF:
-          NavApp::getAircraftPerfController()->restartCollection(true /* do not ask questions */);
-          break;
-        case RESTART_LOGBOOK:
-          NavApp::getLogdataController()->resetTakeoffLandingDetection();
-          break;
-      }
-    }
+    if(choiceDialog.isChecked(EMPTY_FLIGHT_PLAN))
+      routeNew();
+    if(choiceDialog.isChecked(DELETE_TRAIL))
+      deleteAircraftTrack(true /* do not ask questions */);
+    if(choiceDialog.isChecked(DELETE_ACTIVE_LEG))
+      NavApp::getRouteController()->resetActiveLeg();
+    if(choiceDialog.isChecked(RESTART_PERF))
+      NavApp::getAircraftPerfController()->restartCollection(true /* do not ask questions */);
+    if(choiceDialog.isChecked(RESTART_LOGBOOK))
+      NavApp::getLogdataController()->resetTakeoffLandingDetection();
+    if(choiceDialog.isChecked(REMOVE_MARKS))
+      clearRangeRingsAndDistanceMarkers(true /* quiet */);
   }
 }
 
@@ -2090,15 +2115,21 @@ void MainWindow::routeOpen()
   routeOpenFile(QString());
 }
 
+QString MainWindow::routeOpenFileDialog()
+{
+  return dialog->openFileDialog(
+    tr("Open Flight Plan"),
+    tr("Flight Plan Files %1;;All Files (*)").
+    arg(lnm::FILE_PATTERN_FLIGHTPLAN_LOAD),
+    "Route/LnmPln", atools::documentsDir());
+}
+
 void MainWindow::routeOpenFile(QString filepath)
 {
   if(routeCheckForChanges())
   {
     if(filepath.isEmpty())
-      filepath = dialog->openFileDialog(
-        tr("Open Flight Plan"),
-        tr("Flight Plan Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_FLIGHTPLAN_LOAD),
-        "Route/LnmPln", atools::documentsDir());
+      filepath = routeOpenFileDialog();
 
     if(!filepath.isEmpty())
     {
@@ -2113,6 +2144,20 @@ void MainWindow::routeOpenFile(QString filepath)
     }
   }
   saveFileHistoryStates();
+}
+
+void MainWindow::routeOpenFileLnmStr(const QString& string)
+{
+  if(routeCheckForChanges())
+  {
+    if(routeController->loadFlightplanLnmStr(string))
+    {
+      if(OptionData::instance().getFlags() & opts::GUI_CENTER_ROUTE)
+        routeCenter();
+      showFlightPlan();
+      setStatusMessage(tr("Flight plan opened."));
+    }
+  }
 }
 
 /* Called from menu or toolbar by action - append flight plan to current one */
@@ -2244,14 +2289,19 @@ bool MainWindow::routeSaveLnm()
   return false;
 }
 
-/* Called from menu or toolbar by action */
-bool MainWindow::routeSaveAsLnm()
+QString MainWindow::routeSaveFileDialogLnm(const QString& filename)
 {
-  QString routeFile = dialog->saveFileDialog(
+  return dialog->saveFileDialog(
     tr("Save Flight Plan as LNMPLN Format"),
     tr("Flight Plan Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_LNMPLN),
-    "lnmpln", "Route/LnmPln", atools::documentsDir(), routeExport->buildDefaultFilename(),
+    "lnmpln", "Route/LnmPln", atools::documentsDir(),
+    filename.isEmpty() ? routeExport->buildDefaultFilename() : filename,
     false /* confirm overwrite */, OptionData::instance().getFlags2() & opts2::PROPOSE_FILENAME);
+}
+
+bool MainWindow::routeSaveAsLnm()
+{
+  QString routeFile = routeSaveFileDialogLnm();
 
   if(!routeFile.isEmpty())
   {
@@ -2280,16 +2330,22 @@ bool MainWindow::openInSkyVector()
   return true;
 }
 
-void MainWindow::clearRangeRingsAndDistanceMarkers()
+void MainWindow::clearRangeRingsAndDistanceMarkers(bool quiet)
 {
-  int result = atools::gui::Dialog(this).
-               showQuestionMsgBox(lnm::ACTIONS_SHOW_DELETE_MARKS,
-                                  tr("Delete all range rings, measurement lines, traffic patterns and holds from map?"),
-                                  tr("Do not &show this dialog again."),
-                                  QMessageBox::Yes | QMessageBox::No,
-                                  QMessageBox::No, QMessageBox::Yes);
+  if(!quiet)
+  {
+    int result = atools::gui::Dialog(this).
+                 showQuestionMsgBox(lnm::ACTIONS_SHOW_DELETE_MARKS,
+                                    tr(
+                                      "Delete all range rings, measurement lines, traffic patterns and holds from map?"),
+                                    tr("Do not &show this dialog again."),
+                                    QMessageBox::Yes | QMessageBox::No,
+                                    QMessageBox::No, QMessageBox::Yes);
 
-  if(result == QMessageBox::Yes)
+    if(result == QMessageBox::Yes)
+      mapWidget->clearRangeRingsAndDistanceMarkers();
+  }
+  else
     mapWidget->clearRangeRingsAndDistanceMarkers();
 }
 
@@ -2746,6 +2802,7 @@ void MainWindow::resetMessages()
   s.setValue(lnm::ACTIONS_SHOW_RESET_VIEW, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_PARKING_WARNING, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_WARNING, true);
+  s.setValue(lnm::ACTIONS_SHOWROUTE_WARNING_MULTI, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_ERROR, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_PROC_ERROR, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_ALTERNATE_ERROR, true);
@@ -2754,6 +2811,7 @@ void MainWindow::resetMessages()
 
   s.setValue(lnm::ACTIONS_SHOW_LOAD_FMS_ALT_WARN, true);
   s.setValue(lnm::ACTIONS_SHOW_SAVE_WARNING, true);
+  s.setValue(lnm::ACTIONS_SHOW_ZOOM_WARNING, true);
   s.setValue(lnm::ACTIONS_SHOW_UPDATE_FAILED, true);
   s.setValue(lnm::ACTIONS_SHOW_SSL_FAILED, true);
   s.setValue(lnm::ACTIONS_SHOW_OVERWRITE_DATABASE, true);
@@ -2935,6 +2993,9 @@ void MainWindow::mainWindowShown()
   // QTimer::singleShot(20, this, &MainWindow::adjustProfileDockHeight);
 
   setStatusMessage(tr("Ready."));
+  renderStatusUpdateLabel(Marble::Complete, true /* forceUpdate */);
+
+  // routeExport->routeMulitExportOptions();
 
   qDebug() << Q_FUNC_INFO << "leave";
 }
@@ -3013,34 +3074,12 @@ void MainWindow::updateActionStates()
   ui->actionRouteAppend->setEnabled(hasFlightplan);
   ui->actionRouteSave->setEnabled(hasFlightplan /* && routeController->hasChanged()*/);
   ui->actionRouteSaveAs->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsGfp->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsTxt->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsRte->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsFlp->setEnabled(hasFlightplan);
   ui->actionRouteSaveAsFlightGear->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsFpr->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsFpl->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsCorteIn->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsFms3->setEnabled(hasFlightplan);
   ui->actionRouteSaveAsFms11->setEnabled(hasFlightplan);
   ui->actionRouteSaveAsPln->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsPlnAnnotated->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsRxpGtn->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsRxpGns->setEnabled(hasFlightplan);
   ui->actionRouteSaveAsGpx->setEnabled(hasFlightplan);
   ui->actionRouteSaveAsHtml->setEnabled(hasFlightplan);
-
-  ui->actionRouteSaveAsIFly->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsXFmc->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsUfmc->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsProSim->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsBbsAirbus->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsFeelthereFpl->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsLeveldRte->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsEfbr->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsQwRte->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsMdr->setEnabled(hasFlightplan);
-  ui->actionRouteSaveAsTfdi->setEnabled(hasFlightplan);
+  ui->actionRouteSaveAll->setEnabled(hasFlightplan && routeExport->hasSelected());
 
   ui->actionRouteSaveAsVfp->setEnabled(hasFlightplan);
   ui->actionRouteSaveAsIvap->setEnabled(hasFlightplan);
@@ -3281,6 +3320,9 @@ void MainWindow::restoreStateMain()
   qDebug() << "printSupport";
   printSupport->restoreState();
 
+  qDebug() << "routeExport";
+  routeExport->restoreState();
+
   widgetState.setBlockSignals(true);
   if(OptionData::instance().getFlags() & opts::STARTUP_LOAD_MAP_SETTINGS)
   {
@@ -3291,18 +3333,23 @@ void MainWindow::restoreStateMain()
                          ui->actionMapShowJetAirways, ui->actionMapShowTracks, ui->actionShowAirspaces,
                          ui->actionMapShowRoute, ui->actionMapShowAircraft, ui->actionMapShowCompassRose,
                          ui->actionMapAircraftCenter, ui->actionMapShowAircraftAi, ui->actionMapShowAircraftAiBoat,
-                         ui->actionMapShowAircraftTrack, ui->actionInfoApproachShowMissedAppr});
+                         ui->actionMapShowAircraftTrack, ui->actionInfoApproachShowMissedAppr,
+                         ui->actionSearchLogdataShowDirect, ui->actionSearchLogdataShowRoute,
+                         ui->actionSearchLogdataShowTrack});
   }
   else
     mapWidget->resetSettingActionsToDefault();
 
   // Map settings that are always loaded
   widgetState.restore({mapProjectionComboBox, mapThemeComboBox, ui->actionMapShowGrid, ui->actionMapShowCities,
-                       ui->actionMapShowHillshading, ui->actionRouteEditMode, ui->actionWorkOffline,
+                       ui->actionMapShowHillshading, ui->actionRouteEditMode,
                        ui->actionRouteSaveSidStarWaypoints, ui->actionRouteSaveApprWaypoints,
                        ui->actionRouteSaveAirwayWaypoints, ui->actionLogdataCreateLogbook, ui->actionMapShowSunShading,
                        ui->actionMapShowAirportWeather, ui->actionMapShowMinimumAltitude, ui->actionRunWebserver});
   widgetState.setBlockSignals(false);
+
+  // Load status and allow to send signals
+  widgetState.restore(ui->actionWorkOffline);
 
   firstApplicationStart = settings.valueBool(lnm::MAINWINDOW_FIRSTAPPLICATIONSTART, true);
 
@@ -3451,6 +3498,10 @@ void MainWindow::saveStateMain()
   if(printSupport != nullptr)
     printSupport->saveState();
 
+  qDebug() << "routeExport";
+  if(routeExport != nullptr)
+    routeExport->saveState();
+
   qDebug() << "optionsDialog";
   if(optionsDialog != nullptr)
     optionsDialog->saveState();
@@ -3523,7 +3574,9 @@ void MainWindow::saveActionStates()
                     ui->actionMapShowCities, ui->actionMapShowSunShading, ui->actionMapShowHillshading,
                     ui->actionMapShowAirportWeather, ui->actionMapShowMinimumAltitude, ui->actionRouteEditMode,
                     ui->actionWorkOffline, ui->actionRouteSaveSidStarWaypoints, ui->actionRouteSaveApprWaypoints,
-                    ui->actionRouteSaveAirwayWaypoints, ui->actionLogdataCreateLogbook, ui->actionRunWebserver});
+                    ui->actionRouteSaveAirwayWaypoints, ui->actionLogdataCreateLogbook, ui->actionRunWebserver,
+                    ui->actionSearchLogdataShowDirect, ui->actionSearchLogdataShowRoute, ui->actionSearchLogdataShowTrack
+                   });
   Settings::instance().syncSettings();
 }
 
@@ -3620,6 +3673,7 @@ void MainWindow::postDatabaseLoad(atools::fs::FsPaths::SimulatorType type)
     infoController->postDatabaseLoad();
     weatherReporter->postDatabaseLoad(type);
     windReporter->postDatabaseLoad(type);
+    routeExport->postDatabaseLoad();
 
     // U actions for flight simulator database switch in main menu
     NavApp::getDatabaseManager()->insertSimSwitchActions();

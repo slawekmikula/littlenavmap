@@ -50,6 +50,7 @@ class RouteExport;
 namespace Marble {
 class LegendWidget;
 class MarbleAboutDialog;
+class RenderState;
 class ElevationModel;
 }
 
@@ -154,9 +155,16 @@ public:
   void buildWeatherContext(map::WeatherContext& weatherContext, const map::MapAirport& airport) const;
   void buildWeatherContextForTooltip(map::WeatherContext& weatherContext, const map::MapAirport& airport) const;
 
-  /* Render status from marble widget */
-  void renderStatusChanged(Marble::RenderStatus status);
+  /* Render state from marble widget. Get the more detailed state since it updates more often */
+  void renderStatusChanged(const Marble::RenderState& state);
 
+  /* Clear render status if no updates appear */
+  void renderStatusReset();
+
+  /* Update label */
+  void renderStatusUpdateLabel(Marble::RenderStatus status, bool forceUpdate);
+
+  /* Show "Too many objects" label if number of map features was truncated */
   void resultTruncated(int truncatedTo);
 
   void setDatabaseErased(bool value)
@@ -193,6 +201,15 @@ public:
   void showLogbookSearch();
   void showUserpointSearch();
   void showRouteCalc();
+
+  /* Load a flight plan in LNMPLN format from a string */
+  void routeOpenFileLnmStr(const QString& string);
+
+  /* Open file dialog for saving a LNMPLN flight plan. Filename will be built if empty. */
+  QString routeSaveFileDialogLnm(const QString& filename = QString());
+
+  /* Show file dialog for opening a flight plan with all supported formats */
+  QString routeOpenFileDialog();
 
 signals:
   /* Emitted when window is shown the first time */
@@ -313,8 +330,8 @@ private:
   /* Set user defined time for sun shading */
   void sunShadingTimeSet();
 
-  /* From menu action - remove all measurment lines, patterns, holds, etc. */
-  void clearRangeRingsAndDistanceMarkers();
+  /* From menu action - remove all measurement lines, patterns, holds, etc. */
+  void clearRangeRingsAndDistanceMarkers(bool quiet = false);
 
   /* Reset flight plan and other for new flight */
   void routeResetAll();
@@ -411,7 +428,8 @@ private:
   bool databasesErased = false;
 
   QString aboutMessage;
-  QTimer clockTimer;
+  QTimer clockTimer, renderStatusTimer;
+  Marble::RenderStatus lastRenderStatus = Marble::Incomplete;
 
 };
 

@@ -304,6 +304,11 @@ public:
 
   QString getMapCopyright() const;
 
+  map::MapThemeComboIndex getCurrentThemeIndex() const
+  {
+    return currentThemeIndex;
+  }
+
 signals:
   /* Emitted whenever the result exceeds the limit clause in the queries */
   void resultTruncated(int truncatedTo);
@@ -386,6 +391,10 @@ protected:
   /* Update internal values for visible map objects based on menus - default is no-op */
   virtual void updateMapObjectsShown();
 
+  /* Check if position can be displayed and show a warning if not (near poles in Mercator, e.g.).
+   * returns true if position is ok. */
+  virtual bool checkPos(const atools::geo::Pos&);
+
   /* Caches complex X-Plane apron geometry as objects in screen coordinates for faster painting. */
   ApronGeometryCache *apronGeometryCache;
 
@@ -453,7 +462,6 @@ private:
 
   /* Avoids dark background when printing in night mode */
   bool printing = false;
-
 };
 
 #endif // LITTLENAVMAP_NAVMAPPAINTWIDGET_H

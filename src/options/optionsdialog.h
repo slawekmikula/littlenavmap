@@ -186,6 +186,8 @@ private:
   /* Update web server with saved parameters */
   void updateWebOptionsFromData();
 
+  void mapClickAirportProcsToggled();
+
   QColor flightplanColor, flightplanProcedureColor, flightplanActiveColor, trailColor, flightplanPassedColor;
 
   Ui::Options *ui;
@@ -199,6 +201,7 @@ private:
   QHash<optsd::DisplayOptions, QTreeWidgetItem *> displayOptItemIndex;
   QHash<optsd::DisplayOptionsNavAid, QTreeWidgetItem *> displayOptItemIndexNavAid;
   QHash<optsd::DisplayOptionsRose, QTreeWidgetItem *> displayOptItemIndexRose;
+  QHash<optsd::DisplayOptionsMeasurement, QTreeWidgetItem *> displayOptItemIndexMeasurement;
   QHash<optsd::DisplayOptionsRoute, QTreeWidgetItem *> displayOptItemIndexRoute;
 
   UnitStringTool *units = nullptr;
