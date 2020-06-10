@@ -76,6 +76,7 @@ ConnectDialog::ConnectDialog(QWidget *parent, bool simConnectAvailable)
   connect(ui->checkBoxConnectFetchAiAircraftXp, &QCheckBox::toggled, this, &ConnectDialog::fetchOptionsClicked);
   connect(ui->checkBoxConnectFetchAiAircraftFsx, &QCheckBox::toggled, this, &ConnectDialog::fetchOptionsClicked);
   connect(ui->checkBoxConnectFetchAiShipFsx, &QCheckBox::toggled, this, &ConnectDialog::fetchOptionsClicked);
+  connect(ui->checkBoxConnectFetchAiShipXp, &QCheckBox::toggled, this, &ConnectDialog::fetchOptionsClicked);
 
   connect(ui->radioButtonConnectDirectFsx, &QRadioButton::toggled, this, &ConnectDialog::updateButtonStates);
   connect(ui->radioButtonConnectDirectXp, &QRadioButton::toggled, this, &ConnectDialog::updateButtonStates);
@@ -173,6 +174,7 @@ void ConnectDialog::enableWidgets()
   ui->labelConnectUpdateRateFsx->setEnabled(ui->radioButtonConnectDirectFsx->isChecked());
   ui->checkBoxConnectFetchAiAircraftFsx->setEnabled(ui->radioButtonConnectDirectFsx->isChecked());
   ui->checkBoxConnectFetchAiShipFsx->setEnabled(ui->radioButtonConnectDirectFsx->isChecked());
+  ui->checkBoxConnectFetchAiShipXp->setEnabled(ui->radioButtonConnectDirectXp->isChecked());
 
   ui->labelConnectUpdateRateXp->setEnabled(ui->radioButtonConnectDirectXp->isChecked());
   ui->spinBoxConnectUpdateRateXp->setEnabled(ui->radioButtonConnectDirectXp->isChecked());
@@ -213,7 +215,7 @@ bool ConnectDialog::isFetchAiShip(cd::ConnectSimType type) const
   if(type == cd::FSX_P3D)
     return ui->checkBoxConnectFetchAiShipFsx->isChecked();
   else if(type == cd::XPLANE)
-    return false;
+    return ui->checkBoxConnectFetchAiShipXp->isChecked();
 
   // Not relevant for remote connections since Little Navconnect decides
   return true;
@@ -259,7 +261,7 @@ void ConnectDialog::fetchOptionsClicked()
 
   if(checkBox == ui->checkBoxConnectFetchAiAircraftFsx || checkBox == ui->checkBoxConnectFetchAiShipFsx)
     emit fetchOptionsChanged(cd::FSX_P3D);
-  else if(checkBox == ui->checkBoxConnectFetchAiAircraftXp)
+  else if(checkBox == ui->checkBoxConnectFetchAiAircraftXp || checkBox == ui->checkBoxConnectFetchAiShipXp)
     emit fetchOptionsChanged(cd::XPLANE);
 }
 
@@ -286,9 +288,12 @@ void ConnectDialog::saveState()
                     ui->checkBoxConnectOnStartup,
                     ui->radioButtonConnectRemote,
                     ui->radioButtonConnectDirectFsx, ui->radioButtonConnectDirectXp,
-                    ui->checkBoxConnectFetchAiAircraftXp, ui->checkBoxConnectFetchAiAircraftFsx,
+                    ui->checkBoxConnectFetchAiAircraftXp,
+                    ui->checkBoxConnectFetchAiAircraftFsx,                    
+                    ui->radioButtonConnectDirectFg,
+                    ui->spinBoxFlightgearUdpPort,
                     ui->checkBoxConnectFetchAiShipFsx,
-                    ui->radioButtonConnectDirectFg, ui->spinBoxFlightgearUdpPort});
+                    ui->checkBoxConnectFetchAiShipXp});
 
   // Save combo entries separately
   QStringList entries;
@@ -315,8 +320,8 @@ void ConnectDialog::restoreState()
                        ui->radioButtonConnectRemote,
                        ui->radioButtonConnectDirectFsx, ui->radioButtonConnectDirectXp,
                        ui->checkBoxConnectFetchAiAircraftXp, ui->checkBoxConnectFetchAiAircraftFsx,
-                       ui->checkBoxConnectFetchAiShipFsx,
-                       ui->radioButtonConnectDirectFg, ui->spinBoxFlightgearUdpPort});
+                       ui->radioButtonConnectDirectFg, ui->spinBoxFlightgearUdpPort,
+                       ui->checkBoxConnectFetchAiShipFsx, ui->checkBoxConnectFetchAiShipXp});
 
   updateButtonStates();
 }

@@ -287,10 +287,11 @@ struct MapAirport
   QString ident, /* Ident in simulator mostly ICAO */
            icao, /* Real ICAO ident */
            iata, /* IATA ident */
+           xpident, /* X-Plane internal unique ident - mostly ICAO */
            name, /* Full name */
            region; /* Two letter region code */
-  int longestRunwayLength = 0, longestRunwayHeading = 0, transitionAltitude = 0;
-  int rating = -1;
+  int longestRunwayLength = 0, longestRunwayHeading = 0, transitionAltitude = 0, rating = -1,
+      flatten /* X-Plane flatten flag. -1 if not set */;
   map::MapAirportFlags flags = AP_NONE;
   float magvar = 0; /* Magnetic variance - positive is east, negative is west */
   bool navdata, /* true if source is third party nav database, false if source is simulator data */
@@ -358,7 +359,8 @@ struct MapRunway
 
   QString surface, shoulder, primaryName, secondaryName, edgeLight;
   int length /* ft */, primaryEndId, secondaryEndId;
-  float heading, patternAlt;
+  float heading, patternAlt,
+        smoothness /* 0 (smooth) to 1 (very rough). Default is 0.25. X-Plane only. -1.f if not set */;
   int width,
       primaryOffset, secondaryOffset, /* part of the runway length */
       primaryBlastPad, secondaryBlastPad, primaryOverrun, secondaryOverrun; /* not part of the runway length all in ft */
@@ -1115,9 +1117,9 @@ QDataStream& operator<<(QDataStream& dataStream, const map::DistanceMarker& obj)
 /* Stores last METARs to avoid unneeded updates in widget */
 struct WeatherContext
 {
-  atools::fs::weather::MetarResult fsMetar, ivaoMetar, noaaMetar;
+  atools::fs::weather::MetarResult fsMetar, ivaoMetar, noaaMetar, vatsimMetar;
   bool isAsDeparture = false, isAsDestination = false;
-  QString asMetar, asType, vatsimMetar, ident;
+  QString asMetar, asType, ident;
 
   bool isEmpty() const
   {
@@ -1147,6 +1149,7 @@ QString patternDirection(const QString& type);
 
 const QString& navName(const QString& type);
 const QString& surfaceName(const QString& surface);
+QString smoothnessName(float smoothness); // X-Plane runway smoothness
 const QString& parkingGateName(const QString& gate);
 const QString& parkingRampName(const QString& ramp);
 const QString& parkingTypeName(const QString& type);

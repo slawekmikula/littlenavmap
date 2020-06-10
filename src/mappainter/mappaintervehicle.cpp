@@ -75,7 +75,7 @@ void MapPainterVehicle::paintAiVehicle(const PaintContext *context, const SimCon
         context->painter->rotate(rotate);
 
         int modelSize = vehicle.getWingSpan() > 0 ? vehicle.getWingSpan() : vehicle.getModelRadiusCorrected() * 2;
-        int minSize = vehicle.getCategory() == atools::fs::sc::BOAT ? 28 : 32;
+        int minSize = vehicle.isAnyBoat() ? 28 : 32;
 
         int size = std::max(context->sz(context->symbolSizeAircraftAi, minSize), scale->getPixelIntForFeet(modelSize));
         int offset = -(size / 2);
@@ -86,7 +86,7 @@ void MapPainterVehicle::paintAiVehicle(const PaintContext *context, const SimCon
         context->painter->resetTransform();
 
         // Build text label
-        if(vehicle.getCategory() != atools::fs::sc::BOAT)
+        if(!vehicle.isAnyBoat())
         {
           context->szFont(context->textSizeAircraftAi);
           paintTextLabelAi(context, x, y, size, vehicle, forceLabel);
@@ -176,8 +176,10 @@ void MapPainterVehicle::paintTextLabelAi(const PaintContext *context, float x, f
                   context->dOpt(optsd::ITEM_AI_AIRCRAFT_FLIGHT_NUMBER));
 
     if(aircraft.getGroundSpeedKts() > 30)
-      appendSpeedText(texts, aircraft, context->dOpt(optsd::ITEM_AI_AIRCRAFT_IAS),
-                      context->dOpt(optsd::ITEM_AI_AIRCRAFT_GS));
+      appendSpeedText(texts, aircraft,
+                      context->dOpt(optsd::ITEM_AI_AIRCRAFT_IAS),
+                      context->dOpt(optsd::ITEM_AI_AIRCRAFT_GS),
+                      context->dOpt(optsd::ITEM_AI_AIRCRAFT_TAS));
 
     if(context->dOpt(optsd::ITEM_AI_AIRCRAFT_DEP_DEST) &&
        (!aircraft.getFromIdent().isEmpty() || !aircraft.getToIdent().isEmpty()))
@@ -232,8 +234,10 @@ void MapPainterVehicle::paintTextLabelUser(const PaintContext *context, float x,
 
   if(aircraft.getGroundSpeedKts() > 30)
   {
-    appendSpeedText(texts, aircraft, context->dOpt(optsd::ITEM_USER_AIRCRAFT_IAS),
-                    context->dOpt(optsd::ITEM_USER_AIRCRAFT_GS));
+    appendSpeedText(texts, aircraft,
+                    context->dOpt(optsd::ITEM_USER_AIRCRAFT_IAS),
+                    context->dOpt(optsd::ITEM_USER_AIRCRAFT_GS),
+                    context->dOpt(optsd::ITEM_USER_AIRCRAFT_TAS));
   }
 
   if(context->dOpt(optsd::ITEM_USER_AIRCRAFT_HEADING) && aircraft.getHeadingDegMag() < atools::fs::sc::SC_INVALID_FLOAT)
@@ -314,7 +318,7 @@ void MapPainterVehicle::appendAtcText(QStringList& texts, const SimConnectAircra
 }
 
 void MapPainterVehicle::appendSpeedText(QStringList& texts, const SimConnectAircraft& aircraft,
-                                        bool ias, bool gs)
+                                        bool ias, bool gs, bool tas)
 {
   QStringList line;
   if(ias && aircraft.getIndicatedSpeedKts() < atools::fs::sc::SC_INVALID_FLOAT)
@@ -322,6 +326,9 @@ void MapPainterVehicle::appendSpeedText(QStringList& texts, const SimConnectAirc
 
   if(gs && aircraft.getGroundSpeedKts() < atools::fs::sc::SC_INVALID_FLOAT)
     line.append(tr("GS %2").arg(Unit::speedKts(aircraft.getGroundSpeedKts())));
+
+  if(tas && aircraft.getTrueAirspeedKts() < atools::fs::sc::SC_INVALID_FLOAT)
+    line.append(tr("TAS %1").arg(Unit::speedKts(aircraft.getTrueAirspeedKts())));
 
   if(!line.isEmpty())
     texts.append(line.join(tr(", ")));
@@ -333,7 +340,8 @@ void MapPainterVehicle::paintWindPointer(const PaintContext *context,
 {
   if(aircraft.getWindDirectionDegT() < atools::fs::sc::SC_INVALID_FLOAT)
   {
-    symbolPainter->drawWindPointer(context->painter, x, y, WIND_POINTER_SIZE, aircraft.getWindDirectionDegT());
+    if(aircraft.getWindSpeedKts() >= 1.f)
+      symbolPainter->drawWindPointer(context->painter, x, y, WIND_POINTER_SIZE, aircraft.getWindDirectionDegT());
     context->szFont(1.f);
     paintTextLabelWind(context, x, y, WIND_POINTER_SIZE, aircraft);
   }
@@ -344,21 +352,33 @@ void MapPainterVehicle::paintTextLabelWind(const PaintContext *context, int x, i
 {
   if(aircraft.getWindDirectionDegT() < atools::fs::sc::SC_INVALID_FLOAT)
   {
+    int xs, ys;
     QStringList texts;
 
-    if(context->dOpt(optsd::ITEM_USER_AIRCRAFT_WIND))
+    if(aircraft.getWindSpeedKts() >= 1.f)
     {
-      texts.append(tr("%1 °M").arg(QString::number(atools::geo::normalizeCourse(
-                                                     aircraft.getWindDirectionDegT() - aircraft.getMagVarDeg()),
-                                                   'f', 0)));
+      if(context->dOpt(optsd::ITEM_USER_AIRCRAFT_WIND))
+      {
+        texts.append(tr("%1 °M").arg(QString::number(atools::geo::normalizeCourse(
+                                                       aircraft.getWindDirectionDegT() - aircraft.getMagVarDeg()),
+                                                     'f', 0)));
 
-      texts.append(tr("%2").arg(Unit::speedKts(aircraft.getWindSpeedKts())));
+        texts.append(tr("%2").arg(Unit::speedKts(aircraft.getWindSpeedKts())));
+      }
+      xs = x + size / 2;
+      ys = y + size / 2;
+    }
+    else
+    {
+      texts.append(tr("No wind"));
+      xs = x;
+      ys = y + size / 2;
     }
 
     textatt::TextAttributes atts(textatt::BOLD);
     atts |= textatt::ROUTE_BG_COLOR;
 
     // Draw text label
-    symbolPainter->textBoxF(context->painter, texts, QPen(Qt::black), x + size / 2, y + size / 2, atts, 255);
+    symbolPainter->textBoxF(context->painter, texts, QPen(Qt::black), xs, ys, atts, 255);
   }
 }

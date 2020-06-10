@@ -23,8 +23,6 @@
 #include "route/route.h"
 #include "common/tabindexes.h"
 
-#include <QIcon>
-#include <QObject>
 #include <QTimer>
 
 namespace atools {
@@ -272,7 +270,7 @@ public:
   /* Clear network, so it will be reloaded before next flight plan calculation. */
   void clearAirwayNetworkCache();
 
-#ifdef DEBUG_INFORMATION
+#ifdef DEBUG_NETWORK_INFORMATION
   void debugNetworkClick(const atools::geo::Pos& pos);
 
 #endif
@@ -397,6 +395,14 @@ private:
   void showProceduresMenuCustom();
   void showOnMapMenu();
 
+  /* Enable or disable remarks widget */
+  void updateRemarkWidget();
+
+  /* Remarks changed */
+  void remarksTextChanged();
+
+  void remarksFlightPlanToWidget();
+
   void undoTriggered();
   void redoTriggered();
   bool updateStartPositionBestRunway(bool force, bool undo);
@@ -438,6 +444,9 @@ private:
 
   bool canCalcSelection();
 
+  /* Update navdata properties in flightplan properties for export and save */
+  void updateRouteCycleMetadata();
+
   /* Selected rows in table. Updated on selection change. */
   QList<int> selectedRows;
 
@@ -461,6 +470,9 @@ private:
 
   /* Current filename of empty if no route - also remember start and dest to avoid accidental overwriting */
   QString routeFilename, fileDepartureIdent, fileDestinationIdent;
+
+  /* Same as above for cruise altitude */
+  float fileCruiseAlt;
 
   /* Current loaded or saved format since the plans in the undo stack have different values */
   atools::fs::pln::FlightplanType fileIfrVfr;

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>791</width>
-    <height>565</height>
+    <width>781</width>
+    <height>621</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -374,10 +374,23 @@ logbook and other search tabs</string>
 This will scale the Little Navmap map graphics and icons for better visibility if checked.</string>
              </property>
              <property name="text">
-              <string>Enable high &amp;DPI monitor support (restart required after change)</string>
+              <string>Enable high &amp;DPI monitor support</string>
              </property>
              <property name="checked">
               <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_5">
+             <property name="text">
+              <string>&lt;b&gt;A restart is required after changing high DPI support&lt;/b&gt;</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="margin">
+              <number>5</number>
              </property>
             </widget>
            </item>
@@ -590,12 +603,9 @@ This will scale the Little Navmap map graphics and icons for better visibility i
         <item row="7" column="0">
          <widget class="QGroupBox" name="groupBox_6">
           <property name="title">
-           <string>Language (restart required after change)</string>
+           <string>Language</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_7">
-           <property name="spacing">
-            <number>2</number>
-           </property>
+          <layout class="QGridLayout" name="gridLayout_6">
            <property name="leftMargin">
             <number>2</number>
            </property>
@@ -608,18 +618,40 @@ This will scale the Little Navmap map graphics and icons for better visibility i
            <property name="bottomMargin">
             <number>2</number>
            </property>
-           <item>
-            <widget class="QCheckBox" name="checkBoxOptionsGuiOverrideLanguage">
-             <property name="toolTip">
-              <string>Overrides any available translations and forces Little Navmap to use the English language for all windows and dialogs.
-A restart is required for the settings to take effect.</string>
-             </property>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_8">
              <property name="text">
-              <string>Use &amp;English as user interface language independent of operating system language</string>
+              <string>&amp;User interface language:</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="buddy">
+              <cstring>comboBoxOptionsGuiLanguage</cstring>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="0" column="1">
+            <widget class="QComboBox" name="comboBoxOptionsGuiLanguage"/>
+           </item>
+           <item row="2" column="0" colspan="2">
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>&lt;b&gt;A restart is required after changing language or format settings.&lt;/b&gt;&lt;br/&gt;
+Note that some translations might be incomplete.</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="margin">
+              <number>5</number>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
             <widget class="QCheckBox" name="checkBoxOptionsGuiOverrideLocale">
              <property name="toolTip">
               <string>Overrides local settings like number and date formats and forces English formats
@@ -627,7 +659,8 @@ which implies &quot;.&quot; as decimal separator, &quot;,&quot; as thousands sep
 A restart is required for the settings to take effect.</string>
              </property>
              <property name="text">
-              <string>Use English &amp;number and date formats independent of current computer settings</string>
+              <string>Use English &amp;number and date formats
+independent of current computer settings and language selection</string>
              </property>
             </widget>
            </item>
@@ -714,7 +747,8 @@ New name will be &quot;filename_1.pln&quot; if &quot;filename.pln&quot; already 
 opening files, modifying the flight plan and other operations.</string>
              </property>
              <property name="text">
-              <string>Raise related windows on actions (.e.g. show flight plan after opening file)</string>
+              <string>Raise related windows on actions
+Show flight plan after opening file, for example.</string>
              </property>
              <property name="checked">
               <bool>true</bool>
@@ -1902,19 +1936,6 @@ Afftects map and elevation profile.</string>
              </property>
             </widget>
            </item>
-           <item row="14" column="0" colspan="2">
-            <widget class="QCheckBox" name="checkBoxOptionsShowTod">
-             <property name="toolTip">
-              <string>Enable this option to show the top of descent and top of climb points on the map and in the elevation profile.</string>
-             </property>
-             <property name="text">
-              <string>Draw &amp;top of descent and top of climb</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="1">
             <widget class="QSpinBox" name="spinBoxOptionsDisplaySymbolSizeAirport">
              <property name="toolTip">
@@ -2907,7 +2928,16 @@ also define the order when reading coordinates in the user interface if enabled.
            </font>
           </property>
           <property name="text">
-           <string>A restart is recommended after changing units.</string>
+           <string>&lt;b&gt;A restart is recommended after changing units&lt;/b&gt;</string>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="margin">
+           <number>5</number>
+          </property>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
           </property>
          </widget>
         </item>
@@ -3446,30 +3476,7 @@ This is also used for &quot;Center map on aircraft and next flight plan waypoint
            <property name="spacing">
             <number>2</number>
            </property>
-           <item row="6" column="0">
-            <widget class="QLabel" name="labelOptionsRouteGroundBuffer">
-             <property name="text">
-              <string>&amp;Minimum altitude buffer to ground in elevation profile (red line):</string>
-             </property>
-             <property name="buddy">
-              <cstring>spinBoxOptionsRouteGroundBuffer</cstring>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QCheckBox" name="checkBoxOptionsRouteEastWestRule">
-             <property name="toolTip">
-              <string>Rounds up flight plan cruise altitude according to selected rule.</string>
-             </property>
-             <property name="text">
-              <string>&amp;Use simplified rule to determine cruise altitude</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
+           <item row="1" column="0">
             <widget class="QComboBox" name="comboBoxOptionsRouteAltitudeRuleType">
              <property name="toolTip">
               <string>East / West: Rounds up  cruise altitude to nearest odd thousand feet for eastward flight plans and nearest even thousand feet for westward flight plans.
@@ -3493,35 +3500,7 @@ South / North: Same as North / South but reverses odd and even.</string>
              </item>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QCheckBox" name="checkBoxOptionsRoutePreferVor">
-             <property name="toolTip">
-              <string>Prefer nearest VOR that is part of an airway instead of the nearest waypoint
-when transitioning from airport to airway.</string>
-             </property>
-             <property name="text">
-              <string>Prefer &amp;VOR stations as transition to airway in flight plan calculation. </string>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QCheckBox" name="checkBoxOptionsRoutePreferNdb">
-             <property name="toolTip">
-              <string>Prefer nearest NDB that is part of an airway instead the nearest waypoint
-when transitioning from airport to airway.</string>
-             </property>
-             <property name="text">
-              <string>Prefer &amp;NDB stations as  transition to airway in flight plan calculation.</string>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="0">
+           <item row="4" column="0">
             <widget class="QSpinBox" name="spinBoxOptionsRouteGroundBuffer">
              <property name="toolTip">
               <string>The red line value is always rounded up to the next 500 ft.
@@ -3544,14 +3523,30 @@ Note that this value does not affect flight plan calculation or saving of flight
              </property>
             </widget>
            </item>
-           <item row="2" column="0">
-            <widget class="Line" name="line_9">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="checkBoxOptionsRouteEastWestRule">
+             <property name="toolTip">
+              <string>Rounds up flight plan cruise altitude according to selected rule.</string>
+             </property>
+             <property name="text">
+              <string>&amp;Use simplified rule to determine cruise altitude</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
+           <item row="3" column="0">
+            <widget class="QLabel" name="labelOptionsRouteGroundBuffer">
+             <property name="text">
+              <string>&amp;Minimum altitude buffer to ground in elevation profile (red line):</string>
+             </property>
+             <property name="buddy">
+              <cstring>spinBoxOptionsRouteGroundBuffer</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
             <widget class="Line" name="line_7">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
@@ -3566,10 +3561,7 @@ Note that this value does not affect flight plan calculation or saving of flight
           <property name="title">
            <string>Loading, Saving and Export</string>
           </property>
-          <layout class="QVBoxLayout" name="verticalLayout_6">
-           <property name="spacing">
-            <number>2</number>
-           </property>
+          <layout class="QGridLayout" name="gridLayout_7">
            <property name="leftMargin">
             <number>2</number>
            </property>
@@ -3582,7 +3574,45 @@ Note that this value does not affect flight plan calculation or saving of flight
            <property name="bottomMargin">
             <number>2</number>
            </property>
-           <item>
+           <item row="4" column="2">
+            <widget class="QPushButton" name="pushButtonOptionsRouteFilenameLong">
+             <property name="toolTip">
+              <string>Set flight plan file pattern to long name &quot;PLANTYPE DEPARTNAME (DEPARTIDENT) to DESTNAME (DESTIDENT)&quot;
+Example: &quot;IFR Frankfurt Am Main (EDDF) to Fiumicino (LIRF).lnmpln&quot;</string>
+             </property>
+             <property name="text">
+              <string>&amp;Long</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QPushButton" name="pushButtonOptionsRouteFilenameShort">
+             <property name="toolTip">
+              <string>Set flight plan file pattern to short name &quot;DEPARTIDENT DESTIDENT&quot;.
+Example: &quot;EDDF_LIRF.lnmpln&quot;</string>
+             </property>
+             <property name="text">
+              <string>&amp;Short</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0" colspan="3">
+            <widget class="QLabel" name="labelOptionsRouteFilenameExample">
+             <property name="text">
+              <string/>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="margin">
+              <number>5</number>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="3">
             <widget class="QCheckBox" name="checkBoxOptionsGuiCenterRoute">
              <property name="toolTip">
               <string>Does not apply to the flight plan loaded after startup.</string>
@@ -3595,36 +3625,32 @@ Note that this value does not affect flight plan calculation or saving of flight
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QCheckBox" name="checkBoxOptionsGuiAvoidOverwrite">
+           <item row="4" column="0">
+            <widget class="QLineEdit" name="lineEditOptionsRouteFilename">
              <property name="toolTip">
-              <string>Check this option to avoid overwriting flight plans with a new departure or destination after changing these.
-The &quot;Save as&quot; dialog will show up instead of overwriting the current flight plan when you reverse the route for example.</string>
+              <string>Applies to new filenames when saving LNMPLN FSX, P3D or FlightGear flight plans.
+The file suffix like &quot;.lnmpln&quot;, &quot;.pln&quot; or &quot;.fgfp&quot; is appended automatically.
+
+PLANTYPE: IFR or VFR
+DEPARTIDENT: Departure airport ICAO code
+DEPARTNAME: Departure airport name
+DESTIDENT: Destination airport ICAO code
+DESTNAME: Destination airport name
+CRUISEALT: Cruise altitude</string>
              </property>
              <property name="text">
-              <string>&amp;Avoid overwriting Flight Plan with not matching departure and destination</string>
-             </property>
-             <property name="checked">
-              <bool>true</bool>
+              <string>PLANTYPE DEPARTNAME (DEPARTIDENT) to DESTNAME (DESTIDENT)</string>
              </property>
             </widget>
            </item>
-           <item>
-            <widget class="QCheckBox" name="checkBoxOptionsRouteShortName">
-             <property name="text">
-              <string>Use a &amp;short name &quot;ICAO_ICAO.pln&quot; when saving FSX, P3D or
-FlightGear flight plans instead of the long name</string>
-             </property>
-            </widget>
-           </item>
-           <item>
+           <item row="7" column="0" colspan="3">
             <widget class="Line" name="line_10">
              <property name="orientation">
               <enum>Qt::Horizontal</enum>
              </property>
             </widget>
            </item>
-           <item>
+           <item row="8" column="0" colspan="3">
             <widget class="QCheckBox" name="checkBoxOptionsRouteExportUserWpt">
              <property name="toolTip">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This saves all waypoints as user defined waypoints when exporting flight plans for a Garmin unit. &lt;br/&gt;This avoids locked waypoints due to different AIRAC cycles and affects the export functions below: &lt;/p&gt;
@@ -3639,6 +3665,37 @@ FlightGear flight plans instead of the long name</string>
              <property name="text">
               <string>&amp;Export navaids and airports as user defined waypoints for
 Garmin GTN and GNS to avoid locked waypoints</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="3">
+            <widget class="QCheckBox" name="checkBoxOptionsGuiAvoidOverwrite">
+             <property name="toolTip">
+              <string>Check this option to avoid overwriting flight plans with a new departure or destination after changing these.
+The &quot;Save as&quot; dialog will show up instead of overwriting the current flight plan when you reverse the route for example.</string>
+             </property>
+             <property name="text">
+              <string>&amp;Avoid overwriting Flight Plan with not matching departure and destination</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QLabel" name="label_9">
+             <property name="text">
+              <string>&amp;Pattern for default flight plan names:</string>
+             </property>
+             <property name="buddy">
+              <cstring>lineEditOptionsRouteFilename</cstring>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0" colspan="3">
+            <widget class="Line" name="line_19">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
              </property>
             </widget>
            </item>
@@ -3964,7 +4021,7 @@ If this field is empty, the default Active Sky weather file path will be used wh
 &quot;%1&quot; is a placeholder that will be substituted with the airport ICAO ident.</string>
              </property>
              <property name="text">
-              <string>https://metar.vatsim.net/metar.php?id=%1</string>
+              <string>http://metar.vatsim.net/metar.php?id=ALL</string>
              </property>
              <property name="cursorPosition">
               <number>40</number>
@@ -4101,6 +4158,9 @@ If this field is empty, the default Active Sky weather file path will be used wh
              <property name="margin">
               <number>2</number>
              </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+             </property>
             </widget>
            </item>
            <item row="3" column="1" colspan="2">
@@ -4121,7 +4181,10 @@ If this field is empty, the default Active Sky weather file path will be used wh
               <bool>true</bool>
              </property>
              <property name="margin">
-              <number>2</number>
+              <number>5</number>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
              </property>
             </widget>
            </item>
@@ -4255,7 +4318,10 @@ Entering a wrong value will cause errors when downloading wind reports.</string>
               <bool>true</bool>
              </property>
              <property name="margin">
-              <number>2</number>
+              <number>5</number>
+             </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
              </property>
             </widget>
            </item>
@@ -4663,6 +4729,9 @@ Little Navmap GIT repository.
           <property name="wordWrap">
            <bool>true</bool>
           </property>
+          <property name="margin">
+           <number>5</number>
+          </property>
           <property name="textInteractionFlags">
            <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
           </property>
@@ -4870,6 +4939,9 @@ Download from the link &lt;b&gt;&lt;i&gt;All Tiles in One .zip (all10g.zip)&lt;/
              <property name="openExternalLinks">
               <bool>true</bool>
              </property>
+             <property name="textInteractionFlags">
+              <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+             </property>
             </widget>
            </item>
            <item row="2" column="1" colspan="2">
@@ -4879,6 +4951,9 @@ Download from the link &lt;b&gt;&lt;i&gt;All Tiles in One .zip (all10g.zip)&lt;/
              </property>
              <property name="wordWrap">
               <bool>true</bool>
+             </property>
+             <property name="margin">
+              <number>5</number>
              </property>
             </widget>
            </item>
@@ -4984,6 +5059,9 @@ Currently only OpenAir is supported (*.txt). </string>
              <property name="wordWrap">
               <bool>true</bool>
              </property>
+             <property name="margin">
+              <number>5</number>
+             </property>
             </widget>
            </item>
           </layout>
@@ -4993,39 +5071,40 @@ Currently only OpenAir is supported (*.txt). </string>
       </widget>
       <widget class="QWidget" name="stackedWidgetOptionsScenery">
        <layout class="QGridLayout" name="gridLayout_9">
-        <item row="3" column="3">
-         <layout class="QVBoxLayout" name="verticalLayoutOptionsDatabase_2">
-          <property name="leftMargin">
-           <number>0</number>
+        <item row="1" column="2">
+         <widget class="QListWidget" name="listWidgetOptionsDatabaseExclude">
+          <property name="toolTip">
+           <string>All directories including sub-directories and files in this list will be omitted when loading the scenery library into the Little Navmap database.
+You can also use this list to speed up database loading if you exclude directories that do not contain airports or navaids.
+These paths apply to all Flight Simulators (FSX, P3D and X-Plane).
+You have to reload the scenery library so that the changes take effect.</string>
           </property>
-          <item alignment="Qt::AlignTop">
-           <widget class="QPushButton" name="pushButtonOptionsDatabaseAddAddon">
-            <property name="text">
-             <string>A&amp;dd ...</string>
-            </property>
-           </widget>
-          </item>
-          <item alignment="Qt::AlignTop">
-           <widget class="QPushButton" name="pushButtonOptionsDatabaseRemoveAddon">
-            <property name="text">
-             <string>R&amp;emove</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <spacer name="verticalSpacerOptionsDatabaseAddon">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-         </layout>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="alternatingRowColors">
+           <bool>true</bool>
+          </property>
+          <property name="selectionMode">
+           <enum>QAbstractItemView::ExtendedSelection</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="2" colspan="2">
+         <widget class="QLabel" name="labelOptionsDatabaseAddon">
+          <property name="text">
+           <string>Select &amp;paths to exclude from add-on recognition:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+          </property>
+          <property name="wordWrap">
+           <bool>true</bool>
+          </property>
+          <property name="buddy">
+           <cstring>listWidgetOptionsDatabaseAddon</cstring>
+          </property>
+         </widget>
         </item>
         <item row="1" column="3">
          <layout class="QVBoxLayout" name="verticalLayoutOptionsDatabase">
@@ -5068,24 +5147,55 @@ Currently only OpenAir is supported (*.txt). </string>
           </item>
          </layout>
         </item>
-        <item row="1" column="2">
-         <widget class="QListWidget" name="listWidgetOptionsDatabaseExclude">
-          <property name="toolTip">
-           <string>All directories including sub-directories and files in this list will be omitted when loading the scenery library into the Little Navmap database.
-You can also use this list to speed up database loading if you exclude directories that do not contain airports or navaids.
-These paths apply to all Flight Simulators (FSX, P3D and X-Plane).
-You have to reload the scenery library so that the changes take effect.</string>
+        <item row="0" column="2" colspan="2">
+         <widget class="QLabel" name="labelOptionsDatabaseExclude">
+          <property name="text">
+           <string>&amp;Select paths to exclude from loading:</string>
           </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::NoEditTriggers</set>
+          <property name="alignment">
+           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
           </property>
-          <property name="alternatingRowColors">
+          <property name="wordWrap">
            <bool>true</bool>
           </property>
-          <property name="selectionMode">
-           <enum>QAbstractItemView::ExtendedSelection</enum>
+          <property name="buddy">
+           <cstring>listWidgetOptionsDatabaseExclude</cstring>
           </property>
          </widget>
+        </item>
+        <item row="3" column="3">
+         <layout class="QVBoxLayout" name="verticalLayoutOptionsDatabase_2">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <item alignment="Qt::AlignTop">
+           <widget class="QPushButton" name="pushButtonOptionsDatabaseAddAddon">
+            <property name="text">
+             <string>A&amp;dd ...</string>
+            </property>
+           </widget>
+          </item>
+          <item alignment="Qt::AlignTop">
+           <widget class="QPushButton" name="pushButtonOptionsDatabaseRemoveAddon">
+            <property name="text">
+             <string>R&amp;emove</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacerOptionsDatabaseAddon">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
         </item>
         <item row="3" column="2">
          <widget class="QListWidget" name="listWidgetOptionsDatabaseAddon">
@@ -5107,35 +5217,19 @@ You have to reload the scenery library so that the changes take effect.</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="2" colspan="2">
-         <widget class="QLabel" name="labelOptionsDatabaseExclude">
+        <item row="4" column="2" colspan="2">
+         <widget class="QLabel" name="label_7">
           <property name="text">
-           <string>&amp;Select paths to exclude from loading:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+           <string>&lt;b&gt;You have to re-import the scenery library for the changes to take effect.&lt;/b&gt;</string>
           </property>
           <property name="wordWrap">
            <bool>true</bool>
           </property>
-          <property name="buddy">
-           <cstring>listWidgetOptionsDatabaseExclude</cstring>
+          <property name="margin">
+           <number>5</number>
           </property>
-         </widget>
-        </item>
-        <item row="2" column="2" colspan="2">
-         <widget class="QLabel" name="labelOptionsDatabaseAddon">
-          <property name="text">
-           <string>Select &amp;paths to exclude from add-on recognition:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-          <property name="buddy">
-           <cstring>listWidgetOptionsDatabaseAddon</cstring>
+          <property name="textInteractionFlags">
+           <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
           </property>
          </widget>
         </item>
@@ -5180,8 +5274,6 @@ Changes only settings that can be done with this dialog.</string>
   <tabstop>spinBoxOptionsGuiSearchText</tabstop>
   <tabstop>spinBoxOptionsGuiInfoText</tabstop>
   <tabstop>spinBoxOptionsGuiSimInfoText</tabstop>
-  <tabstop>checkBoxOptionsGuiOverrideLanguage</tabstop>
-  <tabstop>checkBoxOptionsGuiOverrideLocale</tabstop>
   <tabstop>checkBoxOptionsGuiProposeFilename</tabstop>
   <tabstop>checkBoxOptionsGuiCenterKml</tabstop>
   <tabstop>checkBoxOptionsGuiRaiseWindows</tabstop>
@@ -5222,7 +5314,6 @@ Changes only settings that can be done with this dialog.</string>
   <tabstop>spinBoxOptionsDisplayTextSizeAircraftAi</tabstop>
   <tabstop>spinBoxOptionsDisplayThicknessFlightplan</tabstop>
   <tabstop>spinBoxOptionsDisplayTextSizeFlightplan</tabstop>
-  <tabstop>checkBoxOptionsShowTod</tabstop>
   <tabstop>checkBoxOptionsMapFlightplanText</tabstop>
   <tabstop>pushButtonOptionsDisplayFlightplanColor</tabstop>
   <tabstop>pushButtonOptionsDisplayFlightplanActiveColor</tabstop>
@@ -5278,14 +5369,11 @@ Changes only settings that can be done with this dialog.</string>
   <tabstop>checkBoxOptionsSimDoNotFollowOnScroll</tabstop>
   <tabstop>spinBoxSimDoNotFollowOnScrollTime</tabstop>
   <tabstop>spinBoxSimMaxTrackPoints</tabstop>
-  <tabstop>checkBoxOptionsRoutePreferVor</tabstop>
-  <tabstop>checkBoxOptionsRoutePreferNdb</tabstop>
   <tabstop>checkBoxOptionsRouteEastWestRule</tabstop>
   <tabstop>comboBoxOptionsRouteAltitudeRuleType</tabstop>
   <tabstop>spinBoxOptionsRouteGroundBuffer</tabstop>
   <tabstop>checkBoxOptionsGuiCenterRoute</tabstop>
   <tabstop>checkBoxOptionsGuiAvoidOverwrite</tabstop>
-  <tabstop>checkBoxOptionsRouteShortName</tabstop>
   <tabstop>checkBoxOptionsRouteExportUserWpt</tabstop>
   <tabstop>checkBoxOptionsRouteDeclination</tabstop>
   <tabstop>checkBoxOptionsWeatherInfoFs</tabstop>

@@ -104,6 +104,7 @@ int main(int argc, char *argv[])
   // Needed to send SimConnectData through queued connections
   qRegisterMetaType<atools::fs::sc::SimConnectData>();
   qRegisterMetaType<atools::fs::sc::SimConnectReply>();
+  qRegisterMetaType<atools::fs::sc::SimConnectStatus>();
   qRegisterMetaType<atools::fs::sc::WeatherRequest>();
 
   // Tasks that have to be done before creating the application object and logging system =================
@@ -242,14 +243,6 @@ int main(int argc, char *argv[])
 
     Settings& settings = Settings::instance();
 
-    // Forcing the English locale if the user has chosen it this way
-    if(OptionsDialog::isOverrideLocale())
-    {
-      qInfo() << "Overriding locale";
-      QLocale::setDefault(QLocale("en"));
-    }
-
-    // Load local and Qt system translations from various places
     int pixmapCache = settings.valueInt(lnm::OPTIONS_PIXMAP_CACHE, -1);
     qInfo() << "QPixmapCache cacheLimit" << QPixmapCache::cacheLimit() << "KB";
     if(pixmapCache != -1)
@@ -285,19 +278,19 @@ int main(int argc, char *argv[])
       qInfo() << "Set font size" << fontSize;
     }
 
-    // Load local and Qt system translations from various places
-    QString lang = settings.valueStr(lnm::OPTIONS_LANGUAGE, QString());
-    if(lang.isEmpty())
+    // Load available translations ============================================
+    qInfo() << "Loading translations for" << OptionsDialog::getLocale();
+    Translator::load(OptionsDialog::getLocale());
+
+    // Load region override ============================================
+    // Forcing the English locale if the user has chosen it this way
+    if(OptionsDialog::isOverrideRegion())
     {
-      qInfo() << "Overriding language";
-      // Checkbox in options dialog
-      lang = OptionsDialog::isOverrideLanguage() ? "en" : lang;
+      qInfo() << "Overriding region settings";
+      QLocale::setDefault(QLocale("en"));
     }
 
-    qInfo() << "Loading translations for" << lang;
-    Translator::load(lang);
-
-    // Add paths here to allow translation
+    // Add paths here to allow translation =================================
     Application::addReportPath(QObject::tr("Log files:"), LoggingHandler::getLogFiles());
 
     Application::addReportPath(QObject::tr("Database directory:"),
@@ -305,10 +298,10 @@ int main(int argc, char *argv[])
     Application::addReportPath(QObject::tr("Configuration:"), {Settings::getFilename()});
     Application::setEmailAddresses({"alex@littlenavmap.org"});
 
-    // Load help URLs from urls.cfg
+    // Load help URLs from urls.cfg =================================
     lnm::loadHelpUrls();
 
-    /* Avoid static translations and load these dynamically now */
+    // Avoid static translations and load these dynamically now  =================================
     Unit::initTranslateableTexts();
     UserdataIcons::initTranslateableTexts();
     map::initTranslateableTexts();

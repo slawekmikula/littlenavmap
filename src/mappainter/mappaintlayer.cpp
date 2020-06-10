@@ -295,7 +295,7 @@ void MapPaintLayer::initMapLayerSettings()
   append(defLayer.clone(50.f).airportSymbolSize(18).airportInfo().
          waypoint(false).
          windBarbsSymbolSize(16).
-         aiAircraftGround(false).aiShipSmall(false).aiAircraftGroundText(false).aiAircraftText(false).
+         aiShipSmall(false).aiAircraftGroundText(false).aiAircraftText(false).
          vorSymbolSize(20).vorIdent().vorInfo().vorLarge().
          ndbSymbolSize(20).ndbIdent().ndbInfo().
          airwayIdent().airwayWaypoint().
@@ -350,7 +350,7 @@ void MapPaintLayer::initMapLayerSettings()
          airportOverviewRunway(false).airportName(false).airportSource(layer::MEDIUM).
          windBarbsSymbolSize(12).
          approachTextAndDetail(false).
-         aiAircraftGround(false).aiAircraftSmall(false).aiShipSmall(false).
+         aiAircraftGround(false).aiShipSmall(false).
          aiAircraftGroundText(false).aiAircraftText(false).
          onlineAircraftText(false).
          trackIdent().trackInfo(false).trackWaypoint().
@@ -366,7 +366,7 @@ void MapPaintLayer::initMapLayerSettings()
          windBarbsSymbolSize(12).
          airportWeatherDetails(false).
          approachTextAndDetail(false).
-         aiAircraftGround(false).aiAircraftSmall(false).aiShipLarge(false).aiShipSmall(false).
+         aiAircraftGround(false).aiShipLarge(false).aiShipSmall(false).
          aiAircraftGroundText(false).aiAircraftText(false).
          onlineAircraftText(false).
          airspaceOther(false).airspaceRestricted(false).airspaceSpecial(false).
@@ -382,7 +382,7 @@ void MapPaintLayer::initMapLayerSettings()
          airportWeather(false).airportWeatherDetails(false).
          windBarbsSymbolSize(10).
          approachTextAndDetail(false).
-         aiAircraftGround(false).aiAircraftLarge(false).aiAircraftSmall(false).aiShipLarge(false).aiShipSmall(false).
+         aiAircraftGround(false).aiAircraftSmall(false).aiShipLarge(false).aiShipSmall(false).
          aiAircraftGroundText(false).aiAircraftText(false).
          onlineAircraftText(false).
          airspaceFir(false).airspaceOther(false).airspaceRestricted(false).airspaceSpecial(false).
@@ -402,7 +402,7 @@ void MapPaintLayer::initMapLayerSettings()
          windBarbsSymbolSize(6).
          minimumAltitude(false).
          approach(false).approachTextAndDetail(false).
-         aiAircraftGround(false).aiAircraftLarge(false).aiAircraftSmall(false).aiShipLarge(false).aiShipSmall(false).
+         aiAircraftGround(false).aiAircraftSmall(false).aiShipLarge(false).aiShipSmall(false).
          aiAircraftGroundText(false).aiAircraftText(false).
          onlineAircraft(false).onlineAircraftText(false).
          airspaceCenter(false).airspaceFir(false).airspaceOther(false).
@@ -553,7 +553,7 @@ bool MapPaintLayer::render(GeoPainter *painter, ViewportParams *viewport, const 
 
       // ====================================
       // Get all waypoints from the route and add them to the map to avoid duplicate drawing
-      if(context.objectTypes.testFlag(map::FLIGHTPLAN))
+      if(context.objectDisplayTypes.testFlag(map::FLIGHTPLAN))
       {
         const Route& route = NavApp::getRouteConst();
         for(int i = 0; i < route.size(); i++)

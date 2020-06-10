@@ -166,6 +166,11 @@ bool Route::canEditLeg(int index) const
   return true;
 }
 
+bool Route::canEditComment(int index) const
+{
+  return value(index).isRoute() && !value(index).isAlternate();
+}
+
 bool Route::canEditPoint(int index) const
 {
   return value(index).isRoute() || value(index).isAlternate();
@@ -1953,27 +1958,6 @@ Route Route::adjustedToOptions(rf::RouteAdjustOptions options) const
     // Airways are updated in route controller
   }
 
-  if(options.testFlag(rf::FIX_AIRPORT_IDENT))
-  {
-    // ========================================================================
-    // Need to use the real ICAO code instead of the X-Plane fake ID
-    const map::MapAirport& departAirport = route.getDepartureAirportLeg().getAirport();
-    if(departAirport.isValid() && !departAirport.icao.isEmpty() && departAirport.ident != departAirport.icao)
-    {
-      qDebug() << Q_FUNC_INFO << "Correcting departure from" << departAirport.ident << "to" << departAirport.icao;
-      plan.setDepartureIdent(departAirport.icao);
-      plan.getEntries()[route.getDepartureAirportLegIndex()].setIdent(departAirport.icao);
-    }
-
-    const map::MapAirport& destAirport = route.getDestinationAirportLeg().getAirport();
-    if(destAirport.isValid() && !destAirport.icao.isEmpty() && destAirport.ident != destAirport.icao)
-    {
-      qDebug() << Q_FUNC_INFO << "Correcting destination from" << destAirport.ident << "to" << destAirport.icao;
-      plan.setDestinationIdent(destAirport.icao);
-      plan.getEntries()[route.getDestinationAirportLegIndex()].setIdent(destAirport.icao);
-    }
-  }
-
   if(options.testFlag(rf::FIX_CIRCLETOLAND))
   {
     // ========================================================================
@@ -2144,40 +2128,38 @@ int Route::getAdjustedAltitude(int newAltitude) const
 
 void Route::getApproachRunwayEndAndIls(QVector<map::MapIls>& ils, map::MapRunwayEnd *runwayEnd) const
 {
-  int destinationLegIdx = getDestinationLegIndex();
-  if(destinationLegIdx < map::INVALID_INDEX_VALUE)
+  if(runwayEnd != nullptr)
+    *runwayEnd = approachLegs.runwayEnd;
+
+  ils.clear();
+  if(approachLegs.runwayEnd.isValid())
   {
-    const RouteLeg& leg = value(destinationLegIdx);
+    QString destIdent = getDestinationAirportLeg().getIdent();
+    // Get one or more ILS from flight plan leg as is
+    ils = NavApp::getMapQuery()->getIlsByAirportAndRunway(destIdent, approachLegs.runwayEnd.name);
 
-    const RouteLeg& destLeg = getDestinationAirportLeg();
-
-    // Get the runway end for arrival
-    QList<map::MapRunwayEnd> runwayEnds;
-    if(approachLegs.runwayEnd.isValid())
-      NavApp::getMapQuery()->getRunwayEndByNameFuzzy(runwayEnds, approachLegs.runwayEnd.name, destLeg.getAirport(),
-                                                     false /* nav data */);
-
-    ils.clear();
-    if(leg.isAnyProcedure() && !(leg.getProcedureType() & proc::PROCEDURE_MISSED) && leg.getRunwayEnd().isValid())
+    if(ils.isEmpty())
     {
-      // Get ILS from flight plan leg as is
-      ils = NavApp::getMapQuery()->getIlsByAirportAndRunway(destLeg.getAirport().ident, leg.getRunwayEnd().name);
-
-      if(ils.isEmpty())
-        // Get all ILS for the runway end found in a fuzzy way
-        ils = NavApp::getMapQuery()->getIlsByAirportAndRunway(destLeg.getAirport().ident, runwayEnds.first().name);
-
-      if(ils.isEmpty())
-      {
-        // ILS does not even match runway - try again fuzzy
-        QStringList variants = map::runwayNameVariants(runwayEnds.first().name);
-        for(const QString& runwayVariant : variants)
-          ils.append(NavApp::getMapQuery()->getIlsByAirportAndRunway(destLeg.getAirport().ident, runwayVariant));
-      }
+      // ILS does not even match runway - try fuzzy
+      QStringList variants = map::runwayNameVariants(approachLegs.runwayEnd.name);
+      for(const QString& runwayVariant : variants)
+        ils.append(NavApp::getMapQuery()->getIlsByAirportAndRunway(destIdent, runwayVariant));
     }
 
-    if(runwayEnd != nullptr)
-      *runwayEnd = runwayEnds.isEmpty() ? map::MapRunwayEnd() : runwayEnds.first();
+    if(ils.size() > 1)
+    {
+      for(const proc::MapProcedureLeg& leg : approachLegs.approachLegs)
+      {
+        for(map::MapIls i : ils)
+        {
+          if(leg.recFixIdent == i.ident)
+          {
+            ils.clear();
+            ils.append(i);
+          }
+        }
+      }
+    }
   }
 }
 

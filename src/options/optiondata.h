@@ -67,13 +67,7 @@ enum Flag
    * ui->checkBoxOptionsRouteEastWestRule */
   ROUTE_ALTITUDE_RULE = 1 << 9,
 
-  /* Start airway route at NDB.
-   * ui->checkBoxOptionsRoutePreferNdb */
-  ROUTE_PREFER_NDB = 1 << 10,
-
-  /* Start airway route at VOR.
-   * ui->checkBoxOptionsRoutePreferVor */
-  ROUTE_PREFER_VOR = 1 << 11,
+  // Old options removed
 
   /* No box mode when moving map.
    * ui->checkBoxOptionsSimUpdatesConstant */
@@ -89,9 +83,6 @@ enum Flag
   /* radioButtonCacheUseOnlineElevation */
   CACHE_USE_OFFLINE_ELEVATION = 1 << 15,
 
-  /* checkBoxOptionsShowTod*/
-  FLIGHT_PLAN_SHOW_TOD = 1 << 16,
-
   /* checkBoxOptionsStartupLoadInfoContent */
   STARTUP_LOAD_INFO = 1 << 17,
 
@@ -100,9 +91,6 @@ enum Flag
 
   /* checkBoxOptionsStartupLoadTrail */
   STARTUP_LOAD_TRAIL = 1 << 19,
-
-  /* checkBoxOptionsGuiOverrideLanguage */
-  GUI_OVERRIDE_LANGUAGE = 1 << 20,
 
   /* checkBoxOptionsGuiOverrideLocale */
   GUI_OVERRIDE_LOCALE = 1 << 21,
@@ -258,9 +246,7 @@ enum Flag2
    * ui->checkBoxOptionsMapEmptyAirports3D */
   MAP_EMPTY_AIRPORTS_3D = 1 << 0,
 
-  /* Save PLN using short names
-   * ui->checkBoxOptionsRouteShortName */
-  ROUTE_SAVE_SHORT_NAME = 1 << 1,
+  // ROUTE_SAVE_SHORT_NAME = 1 << 1,
 
   /* ui->checkBoxOptionsMapAirportText */
   MAP_AIRPORT_TEXT_BACKGROUND = 1 << 2,
@@ -402,6 +388,7 @@ enum DisplayOption
   ITEM_USER_AIRCRAFT_WIND = 1 << 17,
   ITEM_USER_AIRCRAFT_TRACK_LINE = 1 << 18,
   ITEM_USER_AIRCRAFT_WIND_POINTER = 1 << 19,
+  ITEM_USER_AIRCRAFT_TAS = 1 << 20,
 
   ITEM_AI_AIRCRAFT_DEP_DEST = 1 << 21,
   ITEM_AI_AIRCRAFT_REGISTRATION = 1 << 22,
@@ -412,7 +399,8 @@ enum DisplayOption
   ITEM_AI_AIRCRAFT_GS = 1 << 27,
   ITEM_AI_AIRCRAFT_CLIMB_SINK = 1 << 28,
   ITEM_AI_AIRCRAFT_HEADING = 1 << 29,
-  ITEM_AI_AIRCRAFT_ALTITUDE = 1 << 30
+  ITEM_AI_AIRCRAFT_ALTITUDE = 1 << 30,
+  ITEM_AI_AIRCRAFT_TAS = 1 << 31
 };
 
 Q_DECLARE_FLAGS(DisplayOptions, DisplayOption);
@@ -525,6 +513,18 @@ public:
   opts2::Flags2 getFlags2() const
   {
     return flags2;
+  }
+
+  /* Get locale name like "en_US" or "de" for user interface language */
+  const QString& getLanguage() const
+  {
+    return language;
+  }
+
+  /* Get short user interface language code name like "en" or "de" suitable for help URLs */
+  QString getLanguageShort() const
+  {
+    return language.section('_', 0, 0).section('-', 0, 0);
   }
 
   opts::UnitDist getUnitDist() const
@@ -867,6 +867,11 @@ public:
     return cacheOfflineElevationPath;
   }
 
+  const QString& getFlightplanPattern() const
+  {
+    return flightplanPattern;
+  }
+
   opts::AltitudeRule getAltitudeRuleType() const
   {
     return altitudeRuleType;
@@ -1036,7 +1041,7 @@ private:
   opts::Flags flags = opts::STARTUP_LOAD_KML | opts::STARTUP_LOAD_MAP_SETTINGS | opts::STARTUP_LOAD_ROUTE |
                       opts::STARTUP_SHOW_LAST | opts::GUI_CENTER_KML | opts::GUI_CENTER_ROUTE |
                       opts::GUI_AVOID_OVERWRITE_FLIGHTPLAN | opts::MAP_EMPTY_AIRPORTS | opts::ROUTE_ALTITUDE_RULE |
-                      opts::FLIGHT_PLAN_SHOW_TOD | opts::CACHE_USE_ONLINE_ELEVATION |
+                      opts::CACHE_USE_ONLINE_ELEVATION |
                       opts::STARTUP_LOAD_INFO | opts::STARTUP_LOAD_SEARCH | opts::STARTUP_LOAD_TRAIL;
 
   // Defines the defaults used for reset
@@ -1061,10 +1066,13 @@ private:
   QString weatherActiveSkyPath, // ui->lineEditOptionsWeatherAsnPath
           weatherXplanePath, // lineEditOptionsWeatherXplanePath
           weatherNoaaUrl = "https://tgftp.nws.noaa.gov/data/observations/metar/cycles/%1Z.TXT",
-          weatherVatsimUrl = "https://metar.vatsim.net/metar.php?id=%1",
+          weatherVatsimUrl = "http://metar.vatsim.net/metar.php?id=ALL",
           weatherIvaoUrl = "http://wx.ivao.aero/metar.php";
 
   QString cacheOfflineElevationPath, cacheUserAirspacePath, cacheUserAirspaceExtensions = "*.txt";
+
+  // Initialized by widget
+  QString flightplanPattern;
 
   // ui->listWidgetOptionsDatabaseAddon
   QStringList databaseAddonExclude;
@@ -1127,6 +1135,8 @@ private:
 
   // ui->spinBoxOptionsRouteGroundBuffer
   int routeGroundBuffer = 1000;
+
+  QString language;
 
   // comboBoxOptionsUnitDistance
   opts::UnitDist unitDist = opts::DIST_NM;

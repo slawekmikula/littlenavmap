@@ -274,6 +274,8 @@ void LogdataController::createTakeoffLanding(const atools::fs::sc::SimConnectUse
       manager->updateByRecord(record, {logEntryId});
       transaction.commit();
 
+      manager->clearGeometryCache();
+
       emit refreshLogSearch(false /* load all */, false /* keep selection */);
       emit logDataChanged();
       mainWindow->setStatusMessage(tr("Logbook Entry for %1 at %2%3 updated.").
@@ -536,14 +538,17 @@ void LogdataController::importCsv()
 
 void LogdataController::exportCsv()
 {
+
   qDebug() << Q_FUNC_INFO;
   try
   {
+    // Checkbox ids
     enum
     {
-      EXPORTPLAN, EXPORTPERF, EXPORTGPX, HEADER
+      SELECTED, APPEND, HEADER, EXPORTPLAN, EXPORTPERF, EXPORTGPX
     };
 
+    // Build a choice dialog with several checkboxes =========================
     ChoiceDialog choiceDialog(mainWindow, QApplication::applicationName() + tr(" - Logbook Export"),
                               QString(),
                               tr("Select export options for logbook"),
@@ -553,28 +558,47 @@ void LogdataController::exportCsv()
                                    "Note that not all programs will be able to read this.\n"
                                    "Columns will be empty on export if disabled.");
 
-    choiceDialog.add(EXPORTPLAN, tr("&Flight plan in LNMPLN format"), attachmentToolTip, false);
-    choiceDialog.add(EXPORTPERF, tr("&Aircraft performance"), attachmentToolTip, false);
-    choiceDialog.add(EXPORTGPX, tr("&GPX file containing flight plan points and trail"), attachmentToolTip, false);
-    choiceDialog.add(HEADER, tr("Add a &header to the first line"), QString(), false);
+    int numSelected = NavApp::getLogdataSearch()->getSelectedRowCount();
+    choiceDialog.addCheckBox(APPEND, tr("&Append to an already present file"),
+                             tr("File header will be ignore if this is enabled."), false);
+    choiceDialog.addCheckBox(SELECTED, tr("Export &selected entries only"), QString(), true,
+                             numSelected == 0 /* disabled */);
+    choiceDialog.addCheckBox(HEADER, tr("Add a &header to the first line"), QString(), false);
+    choiceDialog.addLine();
+    choiceDialog.addCheckBox(EXPORTPLAN, tr("&Flight plan in LNMPLN format"), attachmentToolTip, false);
+    choiceDialog.addCheckBox(EXPORTPERF, tr("&Aircraft performance"), attachmentToolTip, false);
+    choiceDialog.addCheckBox(EXPORTGPX, tr(
+                               "&GPX file containing flight plan points and trail"), attachmentToolTip, false);
     choiceDialog.restoreState();
+
+    // Disable/enable header depending on append option
+    choiceDialog.getCheckBox(HEADER)->setDisabled(choiceDialog.isChecked(APPEND));
+    ChoiceDialog *dlgPtr = &choiceDialog;
+    connect(&choiceDialog, &ChoiceDialog::checkBoxToggled, [dlgPtr](int id, bool checked) {
+      if(id == APPEND)
+        dlgPtr->getCheckBox(HEADER)->setDisabled(checked);
+    });
 
     if(choiceDialog.exec() == QDialog::Accepted)
     {
       QString file = dialog->saveFileDialog(
         tr("Export Logbook Entry CSV File"),
-        tr("CSV Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_USERDATA_CSV),
-        ".csv",
-        "Logdata/Csv",
-        QString(), QString(), false, OptionData::instance().getFlags2() & opts2::PROPOSE_FILENAME);
+        tr("CSV Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_USERDATA_CSV), ".csv", "Logdata/Csv",
+        QString(), QString(), choiceDialog.isChecked(APPEND),
+        OptionData::instance().getFlags2() & opts2::PROPOSE_FILENAME);
 
       if(!file.isEmpty())
       {
-        int numExported = manager->exportCsv(file,
+        QVector<int> ids;
+        if(choiceDialog.isChecked(SELECTED))
+          ids = NavApp::getLogdataSearch()->getSelectedIds();
+
+        int numExported = manager->exportCsv(file, ids,
                                              choiceDialog.isChecked(EXPORTPLAN),
                                              choiceDialog.isChecked(EXPORTPERF),
                                              choiceDialog.isChecked(EXPORTGPX),
-                                             choiceDialog.isChecked(HEADER));
+                                             choiceDialog.isChecked(HEADER) && !choiceDialog.isChecked(APPEND),
+                                             choiceDialog.isChecked(APPEND));
         mainWindow->setStatusMessage(tr("%1 logbook %2 exported.").
                                      arg(numExported).arg(numExported == 1 ? tr("entry") : tr("entries")));
       }
@@ -734,9 +758,7 @@ void LogdataController::planSaveAs(atools::sql::SqlRecord *record, QWidget *pare
     atools::fs::pln::FlightplanIO().loadLnmGz(flightplan, record->value("flightplan").toByteArray());
 
     // Build filename
-    QString defFilename = (OptionData::instance().getFlags2() & opts2::ROUTE_SAVE_SHORT_NAME) ?
-                          flightplan.getFilenameShort() : flightplan.getFilenameLong();
-
+    QString defFilename = flightplan.getFilenamePattern(OptionData::instance().getFlightplanPattern(), ".lnmpln");
     QString filename = mainWindow->routeSaveFileDialogLnm(defFilename);
     if(!filename.isEmpty())
       atools::fs::pln::FlightplanIO().saveLnm(flightplan, filename);
@@ -800,9 +822,7 @@ void LogdataController::gpxSaveAs(atools::sql::SqlRecord *record, QWidget *paren
     atools::fs::pln::Flightplan flightplan;
     atools::fs::pln::FlightplanIO().loadLnmStr(flightplan, plan);
 
-    QString defFilename = (OptionData::instance().getFlags2() & opts2::ROUTE_SAVE_SHORT_NAME) ?
-                          flightplan.getFilenameShort(QString(), ".gpx") :
-                          flightplan.getFilenameLong(QString(), ".gpx");
+    QString defFilename = flightplan.getFilenamePattern(OptionData::instance().getFlightplanPattern(), ".gpx");
 
     QString filename = dialog->saveFileDialog(
       tr("Save GPX"),

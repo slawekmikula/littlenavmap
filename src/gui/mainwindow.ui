@@ -368,10 +368,14 @@
     <addaction name="menuViewUserpoints"/>
     <addaction name="separator"/>
     <addaction name="actionMapShowRoute"/>
+    <addaction name="actionMapShowTocTod"/>
     <addaction name="actionInfoApproachShowMissedAppr"/>
+    <addaction name="separator"/>
     <addaction name="actionMapShowAircraft"/>
     <addaction name="actionMapShowAircraftTrack"/>
+    <addaction name="separator"/>
     <addaction name="actionMapShowCompassRose"/>
+    <addaction name="actionMapShowCompassRoseAttach"/>
     <addaction name="separator"/>
     <addaction name="actionMapShowAircraftAi"/>
     <addaction name="actionMapShowAircraftAiBoat"/>
@@ -553,7 +557,7 @@
          <item>
           <layout class="QVBoxLayout" name="verticalLayoutAirportSearch">
            <property name="spacing">
-            <number>4</number>
+            <number>2</number>
            </property>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayoutAirportNameSearch">
@@ -1657,7 +1661,7 @@
          <item>
           <layout class="QVBoxLayout" name="verticalLayoutNavSearch">
            <property name="spacing">
-            <number>4</number>
+            <number>2</number>
            </property>
            <property name="bottomMargin">
             <number>0</number>
@@ -3170,7 +3174,7 @@ Will match any visited airport.</string>
             <number>0</number>
            </property>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_7">
+            <layout class="QHBoxLayout" name="horizontalLayoutLogdataDepartDest">
              <property name="spacing">
               <number>2</number>
              </property>
@@ -3227,7 +3231,7 @@ Will match any visited airport.</string>
             </layout>
            </item>
            <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <layout class="QHBoxLayout" name="horizontalLayoutAircraftSim">
              <property name="spacing">
               <number>2</number>
              </property>
@@ -4338,6 +4342,44 @@ Will match any visited airport.</string>
          </item>
         </layout>
        </widget>
+       <widget class="QWidget" name="tabRouteRemarks">
+        <attribute name="title">
+         <string>Flight Plan Remarks</string>
+        </attribute>
+        <attribute name="toolTip">
+         <string>Remarks for the flight plan</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_37">
+         <property name="spacing">
+          <number>2</number>
+         </property>
+         <property name="leftMargin">
+          <number>2</number>
+         </property>
+         <property name="topMargin">
+          <number>2</number>
+         </property>
+         <property name="rightMargin">
+          <number>2</number>
+         </property>
+         <property name="bottomMargin">
+          <number>2</number>
+         </property>
+         <item>
+          <widget class="QPlainTextEdit" name="plainTextEditRouteRemarks">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="tabChangesFocus">
+            <bool>true</bool>
+           </property>
+           <property name="placeholderText">
+            <string>Remarks for the flight plan</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
        <widget class="QWidget" name="tabAircraftPerformance">
         <attribute name="title">
          <string>Fuel Report</string>
@@ -4844,7 +4886,7 @@ Wind speed will be interpolated for climb and descent phases.</string>
        <property name="tabBarAutoHide">
         <bool>false</bool>
        </property>
-       <widget class="QWidget" name="tabAirportInfo">
+       <widget class="QWidget" name="tabAirport">
         <property name="toolTip">
          <string/>
         </property>
@@ -4859,216 +4901,257 @@ Wind speed will be interpolated for climb and descent phases.</string>
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
-          <widget class="QTextBrowser" name="textBrowserAirportInfo">
-           <property name="readOnly">
+          <widget class="QTabWidget" name="tabWidgetAirport">
+           <property name="toolTip">
+            <string/>
+           </property>
+           <property name="currentIndex">
+            <number>0</number>
+           </property>
+           <property name="tabsClosable">
             <bool>true</bool>
            </property>
-           <property name="placeholderText">
-            <string>No airport selected.</string>
-           </property>
-           <property name="openLinks">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabRunwayInfo">
-        <attribute name="title">
-         <string>Runways</string>
-        </attribute>
-        <attribute name="toolTip">
-         <string>Runway and helipad information</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_8">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <property name="leftMargin">
-          <number>2</number>
-         </property>
-         <property name="topMargin">
-          <number>2</number>
-         </property>
-         <property name="rightMargin">
-          <number>2</number>
-         </property>
-         <property name="bottomMargin">
-          <number>2</number>
-         </property>
-         <item>
-          <widget class="QTextBrowser" name="textBrowserRunwayInfo">
-           <property name="readOnly">
+           <property name="movable">
             <bool>true</bool>
            </property>
-           <property name="placeholderText">
-            <string>No airport selected.</string>
-           </property>
-           <property name="openLinks">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabComInfo">
-        <attribute name="title">
-         <string>Com</string>
-        </attribute>
-        <attribute name="toolTip">
-         <string>Airport communication frequencies</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_11">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <property name="leftMargin">
-          <number>2</number>
-         </property>
-         <property name="topMargin">
-          <number>2</number>
-         </property>
-         <property name="rightMargin">
-          <number>2</number>
-         </property>
-         <property name="bottomMargin">
-          <number>2</number>
-         </property>
-         <item>
-          <widget class="QTextBrowser" name="textBrowserComInfo">
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="placeholderText">
-            <string>No airport selected.</string>
-           </property>
-           <property name="openLinks">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabProceduresInfo">
-        <attribute name="title">
-         <string>Procedures</string>
-        </attribute>
-        <attribute name="toolTip">
-         <string>Airport procedures</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_22">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <property name="leftMargin">
-          <number>2</number>
-         </property>
-         <property name="topMargin">
-          <number>2</number>
-         </property>
-         <property name="rightMargin">
-          <number>2</number>
-         </property>
-         <property name="bottomMargin">
-          <number>2</number>
-         </property>
-         <item>
-          <widget class="QTextBrowser" name="textBrowserApproachInfo">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>3</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="readOnly">
-            <bool>true</bool>
-           </property>
-           <property name="placeholderText">
-            <string>No airport selected.</string>
-           </property>
-           <property name="openLinks">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabNearest">
-        <attribute name="title">
-         <string>Nearest</string>
-        </attribute>
-        <attribute name="toolTip">
-         <string>Nearest navaids and airports in
+           <widget class="QWidget" name="tabAirportOverview">
+            <attribute name="title">
+             <string>Overview</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Aiport overview</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_8">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTextBrowser" name="textBrowserAirportInfo">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="placeholderText">
+                <string>No airport selected.</string>
+               </property>
+               <property name="openLinks">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tabAirportRunway">
+            <attribute name="title">
+             <string>Runways</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Runway and helipad information</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_11">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTextBrowser" name="textBrowserRunwayInfo">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="placeholderText">
+                <string>No airport selected.</string>
+               </property>
+               <property name="openLinks">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tabAirportCom">
+            <attribute name="title">
+             <string>Com</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Airport communication frequencies</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_19">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTextBrowser" name="textBrowserComInfo">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="placeholderText">
+                <string>No airport selected.</string>
+               </property>
+               <property name="openLinks">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tabAirportApproach">
+            <attribute name="title">
+             <string>Procedures</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Airport procedures</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_22">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTextBrowser" name="textBrowserApproachInfo">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                 <horstretch>0</horstretch>
+                 <verstretch>3</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+               <property name="placeholderText">
+                <string>No airport selected.</string>
+               </property>
+               <property name="openLinks">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tabAirportNearest">
+            <attribute name="title">
+             <string>Nearest</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Nearest navaids and airports in
 relation to shown airport</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_35">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <property name="leftMargin">
-          <number>2</number>
-         </property>
-         <property name="topMargin">
-          <number>2</number>
-         </property>
-         <property name="rightMargin">
-          <number>2</number>
-         </property>
-         <property name="bottomMargin">
-          <number>2</number>
-         </property>
-         <item>
-          <widget class="QTextBrowser" name="textBrowserNearestInfo">
-           <property name="placeholderText">
-            <string>No airport selected.</string>
-           </property>
-           <property name="openLinks">
-            <bool>false</bool>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-       <widget class="QWidget" name="tabWeatherInfo">
-        <attribute name="title">
-         <string>Weather</string>
-        </attribute>
-        <attribute name="toolTip">
-         <string>Decoded weather information for airport</string>
-        </attribute>
-        <layout class="QVBoxLayout" name="verticalLayout_19">
-         <property name="spacing">
-          <number>2</number>
-         </property>
-         <property name="leftMargin">
-          <number>2</number>
-         </property>
-         <property name="topMargin">
-          <number>2</number>
-         </property>
-         <property name="rightMargin">
-          <number>2</number>
-         </property>
-         <property name="bottomMargin">
-          <number>2</number>
-         </property>
-         <item>
-          <widget class="QTextBrowser" name="textBrowserWeatherInfo">
-           <property name="placeholderText">
-            <string>No airport selected.</string>
-           </property>
-           <property name="openLinks">
-            <bool>false</bool>
-           </property>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_35">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTextBrowser" name="textBrowserNearestInfo">
+               <property name="placeholderText">
+                <string>No airport selected.</string>
+               </property>
+               <property name="openLinks">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QWidget" name="tabAirportWeather">
+            <attribute name="title">
+             <string>Weather</string>
+            </attribute>
+            <attribute name="toolTip">
+             <string>Decoded weather information for airport</string>
+            </attribute>
+            <layout class="QVBoxLayout" name="verticalLayout_38">
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QTextBrowser" name="textBrowserWeatherInfo">
+               <property name="placeholderText">
+                <string>No airport selected.</string>
+               </property>
+               <property name="openLinks">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
           </widget>
          </item>
         </layout>
@@ -5088,13 +5171,13 @@ relation to shown airport</string>
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QTextBrowser" name="textBrowserNavaidInfo">
@@ -5123,13 +5206,13 @@ relation to shown airport</string>
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QTextBrowser" name="textBrowserAirspaceInfo">
@@ -5158,13 +5241,13 @@ relation to shown airport</string>
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QTextBrowser" name="textBrowserUserpointInfo">
@@ -5193,13 +5276,13 @@ relation to shown airport</string>
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QTextBrowser" name="textBrowserLogbookInfo">
@@ -5228,13 +5311,13 @@ relation to shown airport</string>
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QTextBrowser" name="textBrowserClientInfo">
@@ -5263,13 +5346,13 @@ relation to shown airport</string>
           <number>2</number>
          </property>
          <property name="topMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>2</number>
          </property>
          <property name="bottomMargin">
-          <number>2</number>
+          <number>0</number>
          </property>
          <item>
           <widget class="QTextBrowser" name="textBrowserCenterInfo">
@@ -8110,10 +8193,6 @@ Best track will be selected automatically.</string>
    <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="icon">
-    <iconset resource="../../littlenavmap.qrc">
-     <normaloff>:/littlenavmap/resources/icons/offline.svg</normaloff>:/littlenavmap/resources/icons/offline.svg</iconset>
-   </property>
    <property name="text">
     <string>&amp;Work Offline</string>
    </property>
@@ -9294,7 +9373,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/userdata_edit.svg</normaloff>:/littlenavmap/resources/icons/userdata_edit.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Edit Userpoint(s)</string>
+    <string>&amp;Edit Userpoint(s) ...</string>
    </property>
    <property name="toolTip">
     <string>Edit one or more userpoints</string>
@@ -9312,7 +9391,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/userdata_add.svg</normaloff>:/littlenavmap/resources/icons/userdata_add.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Add Userpoint</string>
+    <string>&amp;Add Userpoint ...</string>
    </property>
    <property name="statusTip">
     <string>Add Userpoint</string>
@@ -9345,7 +9424,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/userdata_add.svg</normaloff>:/littlenavmap/resources/icons/userdata_add.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Add Userpoint %1</string>
+    <string>&amp;Add Userpoint %1 ...</string>
    </property>
    <property name="toolTip">
     <string>Add Userpoint</string>
@@ -9360,7 +9439,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/userdata_edit.svg</normaloff>:/littlenavmap/resources/icons/userdata_edit.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Edit Userpoint %1</string>
+    <string>&amp;Edit Userpoint %1 ...</string>
    </property>
    <property name="toolTip">
     <string>Edit Userpoint</string>
@@ -9756,7 +9835,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/trafficpattern.svg</normaloff>:/littlenavmap/resources/icons/trafficpattern.svg</iconset>
    </property>
    <property name="text">
-    <string>Display Airport &amp;Traffic Pattern at %1</string>
+    <string>Display Airport &amp;Traffic Pattern at %1 ...</string>
    </property>
    <property name="toolTip">
     <string>Show Airport traffic pattern for a runway at this airport</string>
@@ -10583,7 +10662,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/logdata_add.svg</normaloff>:/littlenavmap/resources/icons/logdata_add.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Add Logbook Entry</string>
+    <string>&amp;Add Logbook Entry ...</string>
    </property>
    <property name="toolTip">
     <string>Add logbook entry</string>
@@ -10713,7 +10792,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/logdata_edit.svg</normaloff>:/littlenavmap/resources/icons/logdata_edit.svg</iconset>
    </property>
    <property name="text">
-    <string>&amp;Edit Log Entry %1</string>
+    <string>&amp;Edit Log Entry %1 ...</string>
    </property>
    <property name="toolTip">
     <string>Edit Log Entry</string>
@@ -10833,7 +10912,7 @@ Best track will be selected automatically.</string>
      <normaloff>:/littlenavmap/resources/icons/hold.svg</normaloff>:/littlenavmap/resources/icons/hold.svg</iconset>
    </property>
    <property name="text">
-    <string>Display &amp;Holding at %1</string>
+    <string>Display &amp;Holding at %1 ...</string>
    </property>
    <property name="toolTip">
     <string>Display holding at this position or navaid</string>
@@ -10923,7 +11002,7 @@ Best track will be selected automatically.</string>
   </action>
   <action name="actionRouteVisibleColumns">
    <property name="text">
-    <string>&amp;Select visible Columns</string>
+    <string>&amp;Select visible Columns ...</string>
    </property>
    <property name="toolTip">
     <string>Hide or show columns in table</string>
@@ -11211,57 +11290,114 @@ Best track will be selected automatically.</string>
   </action>
   <action name="actionSearchLogdataSavePlanAs">
    <property name="text">
-    <string>&amp;Save Flight Plan as ...</string>
+    <string>&amp;Save attached Flight Plan as ...</string>
    </property>
    <property name="iconText">
     <string>Save flight plan as a new file</string>
    </property>
    <property name="toolTip">
-    <string>Save flight plan as a new file</string>
+    <string>Save attached flight plan as a new file</string>
+   </property>
+   <property name="statusTip">
+    <string>Save attached flight plan as a new file</string>
    </property>
   </action>
   <action name="actionSearchLogdataOpenPlan">
    <property name="text">
-    <string>&amp;Open Flight Plan</string>
+    <string>&amp;Open attached Flight Plan</string>
    </property>
    <property name="iconText">
     <string>Open flight plan as current</string>
    </property>
    <property name="toolTip">
-    <string>Open flight plan as current</string>
+    <string>Open attached flight plan as current</string>
+   </property>
+   <property name="statusTip">
+    <string>Open attached flight plan as current</string>
    </property>
   </action>
   <action name="actionSearchLogdataSavePerfAs">
    <property name="text">
-    <string>Save Aircraft &amp;Perfomance as ...</string>
+    <string>Save attached Aircraft &amp;Perfomance as ...</string>
    </property>
    <property name="iconText">
     <string>Save aircraft perfomance as a new file</string>
    </property>
    <property name="toolTip">
-    <string>Save aircraft perfomance as a new file</string>
+    <string>Save attached aircraft perfomance as a new file</string>
+   </property>
+   <property name="statusTip">
+    <string>Save attached aircraft perfomance as a new file</string>
    </property>
   </action>
   <action name="actionSearchLogdataOpenPerf">
    <property name="text">
-    <string>Open &amp;Aircraft Performance</string>
+    <string>Open attached &amp;Aircraft Performance</string>
    </property>
    <property name="iconText">
     <string>Open aircraft performance as current</string>
    </property>
    <property name="toolTip">
-    <string>Open Aircraft Performance as current</string>
+    <string>Open attached Aircraft Performance as current</string>
+   </property>
+   <property name="statusTip">
+    <string>Open attached Aircraft Performance as current</string>
    </property>
   </action>
   <action name="actionSearchLogdataSaveGpxAs">
    <property name="text">
-    <string>Save &amp;GPX Trail as ...</string>
+    <string>Save attached &amp;GPX Trail as ...</string>
    </property>
    <property name="iconText">
     <string>Save aircraft trail into GPX file</string>
    </property>
    <property name="toolTip">
-    <string>Save aircraft trail into GPX file</string>
+    <string>Save attached aircraft trail into GPX file</string>
+   </property>
+   <property name="statusTip">
+    <string>Save attached aircraft trail into GPX file</string>
+   </property>
+  </action>
+  <action name="actionMapShowCompassRoseAttach">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../littlenavmap.qrc">
+     <normaloff>:/littlenavmap/resources/icons/compassroseattach.svg</normaloff>:/littlenavmap/resources/icons/compassroseattach.svg</iconset>
+   </property>
+   <property name="text">
+    <string>&amp;Attach Compass Rose to Aircraft</string>
+   </property>
+   <property name="toolTip">
+    <string>Compass rose follows user aircraft if checked</string>
+   </property>
+   <property name="statusTip">
+    <string>Compass rose follows user aircraft if checked</string>
+   </property>
+  </action>
+  <action name="actionMapShowTocTod">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../../littlenavmap.qrc">
+     <normaloff>:/littlenavmap/resources/icons/routetoctod.svg</normaloff>:/littlenavmap/resources/icons/routetoctod.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Show &amp;Top of Climb and Top of Descent</string>
+   </property>
+   <property name="toolTip">
+    <string>Show top of descent and top of climb points on the map and in the elevation profile</string>
+   </property>
+   <property name="statusTip">
+    <string>Show top of descent and top of climb points on the map and in the elevation profile</string>
    </property>
   </action>
  </widget>
@@ -11398,12 +11534,6 @@ Best track will be selected automatically.</string>
   <tabstop>textBrowserAircraftProgressInfo</tabstop>
   <tabstop>textBrowserAircraftAiInfo</tabstop>
   <tabstop>tabWidgetInformation</tabstop>
-  <tabstop>textBrowserAirportInfo</tabstop>
-  <tabstop>textBrowserRunwayInfo</tabstop>
-  <tabstop>textBrowserComInfo</tabstop>
-  <tabstop>textBrowserApproachInfo</tabstop>
-  <tabstop>textBrowserNearestInfo</tabstop>
-  <tabstop>textBrowserWeatherInfo</tabstop>
   <tabstop>textBrowserNavaidInfo</tabstop>
   <tabstop>textBrowserAirspaceInfo</tabstop>
   <tabstop>textBrowserUserpointInfo</tabstop>
@@ -11416,7 +11546,7 @@ Best track will be selected automatically.</string>
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="buttonGroupRouteCalcAirway"/>
   <buttongroup name="buttonGroupRouteCalc"/>
+  <buttongroup name="buttonGroupRouteCalcAirway"/>
  </buttongroups>
 </ui>

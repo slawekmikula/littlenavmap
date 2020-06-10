@@ -521,8 +521,7 @@ void MainWindow::loadNavmapLegend()
 {
   qDebug() << Q_FUNC_INFO;
 
-  legendFile = HelpHandler::getHelpFile(lnm::helpLegendLocalFile,
-                                        OptionData::instance().getFlags() & opts::GUI_OVERRIDE_LANGUAGE);
+  legendFile = HelpHandler::getHelpFile(lnm::helpLegendLocalFile, OptionData::instance().getLanguage());
   qDebug() << "legendUrl" << legendFile;
 
   QFile legend(legendFile);
@@ -577,9 +576,7 @@ void MainWindow::showFaqPage()
 
 void MainWindow::showOfflineHelp()
 {
-  HelpHandler::openFile(this, HelpHandler::getHelpFile(lnm::helpOfflineFile,
-                                                       OptionData::instance().getFlags() &
-                                                       opts::GUI_OVERRIDE_LANGUAGE));
+  HelpHandler::openFile(this, HelpHandler::getHelpFile(lnm::helpOfflineFile, OptionData::instance().getLanguage()));
 }
 
 /* Show marble legend */
@@ -748,7 +745,8 @@ void MainWindow::setupUi()
                                                           arg(ui->dockWidgetRouteCalc->windowTitle()));
   ui->dockWidgetRouteCalc->toggleViewAction()->setStatusTip(ui->dockWidgetRouteCalc->toggleViewAction()->toolTip());
   ui->dockWidgetRouteCalc->setAllowedAreas(Qt::NoDockWidgetArea);
-  ui->dockWidgetRouteCalc->setFloating(false);
+  ui->dockWidgetRouteCalc->setFloating(true);
+  ui->dockWidgetRouteCalc->setVisible(false); // Hide on first start - is superseded by restore state later
 
   ui->dockWidgetInformation->toggleViewAction()->setIcon(QIcon(":/littlenavmap/resources/icons/infodock.svg"));
   ui->dockWidgetInformation->toggleViewAction()->setShortcut(QKeySequence(tr("Alt+4")));
@@ -1297,6 +1295,7 @@ void MainWindow::connectAllSlots()
   connect(ui->actionMapShowJetAirways, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapShowTracks, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapShowRoute, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+  connect(ui->actionMapShowTocTod, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapHideRangeRings, &QAction::triggered, this, &MainWindow::clearRangeRingsAndDistanceMarkers);
 
   connect(ui->actionSearchLogdataShowDirect, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
@@ -1323,6 +1322,7 @@ void MainWindow::connectAllSlots()
   connect(ui->actionInfoApproachShowMissedAppr, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
 
   connect(ui->actionMapShowCompassRose, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+  connect(ui->actionMapShowCompassRoseAttach, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapShowAircraft, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapShowAircraftAi, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapShowAircraftAiBoat, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
@@ -1353,8 +1353,8 @@ void MainWindow::connectAllSlots()
   TrackController *trackController = NavApp::getTrackController();
   connect(trackController, &TrackController::postTrackLoad, routeController, &RouteController::clearAirwayNetworkCache);
   connect(trackController, &TrackController::postTrackLoad, infoController, &InfoController::tracksChanged);
-  connect(trackController, &TrackController::postTrackLoad, this, &MainWindow::updateMapObjectsShown);
   connect(trackController, &TrackController::postTrackLoad, routeController, &RouteController::tracksChanged);
+  connect(trackController, &TrackController::postTrackLoad, this, &MainWindow::updateMapObjectsShown);
 
   connect(ui->actionRouteDownloadTracks, &QAction::toggled, trackController, &TrackController::downloadToggled);
   connect(ui->actionRouteDownloadTracksNow, &QAction::triggered, trackController, &TrackController::startDownload);
@@ -1619,6 +1619,7 @@ void MainWindow::actionShortcutAirportInformationTriggered()
   qDebug() << Q_FUNC_INFO;
   dockHandler->activateWindow(ui->dockWidgetInformation);
   infoController->setCurrentInfoTabIndex(ic::INFO_AIRPORT);
+  infoController->setCurrentAirportInfoTabIndex(ic::INFO_AIRPORT_OVERVIEW);
   ui->textBrowserAirportInfo->setFocus();
 }
 
@@ -1626,7 +1627,8 @@ void MainWindow::actionShortcutAirportWeatherTriggered()
 {
   qDebug() << Q_FUNC_INFO;
   dockHandler->activateWindow(ui->dockWidgetInformation);
-  infoController->setCurrentInfoTabIndex(ic::INFO_WEATHER);
+  infoController->setCurrentInfoTabIndex(ic::INFO_AIRPORT);
+  infoController->setCurrentAirportInfoTabIndex(ic::INFO_AIRPORT_WEATHER);
   ui->textBrowserWeatherInfo->setFocus();
 }
 
@@ -1756,7 +1758,8 @@ void MainWindow::showDatabaseFiles()
 /* Updates label and tooltip for connection status */
 void MainWindow::setConnectionStatusMessageText(const QString& text, const QString& tooltipText)
 {
-  connectionStatus = text;
+  if(!text.isEmpty())
+    connectionStatus = text;
   connectionStatusTooltip = tooltipText;
   updateConnectionStatusMessageText();
 }
@@ -1892,17 +1895,17 @@ void MainWindow::routeResetAll()
                             tr("Select items to reset for a new flight"),
                             lnm::RESET_FOR_NEW_FLIGHT_DIALOG, "RESET.html");
 
-  choiceDialog.add(EMPTY_FLIGHT_PLAN, tr("&Create a new and empty flight plan"), QString(), true);
-  choiceDialog.add(DELETE_TRAIL, tr("&Delete aircaft trail"),
-                   tr("Delete simulator aircraft trail from map and elevation profile"), true);
-  choiceDialog.add(DELETE_ACTIVE_LEG, tr("&Reset active flight plan leg"),
-                   tr("Remove the active (magenta) flight plan leg"), true);
-  choiceDialog.add(RESTART_PERF, tr("Restart Aircraft &Performance Collection"),
-                   tr("Restarts the background aircraft performance collection"), true);
-  choiceDialog.add(RESTART_LOGBOOK, tr("Reset flight detection in &logbook"),
-                   tr("Reset the logbook to detect takeoff and landing for new logbook entries"), true);
-  choiceDialog.add(REMOVE_MARKS, tr("&Remove all Ranges, Measurements, Patterns and Holdings"),
-                   tr("Remove all range rings, measurements, traffic patterns and holdings from map"), false);
+  choiceDialog.addCheckBox(EMPTY_FLIGHT_PLAN, tr("&Create a new and empty flight plan"), QString(), true);
+  choiceDialog.addCheckBox(DELETE_TRAIL, tr("&Delete aircaft trail"),
+                           tr("Delete simulator aircraft trail from map and elevation profile"), true);
+  choiceDialog.addCheckBox(DELETE_ACTIVE_LEG, tr("&Reset active flight plan leg"),
+                           tr("Remove the active (magenta) flight plan leg"), true);
+  choiceDialog.addCheckBox(RESTART_PERF, tr("Restart Aircraft &Performance Collection"),
+                           tr("Restarts the background aircraft performance collection"), true);
+  choiceDialog.addCheckBox(RESTART_LOGBOOK, tr("Reset flight detection in &logbook"),
+                           tr("Reset the logbook to detect takeoff and landing for new logbook entries"), true);
+  choiceDialog.addCheckBox(REMOVE_MARKS, tr("&Remove all Ranges, Measurements, Patterns and Holdings"),
+                           tr("Remove all range rings, measurements, traffic patterns and holdings from map"), false);
 
   choiceDialog.restoreState();
 
@@ -2995,8 +2998,8 @@ void MainWindow::mainWindowShown()
   setStatusMessage(tr("Ready."));
   renderStatusUpdateLabel(Marble::Complete, true /* forceUpdate */);
 
-  // routeExport->routeMulitExportOptions();
-
+  // Make sure that window visible is only set after visibility is ensured
+  QTimer::singleShot(100, NavApp::setMainWindowVisible);
   qDebug() << Q_FUNC_INFO << "leave";
 }
 
@@ -3089,6 +3092,7 @@ void MainWindow::updateActionStates()
   ui->actionRouteCenter->setEnabled(hasFlightplan);
   ui->actionRouteSelectParking->setEnabled(NavApp::getRouteConst().hasValidDeparture());
   ui->actionMapShowRoute->setEnabled(hasFlightplan);
+  ui->actionMapShowTocTod->setEnabled(hasFlightplan && ui->actionMapShowRoute->isChecked());
   ui->actionInfoApproachShowMissedAppr->setEnabled(hasFlightplan && ui->actionMapShowRoute->isChecked());
   ui->actionRouteEditMode->setEnabled(hasFlightplan);
   ui->actionPrintFlightplan->setEnabled(hasFlightplan);
@@ -3331,11 +3335,11 @@ void MainWindow::restoreStateMain()
                          ui->actionMapShowAddonAirports, ui->actionMapShowVor, ui->actionMapShowNdb,
                          ui->actionMapShowWp, ui->actionMapShowIls, ui->actionMapShowVictorAirways,
                          ui->actionMapShowJetAirways, ui->actionMapShowTracks, ui->actionShowAirspaces,
-                         ui->actionMapShowRoute, ui->actionMapShowAircraft, ui->actionMapShowCompassRose,
-                         ui->actionMapAircraftCenter, ui->actionMapShowAircraftAi, ui->actionMapShowAircraftAiBoat,
-                         ui->actionMapShowAircraftTrack, ui->actionInfoApproachShowMissedAppr,
-                         ui->actionSearchLogdataShowDirect, ui->actionSearchLogdataShowRoute,
-                         ui->actionSearchLogdataShowTrack});
+                         ui->actionMapShowRoute, ui->actionMapShowTocTod, ui->actionMapShowAircraft,
+                         ui->actionMapShowCompassRose, ui->actionMapShowCompassRoseAttach, ui->actionMapAircraftCenter,
+                         ui->actionMapShowAircraftAi, ui->actionMapShowAircraftAiBoat, ui->actionMapShowAircraftTrack,
+                         ui->actionInfoApproachShowMissedAppr, ui->actionSearchLogdataShowDirect,
+                         ui->actionSearchLogdataShowRoute, ui->actionSearchLogdataShowTrack});
   }
   else
     mapWidget->resetSettingActionsToDefault();
@@ -3568,12 +3572,13 @@ void MainWindow::saveActionStates()
                     ui->actionMapShowEmptyAirports, ui->actionMapShowAddonAirports, ui->actionMapShowVor,
                     ui->actionMapShowNdb, ui->actionMapShowWp, ui->actionMapShowIls, ui->actionMapShowVictorAirways,
                     ui->actionMapShowJetAirways, ui->actionMapShowTracks, ui->actionShowAirspaces,
-                    ui->actionMapShowRoute, ui->actionMapShowAircraft, ui->actionMapShowCompassRose,
-                    ui->actionMapAircraftCenter, ui->actionMapShowAircraftAi, ui->actionMapShowAircraftAiBoat,
-                    ui->actionMapShowAircraftTrack, ui->actionInfoApproachShowMissedAppr, ui->actionMapShowGrid,
-                    ui->actionMapShowCities, ui->actionMapShowSunShading, ui->actionMapShowHillshading,
-                    ui->actionMapShowAirportWeather, ui->actionMapShowMinimumAltitude, ui->actionRouteEditMode,
-                    ui->actionWorkOffline, ui->actionRouteSaveSidStarWaypoints, ui->actionRouteSaveApprWaypoints,
+                    ui->actionMapShowRoute, ui->actionMapShowTocTod, ui->actionMapShowAircraft,
+                    ui->actionMapShowCompassRose, ui->actionMapShowCompassRoseAttach, ui->actionMapAircraftCenter,
+                    ui->actionMapShowAircraftAi, ui->actionMapShowAircraftAiBoat, ui->actionMapShowAircraftTrack,
+                    ui->actionInfoApproachShowMissedAppr, ui->actionMapShowGrid, ui->actionMapShowCities,
+                    ui->actionMapShowSunShading, ui->actionMapShowHillshading, ui->actionMapShowAirportWeather,
+                    ui->actionMapShowMinimumAltitude, ui->actionRouteEditMode, ui->actionWorkOffline,
+                    ui->actionRouteSaveSidStarWaypoints, ui->actionRouteSaveApprWaypoints,
                     ui->actionRouteSaveAirwayWaypoints, ui->actionLogdataCreateLogbook, ui->actionRunWebserver,
                     ui->actionSearchLogdataShowDirect, ui->actionSearchLogdataShowRoute, ui->actionSearchLogdataShowTrack
                    });
@@ -3763,11 +3768,11 @@ bool MainWindow::buildWeatherContextForInfo(map::WeatherContext& weatherContext,
 
   if(flags & optsw::WEATHER_INFO_VATSIM)
   {
-    QString metarStr = weatherReporter->getVatsimMetar(airport.ident);
-    if(newAirport || (!metarStr.isEmpty() && metarStr != currentWeatherContext->vatsimMetar))
+    atools::fs::weather::MetarResult vatsimMetar = weatherReporter->getVatsimMetar(airport.ident, airport.position);
+    if(newAirport || (!vatsimMetar.isEmpty() && vatsimMetar != currentWeatherContext->vatsimMetar))
     {
       // Airport has changed or METAR has changed
-      currentWeatherContext->vatsimMetar = metarStr;
+      currentWeatherContext->vatsimMetar = vatsimMetar;
       changed = true;
     }
   }
@@ -3819,7 +3824,7 @@ void MainWindow::buildWeatherContext(map::WeatherContext& weatherContext, const 
     weatherContext.noaaMetar = weatherReporter->getNoaaMetar(airport.ident, airport.position);
 
   if(flags & optsw::WEATHER_INFO_VATSIM)
-    weatherContext.vatsimMetar = weatherReporter->getVatsimMetar(airport.ident);
+    weatherContext.vatsimMetar = weatherReporter->getVatsimMetar(airport.ident, airport.position);
 
   if(flags & optsw::WEATHER_INFO_IVAO)
     weatherContext.ivaoMetar = weatherReporter->getIvaoMetar(airport.ident, airport.position);
@@ -3852,7 +3857,7 @@ void MainWindow::buildWeatherContextForTooltip(map::WeatherContext& weatherConte
     weatherContext.noaaMetar = weatherReporter->getNoaaMetar(airport.ident, airport.position);
 
   if(flags & optsw::WEATHER_TOOLTIP_VATSIM)
-    weatherContext.vatsimMetar = weatherReporter->getVatsimMetar(airport.ident);
+    weatherContext.vatsimMetar = weatherReporter->getVatsimMetar(airport.ident, airport.position);
 
   if(flags & optsw::WEATHER_TOOLTIP_IVAO)
     weatherContext.ivaoMetar = weatherReporter->getIvaoMetar(airport.ident, airport.position);
@@ -3954,31 +3959,32 @@ map::MapThemeComboIndex MainWindow::getMapThemeIndex() const
 
 void MainWindow::showFlightPlan()
 {
-  if(OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
+  if(NavApp::isMainWindowVisible() && OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
     actionShortcutFlightPlanTriggered();
 }
 
 void MainWindow::showAircraftPerformance()
 {
-  if(OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
+  if(NavApp::isMainWindowVisible() && OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
     actionShortcutAircraftPerformanceTriggered();
 }
 
 void MainWindow::showLogbookSearch()
 {
-  if(OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
+  if(NavApp::isMainWindowVisible() && OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
     actionShortcutLogbookSearchTriggered();
 }
 
 void MainWindow::showUserpointSearch()
 {
-  if(OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
+  if(NavApp::isMainWindowVisible() && OptionData::instance().getFlags2() & opts2::RAISE_WINDOWS)
     actionShortcutUserpointSearchTriggered();
 }
 
 void MainWindow::showRouteCalc()
 {
-  actionShortcutCalcRouteTriggered();
+  if(NavApp::isMainWindowVisible())
+    actionShortcutCalcRouteTriggered();
 }
 
 void MainWindow::webserverStatusChanged(bool running)

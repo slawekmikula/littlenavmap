@@ -113,6 +113,7 @@ void MapTypesFactory::fillRunway(const atools::sql::SqlRecord& record, map::MapR
   // Optional in AirportQuery::getRunways
   runway.airportId = record.valueInt("airport_id", -1);
 
+  runway.smoothness = record.valueFloat("smoothness", -1.f);
   runway.length = record.valueInt("length");
   runway.heading = record.valueFloat("heading");
   runway.patternAlt = record.valueFloat("pattern_altitude", 0.f);
@@ -146,12 +147,14 @@ void MapTypesFactory::fillAirportBase(const SqlRecord& record, map::MapAirport& 
     ap.ident = record.valueStr("ident");
     ap.icao = record.valueStr("icao", QString());
     ap.iata = record.valueStr("iata", QString());
+    ap.xpident = record.valueStr("xpident", QString());
     ap.name = record.valueStr("name");
     ap.rating = record.valueInt("rating", -1);
     ap.longestRunwayLength = record.valueInt("longest_runway_length");
     ap.longestRunwayHeading = static_cast<int>(std::round(record.valueFloat("longest_runway_heading")));
     ap.magvar = record.valueFloat("mag_var");
     ap.transitionAltitude = record.valueInt("transition_altitude", 0);
+    ap.flatten = record.valueInt("flatten", -1);
 
     ap.bounding = Rect(record.valueFloat("left_lonx"), record.valueFloat("top_laty"),
                        record.valueFloat("right_lonx"), record.valueFloat("bottom_laty"));

@@ -67,6 +67,9 @@ RouteCalcWindow::RouteCalcWindow(QWidget *parent) :
   connect(ui->horizontalSliderRouteCalcAirwayPreference, &QSlider::valueChanged,
           this, &RouteCalcWindow::updatePreferenceLabel);
 
+  connect(ui->dockWidgetRouteCalc->toggleViewAction(), &QAction::toggled,
+          this, &RouteCalcWindow::dockVisibilityChanged);
+
   units = new UnitStringTool();
   units->init({ui->spinBoxRouteCalcCruiseAltitude});
 
@@ -119,6 +122,12 @@ void RouteCalcWindow::helpClicked()
 {
   atools::gui::HelpHandler::openHelpUrlWeb(NavApp::getQMainWindow(), lnm::helpOnlineUrl + "ROUTECALC.html",
                                            lnm::helpLanguageOnline());
+}
+
+void RouteCalcWindow::dockVisibilityChanged(bool visible)
+{
+  if(visible)
+    setCruisingAltitudeFt(NavApp::getRouteCruiseAltFt());
 }
 
 void RouteCalcWindow::updateWidgets()
@@ -176,7 +185,7 @@ void RouteCalcWindow::updateHeader()
                     arg(flightplan.getEntries().at(toIndex).getIdent()).
                     arg(flightplan.getEntries().at(toIndex).getWaypointTypeAsFsxString());
 
-      title = tr("<b>Calculate flight plan between legs<br/>%1 and %2.</b>").arg(departure).arg(destination);
+      title = tr("<b>Calculate flight plan between legs<br/>%1 and %2</b>").arg(departure).arg(destination);
     }
     else
     {
@@ -206,7 +215,7 @@ void RouteCalcWindow::updateHeader()
                       arg(flightplan.getEntries().at(route.getDestinationAirportLegIndex()).getIdent()).
                       arg(flightplan.getEntries().at(route.getDestinationAirportLegIndex()).getWaypointTypeAsFsxString());
 
-      title = tr("<b>From %1 to %2.</b>").arg(departure).arg(destination);
+      title = tr("<b>From %1 to %2</b>").arg(departure).arg(destination);
 
     }
     else
@@ -240,6 +249,11 @@ void RouteCalcWindow::preDatabaseLoad()
 void RouteCalcWindow::postDatabaseLoad()
 {
   updateWidgets();
+}
+
+void RouteCalcWindow::optionsChanged()
+{
+  units->init({NavApp::getMainUi()->spinBoxRouteCalcCruiseAltitude});
 }
 
 rd::RoutingType RouteCalcWindow::getRoutingType() const
