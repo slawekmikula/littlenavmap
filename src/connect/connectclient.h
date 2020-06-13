@@ -25,6 +25,7 @@
 #include <QAbstractSocket>
 #include <QCache>
 #include <QTimer>
+#include <QUdpSocket>
 
 class QTcpSocket;
 class ConnectDialog;
@@ -105,6 +106,9 @@ signals:
   /* Fetch boat or aircraft AI has been changed */
   void aiFetchOptionsChanged();
 
+private slots:
+  void readPendingDatagrams();
+
 private:
   /* Try to reconnect every 5 seconds when network connection is lost */
   const int SOCKET_RECONNECT_SEC = 5;
@@ -115,6 +119,8 @@ private:
   /* Any metar fetched from the Simulator will time out in 15 seconds */
   const int WEATHER_TIMEOUT_FS_SECS = 15;
   const int NOT_AVAILABLE_TIMEOUT_FS_SECS = 300;
+
+  QUdpSocket* udpSocket;
 
   void readFromSocket();
   void readFromSocketError(QAbstractSocket::SocketError error);

@@ -61,7 +61,11 @@ ConnectClient::ConnectClient(MainWindow *parent)
     new DataReaderThread(mainWindow, settings.getAndStoreValue(lnm::OPTIONS_DATAREADER_DEBUG, false).toBool());
 
   // Create Flightgear handler
-  fgConnectHandler = new atools::fs::sc::FgConnectHandler(dataReader);
+  udpSocket = new QUdpSocket(parent);
+  udpSocket->bind(7755);
+  QObject::connect(udpSocket, SIGNAL(readyRead()), this, SLOT(readPendingDatagrams()));
+  fgConnectHandler = new atools::fs::sc::FgConnectHandler(dataReader, udpSocket);
+
 
   if(simConnectHandler->isLoaded()) {
     dataReader->setHandler(simConnectHandler);
@@ -92,6 +96,29 @@ ConnectClient::ConnectClient(MainWindow *parent)
   flushQueuedRequestsTimer.setInterval(FLUSH_QUEUE_MS);
   connect(&flushQueuedRequestsTimer, &QTimer::timeout, this, &ConnectClient::flushQueuedRequests);
   flushQueuedRequestsTimer.start();
+}
+
+void ConnectClient::readPendingDatagrams()
+{
+    QByteArray rxData;
+    QHostAddress sender;
+    quint16 senderPort;
+
+    while (udpSocket->hasPendingDatagrams())
+    {
+        qInfo() << Q_FUNC_INFO << "Read pending datagrams";
+
+        // Resize and zero byte buffer so we can make way for the new data.
+        rxData.fill(0, udpSocket->pendingDatagramSize());
+
+        // Read data from the UDP buffer.
+        udpSocket->readDatagram(rxData.data(),
+                                rxData.size(),
+                                &sender,
+                                &senderPort);
+
+        qInfo() << Q_FUNC_INFO << "Received: " << rxData.size();
+    }
 }
 
 ConnectClient::~ConnectClient()
