@@ -43,6 +43,7 @@ class MapPainterMark;
 class MapPainterTop;
 class MapPainterRoute;
 class MapPainterAircraft;
+class MapPainterTrack;
 class MapPainterShip;
 class MapPainterUser;
 class MapPainterAltitude;
@@ -86,6 +87,11 @@ public:
 
   /* Changes the detail factor (range 5-15 default is 10 */
   void setDetailFactor(int factor);
+
+  int getDetailFactor() const
+  {
+    return detailFactor;
+  }
 
   /* Get all shown map objects like airports, VOR, NDB, etc. */
   map::MapObjectTypes getShownMapObjects() const
@@ -172,6 +178,7 @@ private:
   MapPainterMark *mapPainterMark;
   MapPainterRoute *mapPainterRoute;
   MapPainterAircraft *mapPainterAircraft;
+  MapPainterTrack *mapPainterTrack;
   MapPainterTop *mapPainterTop;
   MapPainterShip *mapPainterShip;
   MapPainterUser *mapPainterUser;

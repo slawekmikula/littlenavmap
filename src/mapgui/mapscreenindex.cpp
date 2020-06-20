@@ -116,30 +116,24 @@ void MapScreenIndex::updateAirspaceScreenGeometryInternal(QSet<map::MapAirspaceI
       if(!(airspace->type & mapPaintWidget->getShownAirspaceTypesByLayer().types) && !highlights)
         continue;
 
-      Marble::GeoDataLatLonBox airspacebox(airspace->bounding.getNorth(), airspace->bounding.getSouth(),
-                                           airspace->bounding.getEast(), airspace->bounding.getWest(),
-                                           Marble::GeoDataCoordinates::Degree);
+      Marble::GeoDataLatLonBox airspacebox = conv.toGdc(airspace->bounding);
 
       // Check if airspace overlaps with current screen and is not already in list
       if(airspacebox.intersects(curBox) && !ids.contains(airspace->combinedId()))
       {
-        QPolygon polygon;
-        int x, y;
 
         const atools::geo::LineString *lines = controller->getAirspaceGeometry(airspace->combinedId());
         if(lines != nullptr)
         {
-          for(const Pos& pos : *lines)
+          QVector<QPolygonF> polygons = conv.wToS(*lines);
+
+          for(const QPolygonF& poly : polygons)
           {
-            conv.wToS(pos, x, y /*, QSize(2000, 2000)*/);
-            polygon.append(QPoint(x, y));
+            // Cut off all polygon parts that are not visible on screen
+            airspacePolygons.append(std::make_pair(airspace->combinedId(),
+                                                   poly.intersected(QPolygon(mapPaintWidget->rect())).toPolygon()));
+            ids.insert(airspace->combinedId());
           }
-
-          // Cut off all polygon parts that are not visible on screen
-          polygon = polygon.intersected(QPolygon(mapPaintWidget->rect()));
-
-          airspacePolygons.append(std::make_pair(airspace->combinedId(), polygon));
-          ids.insert(airspace->combinedId());
         }
       }
     }
@@ -217,20 +211,7 @@ void MapScreenIndex::updateIlsScreenGeometry(const Marble::GeoDataLatLonBox& cur
 
           if(ilsbox.intersects(curBox))
           {
-            QLine line;
-            atools::geo::Line centerLine = ils.centerLine();
-
-            int xs1, ys1, xs2, ys2;
-            bool hidden1, hidden2;
-            conv.wToS(centerLine.getPos1(), xs1, ys1, CoordinateConverter::DEFAULT_WTOS_SIZE, &hidden1);
-            conv.wToS(centerLine.getPos2(), xs2, ys2, CoordinateConverter::DEFAULT_WTOS_SIZE, &hidden2);
-
-            if(!hidden1 && !hidden2)
-            {
-              line.setP1(QPoint(xs1, ys1));
-              line.setP2(QPoint(xs2, ys2));
-              ilsLines.append(std::make_pair(ils.id, line));
-            }
+            updateLineScreenGeometry(ilsLines, ils.id, ils.centerLine(), curBox, conv);
 
             QPolygon polygon;
             bool hidden;
@@ -259,22 +240,27 @@ void MapScreenIndex::updateLogEntryScreenGeometry(const Marble::GeoDataLatLonBox
 
   if(scale->isValid())
   {
-    bool routePreview = NavApp::getLogdataController()->isRoutePreviewShown();
-    CoordinateConverter conv(mapPaintWidget->viewport());
-    for(map::MapLogbookEntry& entry : searchHighlights.logbookEntries)
-    {
-      if(entry.isValid())
-      {
-        updateLineScreenGeometry(logEntryLines, entry.id, entry.line(), curBox, conv);
+    map::MapObjectDisplayTypes types = paintLayer->getShownMapObjectDisplayTypes();
 
-        if(routePreview)
+    if(types.testFlag(map::LOGBOOK_DIRECT) || types.testFlag(map::LOGBOOK_ROUTE))
+    {
+      CoordinateConverter conv(mapPaintWidget->viewport());
+      for(map::MapLogbookEntry& entry : searchHighlights.logbookEntries)
+      {
+        if(entry.isValid())
         {
-          // Get geometry for flight plan if preview is enabled
-          const atools::geo::LineString *geo = NavApp::getLogdataController()->getRouteGeometry(entry.id);
-          if(geo != nullptr)
+          if(types.testFlag(map::LOGBOOK_DIRECT))
+            updateLineScreenGeometry(logEntryLines, entry.id, entry.line(), curBox, conv);
+
+          if(types.testFlag(map::LOGBOOK_ROUTE))
           {
-            for(int i = 0; i < geo->size() - 1; i++)
-              updateLineScreenGeometry(logEntryLines, entry.id, Line(geo->at(i), geo->at(i + 1)), curBox, conv);
+            // Get geometry for flight plan if preview is enabled
+            const atools::geo::LineString *geo = NavApp::getLogdataController()->getRouteGeometry(entry.id);
+            if(geo != nullptr)
+            {
+              for(int i = 0; i < geo->size() - 1; i++)
+                updateLineScreenGeometry(logEntryLines, entry.id, Line(geo->at(i), geo->at(i + 1)), curBox, conv);
+            }
           }
         }
       }
@@ -293,10 +279,10 @@ void MapScreenIndex::updateAirwayScreenGeometry(const Marble::GeoDataLatLonBox& 
   QSet<int> ids;
 
   // First get geometry from highlights
-  updateAirwayScreenGeometryInternal(ids, curBox, true);
+  updateAirwayScreenGeometryInternal(ids, curBox, true /* highlight */);
 
   // Get geometry from visible airspaces
-  updateAirwayScreenGeometryInternal(ids, curBox, false);
+  updateAirwayScreenGeometryInternal(ids, curBox, false /* highlight */);
 }
 
 void MapScreenIndex::updateAirwayScreenGeometryInternal(QSet<int>& ids, const Marble::GeoDataLatLonBox& curBox,
@@ -378,38 +364,36 @@ void MapScreenIndex::updateLineScreenGeometry(QList<std::pair<int, QLine> >& ind
                                               const Marble::GeoDataLatLonBox& curBox,
                                               const CoordinateConverter& conv)
 {
-  atools::geo::Rect bounding = line.boundingRect();
+  Marble::GeoDataLineString geoLineStr = conv.toGdcStr(line);
+  QRect mapGeo = mapPaintWidget->rect();
 
-  Marble::GeoDataLatLonBox airwaybox(bounding.getNorth(), bounding.getSouth(), bounding.getEast(), bounding.getWest(),
-                                     Marble::GeoDataCoordinates::Degree);
-  const QRect& mapGeo = mapPaintWidget->rect();
-  const MapScale *scale = paintLayer->getMapScale();
-
-  if(airwaybox.intersects(curBox))
+  QList<Marble::GeoDataLatLonBox> curBoxCorrectedList = query::splitAtAntiMeridian(curBox);
+  QVector<Marble::GeoDataLineString *> geoLineStringVector = geoLineStr.toDateLineCorrected();
+  for(Marble::GeoDataLatLonBox curBoxCorrected : curBoxCorrectedList)
   {
-    // Airway segment intersects with view rectangle
-    float distanceMeter = line.lengthMeter();
-    // Approximate the needed number of line segments
-    float numSegments = std::min(std::max(scale->getPixelIntForMeter(distanceMeter) / 40.f, 2.f), 72.f);
-    float step = 1.f / numSegments;
-
-    // Split the segments into smaller lines and add them only if visible
-    for(int j = 0; j < numSegments; j++)
+    for(const Marble::GeoDataLineString *lineCorrected : geoLineStringVector)
     {
-      float cur = step * static_cast<float>(j);
-      int xs1, ys1, xs2, ys2;
-      conv.wToS(line.getPos1().interpolate(line.getPos2(), distanceMeter, cur), xs1, ys1);
-      conv.wToS(line.getPos1().interpolate(line.getPos2(), distanceMeter, cur + step), xs2, ys2);
+      if(lineCorrected->latLonAltBox().intersects(curBoxCorrected))
+      {
+        QVector<QPolygonF> polys = conv.wToS(*lineCorrected);
+        for(const QPolygonF& p : polys)
+        {
+          for(int k = 0; k < p.size() - 1; k++)
+          {
+            QLine line(p.at(k).toPoint(), p.at(k + 1).toPoint());
+            QRect rect(line.p1(), line.p2());
+            rect = rect.normalized();
+            // Avoid points or flat rectangles (lines)
+            rect.adjust(-1, -1, 1, 1);
 
-      QRect rect(QPoint(xs1, ys1), QPoint(xs2, ys2));
-      rect = rect.normalized();
-      // Avoid points or flat rectangles (lines)
-      rect.adjust(-1, -1, 1, 1);
-
-      if(mapGeo.intersects(rect))
-        index.append(std::make_pair(id, QLine(xs1, ys1, xs2, ys2)));
+            if(mapGeo.intersects(rect))
+              index.append(std::make_pair(id, line));
+          }
+        }
+      }
     }
   }
+  qDeleteAll(geoLineStringVector);
 }
 
 void MapScreenIndex::saveState() const
@@ -445,8 +429,6 @@ void MapScreenIndex::updateRouteScreenGeometry(const Marble::GeoDataLatLonBox& c
   if(scale->isValid())
   {
     Pos p1;
-    const QRect& mapGeo = mapPaintWidget->rect();
-
     for(int i = 0; i < route.size(); i++)
     {
       const RouteLeg& routeLeg = route.value(i);
@@ -472,51 +454,9 @@ void MapScreenIndex::updateRouteScreenGeometry(const Marble::GeoDataLatLonBox& c
       }
 
       if(p1.isValid())
-      {
-        GeoDataLineString coords;
-        coords.setTessellate(true);
-        coords << GeoDataCoordinates(p1.getLonX(), p1.getLatY(), 0., GeoDataCoordinates::Degree)
-               << GeoDataCoordinates(p2.getLonX(), p2.getLatY(), 0., GeoDataCoordinates::Degree);
-
-        QVector<Marble::GeoDataLineString *> coordsCorrected = coords.toDateLineCorrected();
-        for(const Marble::GeoDataLineString *ls : coordsCorrected)
-        {
-          if(curBox.intersects(ls->latLonAltBox()))
-          {
-            Pos pos1(ls->first().longitude(), ls->first().latitude());
-            pos1.toDeg();
-
-            Pos pos2(ls->last().longitude(), ls->last().latitude());
-            pos2.toDeg();
-
-            float distanceMeter = pos2.distanceMeterTo(pos1);
-            // Approximate the needed number of line segments
-            float numSegments = std::min(std::max(scale->getPixelIntForMeter(distanceMeter) / 140.f, 4.f), 288.f);
-            float step = 1.f / numSegments;
-
-            // Split the legs into smaller lines and add them only if visible
-            for(int j = 0; j < numSegments; j++)
-            {
-              float cur = step * static_cast<float>(j);
-              int xs1, ys1, xs2, ys2;
-              conv.wToS(pos1.interpolate(pos2, distanceMeter, cur), xs1, ys1);
-              conv.wToS(pos1.interpolate(pos2, distanceMeter, cur + step), xs2, ys2);
-
-              QRect rect(QPoint(xs1, ys1), QPoint(xs2, ys2));
-              rect = rect.normalized();
-              // Avoid points or flat rectangles (lines)
-              rect.adjust(-1, -1, 1, 1);
-
-              if(mapGeo.intersects(rect))
-                routeLines.append(std::make_pair(i - 1, QLine(xs1, ys1, xs2, ys2)));
-            }
-          }
-        }
-        qDeleteAll(coordsCorrected);
-      }
+        updateLineScreenGeometry(routeLines, i - 1, Line(p1, p2), curBox, conv);
       p1 = p2;
     }
-
     routePoints.append(airportPoints);
     routePoints.append(otherPoints);
   }
@@ -625,6 +565,7 @@ void MapScreenIndex::getAllNearest(int xs, int ys, int maxDistance, map::MapSear
   getNearestHighlights(xs, ys, maxDistance, result, types);
 
   // Get objects from cache - already present objects will be skipped
+  // Airway included to fetch waypoints
   mapQuery->getNearestScreenObjects(conv, mapLayer, mapLayerEffective->isAirportDiagram(),
                                     shown & (map::AIRPORT_ALL | map::VOR | map::NDB | map::WAYPOINT | map::MARKER |
                                              map::AIRWAYJ | map::TRACK | map::AIRWAYV | map::USERPOINT | map::LOGBOOK),
@@ -683,6 +624,9 @@ void MapScreenIndex::getNearestHighlights(int xs, int ys, int maxDistance, map::
 
   if(types & map::QUERY_PATTERNS && NavApp::getMapMarkHandler()->getMarkTypes() & map::MARK_PATTERNS)
     insertSorted(conv, xs, ys, trafficPatterns, result.trafficPatterns, nullptr, maxDistance);
+
+  if(types & map::QUERY_RANGEMARKER && NavApp::getMapMarkHandler()->getMarkTypes() & map::MARK_RANGE_RINGS)
+    insertSorted(conv, xs, ys, rangeMarks, result.rangeMarkers, nullptr, maxDistance);
 }
 
 void MapScreenIndex::getNearestProcedureHighlights(int xs, int ys, int maxDistance, map::MapSearchResult& result,
@@ -831,8 +775,27 @@ QSet<int> MapScreenIndex::nearestLineIds(const QList<std::pair<int, QLine> >& li
 /* Get all airways near cursor position */
 void MapScreenIndex::getNearestLogEntries(int xs, int ys, int maxDistance, map::MapSearchResult& result) const
 {
-  for(int id : nearestLineIds(logEntryLines, xs, ys, maxDistance, false /* also distance to points */))
-    result.logbookEntries.append(NavApp::getLogdataController()->getLogEntryById(id));
+  CoordinateConverter conv(mapPaintWidget->viewport());
+  QSet<int> ids; // Deduplicate
+
+  // Look for logbook entry endpoints (departure and destination)
+  for(int i = searchHighlights.logbookEntries.size() - 1; i >= 0; i--)
+  {
+    const map::MapLogbookEntry& l = searchHighlights.logbookEntries.at(i);
+    int x, y;
+    if(conv.wToS(l.departurePos, x, y) || conv.wToS(l.destinationPos, x, y))
+      if((atools::geo::manhattanDistance(x, y, xs, ys)) < maxDistance)
+        maptools::insertSortedByDistance(conv, result.logbookEntries, &ids, xs, ys, l);
+  }
+
+  // Look for route and direct line geometry
+  if(paintLayer->getShownMapObjectDisplayTypes().testFlag(map::LOGBOOK_DIRECT) ||
+     paintLayer->getShownMapObjectDisplayTypes().testFlag(map::LOGBOOK_ROUTE))
+  {
+    for(int id : nearestLineIds(logEntryLines, xs, ys, maxDistance, false /* also distance to points */))
+      maptools::insertSortedByDistance(conv, result.logbookEntries, &ids, xs, ys,
+                                       NavApp::getLogdataController()->getLogEntryById(id));
+  }
 }
 
 void MapScreenIndex::getNearestIls(int xs, int ys, int maxDistance, map::MapSearchResult& result) const

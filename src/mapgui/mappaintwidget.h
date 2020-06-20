@@ -186,6 +186,7 @@ public:
 
   /* User aircraft as shown on the map */
   const atools::fs::sc::SimConnectUserAircraft& getUserAircraft() const;
+  const atools::fs::sc::SimConnectData& getSimConnectData() const;
 
   /* AI aircraft as shown on the map */
   const QVector<atools::fs::sc::SimConnectAircraft>& getAiAircraft() const;
@@ -309,6 +310,18 @@ public:
     return currentThemeIndex;
   }
 
+  /* Logbook display options have changed or new or edited logbook entry */
+  void updateLogEntryScreenGeometry();
+
+  /* For debugging functions */
+  MapScreenIndex *getScreenIndex()
+  {
+    return screenIndex;
+  }
+
+  /* Saved bounding box from last zoom or scroll operation. Needed to detect view changes. */
+  const Marble::GeoDataLatLonBox& getCurrentViewBoundingBox() const;
+
 signals:
   /* Emitted whenever the result exceeds the limit clause in the queries */
   void resultTruncated(int truncatedTo);
@@ -331,15 +344,7 @@ protected:
   void centerRectOnMap(const atools::geo::Rect& rect, bool allowAdjust = true);
   void centerRectOnMap(const Marble::GeoDataLatLonBox& rect, bool allowAdjust);
 
-  /* Saved bounding box from last zoom or scroll operation. Needed to detect view changes. */
-  const Marble::GeoDataLatLonBox& getCurrentViewBoundingBox() const;
-
   const MapScreenIndex *getScreenIndexConst() const
-  {
-    return screenIndex;
-  }
-
-  MapScreenIndex *getScreenIndex()
   {
     return screenIndex;
   }

@@ -161,9 +161,8 @@ MainWindow::MainWindow()
     ui->setupUi(this);
     setAcceptDrops(true);
 
-    // #ifdef QT_NO_DEBUG
-    // ui->menuExportFlightplanToOtherFormats->removeAction(ui->actionRouteSaveAsPlnAnnotated);
-    // #endif
+    // Show tooltips also for inactive windows (e.g. if a floating window is active)
+    setAttribute(Qt::WA_AlwaysShowToolTips);
 
     dialog = new atools::gui::Dialog(this);
     errorHandler = new atools::gui::ErrorHandler(this);
@@ -184,6 +183,7 @@ MainWindow::MainWindow()
     optionsDialog = new OptionsDialog(this);
     // Has to load the state now so options are available for all controller and manager classes
     optionsDialog->restoreState();
+    optionsChanged();
 
     // Dialog is opened with asynchronous open()
     connect(optionsDialog, &QDialog::finished, [ = ](int result) {
@@ -287,6 +287,8 @@ MainWindow::MainWindow()
 
     qDebug() << Q_FUNC_INFO << "Creating PrintSupport";
     printSupport = new PrintSupport(this);
+
+    setStatusMessage(tr("Started."), true /* addToLog */);
 
     qDebug() << Q_FUNC_INFO << "Connecting slots";
     connectAllSlots();
@@ -808,6 +810,7 @@ void MainWindow::setupUi()
   ui->toolBarView->addAction(ui->dockWidgetAircraft->toggleViewAction());
   ui->toolBarView->addAction(ui->dockWidgetLegend->toggleViewAction());
 
+  // ==============================================================
   // Create labels for the statusbar
   connectStatusLabel = new QLabel();
   connectStatusLabel->setAlignment(Qt::AlignCenter);
@@ -910,6 +913,7 @@ void MainWindow::connectAllSlots()
   connect(optionsDialog, &OptionsDialog::optionsChanged,
           NavApp::getTrackController(), &TrackController::optionsChanged);
   connect(optionsDialog, &OptionsDialog::optionsChanged, this, &MainWindow::saveStateNow);
+  connect(optionsDialog, &OptionsDialog::optionsChanged, this, &MainWindow::optionsChanged);
 
   // Updated manually in dialog
   // connect(optionsDialog, &OptionsDialog::optionsChanged, NavApp::getWebController(), &WebController::optionsChanged);
@@ -1045,6 +1049,7 @@ void MainWindow::connectAllSlots()
   // Logbook ===================================================================================
   LogdataController *logdataController = NavApp::getLogdataController();
   connect(logdataController, &LogdataController::refreshLogSearch, logSearch, &LogdataSearch::refreshData);
+  connect(logdataController, &LogdataController::logDataChanged, mapWidget, &MapWidget::updateLogEntryScreenGeometry);
   connect(logdataController, &LogdataController::logDataChanged, this, &MainWindow::updateMapObjectsShown);
   connect(logdataController, &LogdataController::logDataChanged, infoController,
           &InfoController::updateAllInformation);
@@ -1298,10 +1303,7 @@ void MainWindow::connectAllSlots()
   connect(ui->actionMapShowTocTod, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
   connect(ui->actionMapHideRangeRings, &QAction::triggered, this, &MainWindow::clearRangeRingsAndDistanceMarkers);
 
-  connect(ui->actionSearchLogdataShowDirect, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
-  connect(ui->actionSearchLogdataShowRoute, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
-  connect(ui->actionSearchLogdataShowTrack, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
-
+  // Logbook view options ============================================
   connect(ui->actionSearchLogdataShowDirect, &QAction::toggled,
           logdataController, &LogdataController::displayOptionsChanged);
   connect(ui->actionSearchLogdataShowRoute, &QAction::toggled,
@@ -1309,10 +1311,14 @@ void MainWindow::connectAllSlots()
   connect(ui->actionSearchLogdataShowTrack, &QAction::toggled,
           logdataController, &LogdataController::displayOptionsChanged);
 
+  connect(ui->actionSearchLogdataShowDirect, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+  connect(ui->actionSearchLogdataShowRoute, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+  connect(ui->actionSearchLogdataShowTrack, &QAction::toggled, this, &MainWindow::updateMapObjectsShown);
+
   connect(ui->actionMapShowAirportWeather, &QAction::toggled, infoController, &InfoController::updateAirportWeather);
 
   // Clear selection and highlights
-  connect(ui->actionMapClearAllHighlights, &QAction::triggered, routeController, &RouteController::clearSelection);
+  connect(ui->actionMapClearAllHighlights, &QAction::triggered, routeController, &RouteController::clearTableSelection);
   connect(ui->actionMapClearAllHighlights, &QAction::triggered, searchController, &SearchController::clearSelection);
   connect(ui->actionMapClearAllHighlights, &QAction::triggered, mapWidget, &MapPaintWidget::clearSearchHighlights);
   connect(ui->actionMapClearAllHighlights, &QAction::triggered, mapWidget, &MapPaintWidget::clearAirspaceHighlights);
@@ -1452,12 +1458,12 @@ void MainWindow::connectAllSlots()
   connect(connectClient, &ConnectClient::dataPacketReceived, profileWidget, &ProfileWidget::simDataChanged);
   connect(connectClient, &ConnectClient::dataPacketReceived, infoController, &InfoController::simDataChanged);
 
-  connect(connectClient, &ConnectClient::connectedToSimulator,
-          NavApp::getAircraftPerfController(), &AircraftPerfController::updateReports);
-  connect(connectClient, &ConnectClient::disconnectedFromSimulator,
-          NavApp::getAircraftPerfController(), &AircraftPerfController::updateReports);
   connect(connectClient, &ConnectClient::dataPacketReceived,
           NavApp::getAircraftPerfController(), &AircraftPerfController::simDataChanged);
+  connect(connectClient, &ConnectClient::connectedToSimulator,
+          NavApp::getAircraftPerfController(), &AircraftPerfController::connectedToSimulator);
+  connect(connectClient, &ConnectClient::disconnectedFromSimulator,
+          NavApp::getAircraftPerfController(), &AircraftPerfController::disconnectedFromSimulator);
 
   connect(connectClient, &ConnectClient::disconnectedFromSimulator, routeController,
           &RouteController::disconnectedFromSimulator);
@@ -2260,7 +2266,7 @@ bool MainWindow::routeSaveLnm()
                                     "Information might be lost.<br/>"
                                     "Use the export function instead.</b></p>"
                                     "<p><b>Save using the new LNMPLN format?</b></p>"),
-                                 tr("Do not show this dialog again."),
+                                 tr("Do not show this dialog again and save as LNMPLN."),
                                  buttonList, QMessageBox::Cancel, QMessageBox::Save);
 
     if(result == QMessageBox::Cancel)
@@ -2837,15 +2843,23 @@ void MainWindow::resetMessages()
 }
 
 /* Set a general status message */
-void MainWindow::setStatusMessage(const QString& message)
+void MainWindow::setStatusMessage(const QString& message, bool addToLog)
 {
-  if(statusMessages.isEmpty() || statusMessages.last() != message)
-    statusMessages.append(message);
+  if(addToLog)
+  {
+    statusMessages.append(std::make_pair(QTime::currentTime(), message));
+    while(statusMessages.size() > 20)
+      statusMessages.removeFirst();
 
-  if(statusMessages.size() > 1)
-    statusMessages.removeAt(0);
+    QStringList msg(tr("Background tasks:"));
+    for(int i = 0; i < statusMessages.size(); i++)
+      msg.append(tr("%1: %2").
+                 arg(QLocale().toString(statusMessages.at(i).first, tr("hh:mm:ss"))).
+                 arg(statusMessages.at(i).second));
+    ui->statusBar->setToolTip(msg.join("\n"));
+  }
 
-  ui->statusBar->showMessage(statusMessages.join(" "));
+  ui->statusBar->showMessage(message);
 }
 
 void MainWindow::setDetailLabelText(const QString& text)
@@ -2860,6 +2874,8 @@ void MainWindow::mainWindowShown()
 
   // Enable dock handler
   dockHandler->setHandleDockViews(true);
+
+  qDebug() << Q_FUNC_INFO << "UI font" << font();
 
   // Postpone loading of KML etc. until now when everything is set up
   mapWidget->mainWindowShown();
@@ -2981,9 +2997,6 @@ void MainWindow::mainWindowShown()
   // Start regular download of online network files
   NavApp::getOnlinedataController()->startProcessing();
 
-  if(ui->actionRouteDownloadTracks->isChecked())
-    NavApp::getTrackController()->startDownload();
-
   // Start webserver
   if(ui->actionRunWebserver->isChecked())
     NavApp::getWebController()->startServer();
@@ -2995,11 +3008,14 @@ void MainWindow::mainWindowShown()
   //// Workaround for profile dock widget which is not resized properly on startup
   // QTimer::singleShot(20, this, &MainWindow::adjustProfileDockHeight);
 
-  setStatusMessage(tr("Ready."));
   renderStatusUpdateLabel(Marble::Complete, true /* forceUpdate */);
 
   // Make sure that window visible is only set after visibility is ensured
   QTimer::singleShot(100, NavApp::setMainWindowVisible);
+
+  if(ui->actionRouteDownloadTracks->isChecked())
+    QTimer::singleShot(2000, NavApp::getTrackController(), &TrackController::startDownload);
+
   qDebug() << Q_FUNC_INFO << "leave";
 }
 
@@ -3055,7 +3071,7 @@ void MainWindow::updateMarkActionStates()
 void MainWindow::updateHighlightActionStates()
 {
   ui->actionMapClearAllHighlights->setEnabled(
-    mapWidget->hasHighlights() || searchController->hasSelection() || routeController->hasSelection());
+    mapWidget->hasHighlights() || searchController->hasSelection() || routeController->hasTableSelection());
 }
 
 /* Enable or disable actions */
@@ -3366,6 +3382,12 @@ void MainWindow::restoreStateMain()
     ui->dockWidgetMap->show();
 
   qDebug() << Q_FUNC_INFO << "leave";
+}
+
+void MainWindow::optionsChanged()
+{
+  dockHandler->setAutoRaiseDockWindows(OptionData::instance().getFlags2().testFlag(opts2::RAISE_DOCK_WINDOWS));
+  dockHandler->setAutoRaiseMainWindow(OptionData::instance().getFlags2().testFlag(opts2::RAISE_MAIN_WINDOW));
 }
 
 void MainWindow::saveStateNow()

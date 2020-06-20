@@ -20,10 +20,8 @@
 
 #include "fs/fspaths.h"
 #include "common/mapflags.h"
-#include "fs/pln/flightplanconstants.h"
 
 #include <QMainWindow>
-#include <QUrl>
 #include <QFileInfoList>
 #include <QTimer>
 #include <marble/MarbleGlobal.h>
@@ -147,7 +145,7 @@ public:
   void setOnlineConnectionStatusMessageText(const QString& text, const QString& tooltipText);
 
   /* Sets a general status bar message which is shared with all widgets/actions status text */
-  void setStatusMessage(const QString& message);
+  void setStatusMessage(const QString& message, bool addToLog = false);
 
   void setDetailLabelText(const QString& text);
 
@@ -356,6 +354,7 @@ private:
   void webserverStatusChanged(bool running);
   void openWebserver();
   void saveStateNow();
+  void optionsChanged();
 
 #ifdef DEBUG_INFORMATION
   void debugActionTriggered1();
@@ -388,8 +387,8 @@ private:
   /* Connection field and tooltip in statusbar */
   QString connectionStatus, connectionStatusTooltip, onlineConnectionStatus, onlineConnectionStatusTooltip;
 
-  /* List of status bar messages (currently only one) */
-  QStringList statusMessages;
+  /* List of status bar messages. First is shown and others are shown in tooltip. */
+  QVector<std::pair<QTime, QString> > statusMessages;
 
   /* true if database is currently switched off (i.e. the scenery library loading is open) */
   bool hasDatabaseLoadStatus = false;

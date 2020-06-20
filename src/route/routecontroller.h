@@ -213,7 +213,7 @@ public:
   void flightplanTableAsTextTable(QTextCursor& cursor, const QBitArray& selectedCols, float fontPointSize) const;
 
   /* Get header for print report */
-  void flightplanHeader(atools::util::HtmlBuilder& html, bool titleOnly) const;
+  void flightplanHeaderPrint(atools::util::HtmlBuilder& html, bool titleOnly) const;
 
   /* Copy the route as a string to the clipboard */
   void routeStringToClipboard() const;
@@ -240,9 +240,9 @@ public:
 
   QString procedureTypeText(const RouteLeg& leg);
 
-  void clearSelection();
+  void clearTableSelection();
 
-  bool hasSelection();
+  bool hasTableSelection();
 
   void aircraftPerformanceChanged();
   void windUpdated();
@@ -411,8 +411,14 @@ private:
   void dockVisibilityChanged(bool visible);
   void eraseAirway(int row);
 
+  /* Time for clear selection triggered or scroll active to top */
+  void cleanupTableTimeout();
+
+  /* Departure, destination and procedures. */
   QString buildFlightplanLabel(bool print = false, bool titleOnly = false, QString *tooltip = nullptr) const;
-  QString buildFlightplanLabel2() const;
+
+  /* Distance and time. */
+  QString buildFlightplanLabel2(bool print = false) const;
 
   void updateTableHeaders();
   void highlightNextWaypoint(int nearestLegIndex);
@@ -447,6 +453,11 @@ private:
   /* Update navdata properties in flightplan properties for export and save */
   void updateRouteCycleMetadata();
 
+  /* Move active leg to second top position */
+  void scrollToActive();
+
+  void viewScrolled(int);
+
   /* Selected rows in table. Updated on selection change. */
   QList<int> selectedRows;
 
@@ -477,6 +488,8 @@ private:
   /* Current loaded or saved format since the plans in the undo stack have different values */
   atools::fs::pln::FlightplanType fileIfrVfr;
 
+  bool contextMenuOpen = false;
+
   QMainWindow *mainWindow;
   QTableView *view;
   MapQuery *mapQuery;
@@ -496,14 +509,16 @@ private:
 
   bool loadingDatabaseState = false;
   qint64 lastSimUpdate = 0;
+
+  /* Copy of current active aircraft updated every MIN_SIM_UPDATE_TIME_MS */
   atools::fs::sc::SimConnectUserAircraft aircraft;
 
   SymbolPainter *symbolPainter = nullptr;
 
   atools::gui::TabWidgetHandler *tabHandlerRoute = nullptr;
 
-  /* Calls RouteController::routeAltChangedDelayed */
-  QTimer routeAltDelayTimer;
+  /* Timers for updating altitude delayer, clear selection while flying and moving active to top */
+  QTimer routeAltDelayTimer, cleanupTableTimer;
 
   // Route table colum headings
   QStringList routeColumns, routeColumnTooltips;

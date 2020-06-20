@@ -177,6 +177,11 @@ public:
     return simData.getUserAircraftConst();
   }
 
+  const atools::fs::sc::SimConnectData& getSimConnectData() const
+  {
+    return simData;
+  }
+
   const atools::fs::sc::SimConnectUserAircraft& getLastUserAircraft() const
   {
     return lastSimData.getUserAircraftConst();
@@ -242,6 +247,12 @@ public:
     airwayHighlights = value;
   }
 
+  /* For debug functions */
+  QList<std::pair<int, QLine> > getAirwayLines() const
+  {
+    return airwayLines;
+  }
+
 private:
   void getNearestAirways(int xs, int ys, int maxDistance, map::MapSearchResult& result) const;
   void getNearestLogEntries(int xs, int ys, int maxDistance, map::MapSearchResult& result) const;
@@ -303,6 +314,8 @@ private:
 
   /* Geometry objects that are cached in screen coordinate system for faster access to tooltips etc. */
   QList<std::pair<int, QLine> > airwayLines;
+
+  /* Collects logbook entry route and direct line geometry */
   QList<std::pair<int, QLine> > logEntryLines;
   QList<std::pair<map::MapAirspaceId, QPolygon> > airspacePolygons;
   QList<std::pair<int, QPolygon> > ilsPolygons;

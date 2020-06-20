@@ -61,6 +61,7 @@ AircraftPerfController::AircraftPerfController(MainWindow *parent)
 
   perf = new AircraftPerf();
 
+  lastSimData = new atools::fs::sc::SimConnectData();
   // Remember original font for resizing in options
   infoFontPtSize = static_cast<float>(ui->textBrowserAircraftPerformanceReport->font().pointSizeF());
 
@@ -100,6 +101,7 @@ AircraftPerfController::~AircraftPerfController()
   delete fileHistory;
   delete perfHandler;
   delete perf;
+  delete lastSimData;
 }
 
 void AircraftPerfController::create()
@@ -378,14 +380,19 @@ bool AircraftPerfController::save()
   }
 }
 
-bool AircraftPerfController::saveAsStr(const QString& string)
+bool AircraftPerfController::saveAsStr(const QString& string) const
 {
   qDebug() << Q_FUNC_INFO;
   bool retval = false;
 
   try
   {
-    QString perfFile = saveAsFileDialog();
+    // Load performance to get the filename
+    AircraftPerf aperf;
+    aperf.loadXmlStr(string);
+
+    QString filename = atools::cleanFilename(aperf.getName()) + ".lnmperf";
+    QString perfFile = saveAsFileDialog(filename);
     if(!perfFile.isEmpty())
     {
       QFile file(perfFile);
@@ -413,13 +420,13 @@ bool AircraftPerfController::saveAsStr(const QString& string)
   return retval;
 }
 
-QString AircraftPerfController::saveAsFileDialog() const
+QString AircraftPerfController::saveAsFileDialog(const QString& filepath) const
 {
   return atools::gui::Dialog(mainWindow).saveFileDialog(
     tr("Save Aircraft Performance File"),
     tr("Aircraft Performance Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_AIRCRAFT_PERF),
     "lnmperf", "AircraftPerformance/",
-    QString(), currentFilepath.isEmpty() ? perf->getName() + ".lnmperf" : QFileInfo(currentFilepath).fileName(),
+    QString(), filepath,
     false /* confirm overwrite */, OptionData::instance().getFlags2() & opts2::PROPOSE_FILENAME);
 }
 
@@ -438,7 +445,9 @@ bool AircraftPerfController::saveAs()
 
   try
   {
-    QString perfFile = saveAsFileDialog();
+    QString perfFile = saveAsFileDialog(currentFilepath.isEmpty() ?
+                                        atools::cleanFilename(perf->getName()) + ".lnmperf" :
+                                        QFileInfo(currentFilepath).fileName());
     if(!perfFile.isEmpty())
     {
       currentFilepath = perfFile;
@@ -576,7 +585,8 @@ void AircraftPerfController::flightSegmentChanged(const atools::fs::perf::Flight
   updateActionStates();
   updateReportCurrent();
   NavApp::setStatusMessage(tr("Flight segment %1.").
-                           arg(AircraftPerfHandler::getFlightSegmentString(flightSegment).toLower()));
+                           arg(AircraftPerfHandler::getFlightSegmentString(flightSegment).toLower()),
+                           true /* addToLog */);
 }
 
 bool AircraftPerfController::isClimbValid() const
@@ -951,7 +961,7 @@ void AircraftPerfController::fuelReport(atools::util::HtmlBuilder& html, bool pr
       html.p().warning(tr("Aircraft type is not set.")).pEnd();
     else
     {
-      QString model = NavApp::getUserAircraft().getAirplaneModel();
+      QString model = lastSimData->getUserAircraft().getAirplaneModel();
       if(!model.isEmpty() && perf->getAircraftType() != model)
         html.p().
         warning(tr("Airplane model does not match:")).br().
@@ -1204,17 +1214,39 @@ void AircraftPerfController::optionsChanged()
   updateReportCurrent();
 }
 
+void AircraftPerfController::connectedToSimulator()
+{
+  currentReportLastSampleTimeMs = reportLastSampleTimeMs = 0L; // Force update on next simDataChanged
+  *lastSimData = atools::fs::sc::SimConnectData();
+}
+
+void AircraftPerfController::disconnectedFromSimulator()
+{
+  *lastSimData = atools::fs::sc::SimConnectData();
+  updateReports();
+}
+
 void AircraftPerfController::simDataChanged(const atools::fs::sc::SimConnectData& simulatorData)
 {
+  *lastSimData = simulatorData;
+
   // Pass to handler for averaging
   perfHandler->simDataChanged(simulatorData);
 
   // Update report every second
   qint64 currentSampleTime = QDateTime::currentMSecsSinceEpoch();
-  if(currentSampleTime > reportLastSampleTimeMs + 1000)
+  if(currentSampleTime > currentReportLastSampleTimeMs + 1000)
+  {
+    currentReportLastSampleTimeMs = currentSampleTime;
+    updateReportCurrent();
+  }
+
+  // Update report every second
+  currentSampleTime = QDateTime::currentMSecsSinceEpoch();
+  if(currentSampleTime > reportLastSampleTimeMs + 5000)
   {
     reportLastSampleTimeMs = currentSampleTime;
-    updateReportCurrent();
+    updateReport();
   }
 }
 

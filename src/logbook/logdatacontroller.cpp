@@ -228,12 +228,12 @@ void LogdataController::createTakeoffLanding(const atools::fs::sc::SimConnectUse
       manager->insertByRecord(record, &logEntryId);
       transaction.commit();
 
-      emit refreshLogSearch(false /* load all */, true /* keep selection */);
-      emit logDataChanged();
+      logChanged(false /* load all */, true /* keep selection */);
+
       mainWindow->setStatusMessage(tr("Logbook Entry for %1 at %2%3 added.").
                                    arg(departureArrivalText).
                                    arg(airport.ident).
-                                   arg(runwayText));
+                                   arg(runwayText), true /* addToLog */);
     }
     else if(logEntryId >= 0)
     {
@@ -274,14 +274,12 @@ void LogdataController::createTakeoffLanding(const atools::fs::sc::SimConnectUse
       manager->updateByRecord(record, {logEntryId});
       transaction.commit();
 
-      manager->clearGeometryCache();
+      logChanged(false /* load all */, false /* keep selection */);
 
-      emit refreshLogSearch(false /* load all */, false /* keep selection */);
-      emit logDataChanged();
       mainWindow->setStatusMessage(tr("Logbook Entry for %1 at %2%3 updated.").
                                    arg(departureArrivalText).
                                    arg(airport.ident).
-                                   arg(runwayText));
+                                   arg(runwayText), true /* addToLog */);
 
       logEntryId = -1;
     }
@@ -295,9 +293,19 @@ void LogdataController::createTakeoffLanding(const atools::fs::sc::SimConnectUse
     aircraftAtTakeoff = new atools::fs::sc::SimConnectUserAircraft(aircraft);
 }
 
+void LogdataController::logChanged(bool loadAll, bool keepSelection)
+{
+  // Clear cache and update map screen index
+  manager->clearGeometryCache();
+  emit logDataChanged();
+
+  // Reload search
+  emit refreshLogSearch(loadAll, keepSelection);
+}
+
 void LogdataController::recordFlightplanAndPerf(atools::sql::SqlRecord& record)
 {
-  const atools::fs::pln::Flightplan& fp = NavApp::getRoute().getFlightplan();
+  atools::fs::pln::Flightplan fp = NavApp::getRoute().adjustedToOptions(rf::DEFAULT_OPTS_LNMPLN).getFlightplan();
   record.setValue("flightplan", FlightplanIO().saveLnmGz(fp)); // blob
   record.setValue("aircraft_perf", NavApp::getAircraftPerformance().saveXmlGz()); // blob
 }
@@ -306,11 +314,6 @@ void LogdataController::resetTakeoffLandingDetection()
 {
   delete aircraftAtTakeoff;
   aircraftAtTakeoff = nullptr;
-}
-
-const atools::geo::LineString *LogdataController::getRouteGeometry(int id)
-{
-  return manager->getRouteGeometry(id);
 }
 
 bool LogdataController::isDirectPreviewShown()
@@ -358,9 +361,16 @@ void LogdataController::displayOptionsChanged()
   manager->clearGeometryCache();
 }
 
+const atools::geo::LineString *LogdataController::getRouteGeometry(int id)
+{
+  const atools::fs::userdata::LogEntryGeometry *entry = manager->getGeometry(id);
+  return entry != nullptr ? &entry->route : nullptr;
+}
+
 const atools::geo::LineString *LogdataController::getTrackGeometry(int id)
 {
-  return manager->getTrackGeometry(id);
+  const atools::fs::userdata::LogEntryGeometry *entry = manager->getGeometry(id);
+  return entry != nullptr ? &entry->track : nullptr;
 }
 
 void LogdataController::editLogEntryFromMap(int id)
@@ -401,8 +411,7 @@ void LogdataController::editLogEntries(const QVector<int>& ids)
       manager->updateByRecord(dlg.getRecord(), ids);
       transaction.commit();
 
-      emit refreshLogSearch(false /* load all */, true /* keep selection */);
-      emit logDataChanged();
+      logChanged(false /* load all */, true /* keep selection */);
 
       mainWindow->setStatusMessage(tr("%1 logbook %2 updated.").
                                    arg(ids.size()).arg(ids.size() == 1 ? tr("entry") : tr("entries")));
@@ -436,8 +445,8 @@ void LogdataController::addLogEntry()
     manager->insertByRecord(dlg.getRecord());
     transaction.commit();
 
-    emit refreshLogSearch(false /* load all */, false /* keep selection */);
-    emit logDataChanged();
+    logChanged(false /* load all */, false /* keep selection */);
+
     mainWindow->setStatusMessage(tr("Logbook entry added."));
   }
   dlg.saveState();
@@ -459,8 +468,8 @@ void LogdataController::deleteLogEntries(const QVector<int>& ids)
     manager->removeRows(ids);
     transaction.commit();
 
-    emit refreshLogSearch(false /* load all */, false /* keep selection */);
-    emit logDataChanged();
+    logChanged(false /* load all */, false /* keep selection */);
+
     mainWindow->setStatusMessage(tr("%1 logbook %2 deleted.").arg(ids.size()).arg(txt));
   }
 }
@@ -487,8 +496,8 @@ void LogdataController::importXplane()
       numImported += manager->importXplane(file, fetchAirportCoordinates);
       mainWindow->setStatusMessage(tr("Imported %1 %2 X-Plane logbook.").arg(numImported).
                                    arg(numImported == 1 ? tr("entry") : tr("entries")));
-      emit refreshLogSearch(false /* load all */, false /* keep selection */);
-      emit logDataChanged();
+
+      logChanged(false /* load all */, false /* keep selection */);
 
       /*: The text "Imported from X-Plane logbook" has to match the one in atools::fs::userdata::LogdataManager::importXplane */
       emit showInSearch(map::LOGBOOK,
@@ -523,7 +532,7 @@ void LogdataController::importCsv()
       mainWindow->setStatusMessage(tr("Imported %1 %2 from CSV file.").arg(numImported).
                                    arg(numImported == 1 ? tr("entry") : tr("entries")));
       mainWindow->showLogbookSearch();
-      emit refreshLogSearch(false /* load all */, false /* keep selection */);
+      logChanged(false /* load all */, false /* keep selection */);
     }
   }
   catch(atools::Exception& e)
@@ -675,8 +684,8 @@ void LogdataController::convertUserdata()
     }
 
     mainWindow->showLogbookSearch();
-    emit refreshLogSearch(false /* load all */, false /* keep selection */);
-    emit logDataChanged();
+
+    logChanged(false /* load all */, false /* keep selection */);
 
     /*: The text "Converted from userdata" has to match the one in LogdataConverter::convertFromUserdata */
     emit showInSearch(map::LOGBOOK,

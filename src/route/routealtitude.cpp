@@ -206,7 +206,7 @@ QString RouteAltitude::getErrorStrings(QString& toolTip, QString& statusTip) con
   {
     statusTip = tr("Cannot calculate profile.");
     toolTip = errors.join(tr("\n"));
-    return tr("Cannot calculate profile. See tooltip on this message for details.");
+    return tr("Cannot calculate profile. Hover mouse over this message for details.");
   }
   else
     return QString();
@@ -530,7 +530,7 @@ float RouteAltitude::findDepartureMaxAltitude(int index) const
 
 int RouteAltitude::findApproachFirstRestricion() const
 {
-  if(route->hasAnyArrivalProcedure() || route->hasAnyStarProcedure())
+  if(route->hasAnyApproachProcedure() || route->hasAnyStarProcedure())
   {
     // Search for first restriction in an arrival or STAR
     int start = route->getStarLegsOffset();
@@ -767,6 +767,13 @@ void RouteAltitude::calculateAll(const atools::fs::perf::AircraftPerf& perf, flo
   {
     errors.append(tr("Flight plan is too short."));
     qWarning() << Q_FUNC_INFO << "Flight plan too short";
+    invalid = true;
+  }
+
+  if(route->getCruisingAltitudeFeet() < 100.f)
+  {
+    errors.append(tr("Cruise altitude is too low."));
+    qWarning() << Q_FUNC_INFO << "Cruise altitude is too low";
     invalid = true;
   }
 

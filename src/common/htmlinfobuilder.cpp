@@ -685,100 +685,103 @@ void HtmlInfoBuilder::comText(const MapAirport& airport, HtmlBuilder& html) cons
   }
 }
 
-void HtmlInfoBuilder::bestRunwaysText(const MapAirport& airport, HtmlBuilder& html, float windSpeed,
-                                      float windDirectionDeg, int max, bool details) const
+void HtmlInfoBuilder::bestRunwaysText(const MapAirport& airport, HtmlBuilder& html,
+                                      const atools::fs::weather::MetarParser& parsed, int max, bool details) const
 {
-  if(!(windSpeed < atools::fs::weather::INVALID_METAR_VALUE))
-    return;
+  int windDirectionDeg = parsed.getWindDir();
+  float windSpeedKts = parsed.getWindSpeedKts();
+  maptools::RwVector ends(windSpeedKts, windDirectionDeg);
 
-  const SqlRecordVector *recVector = infoQuery->getRunwayInformation(airport.id);
-  if(recVector != nullptr)
+  // Need wind direction and speed - otherwise all runways are good =======================
+  if(windDirectionDeg != -1 && windSpeedKts < atools::fs::weather::INVALID_METAR_VALUE)
   {
-    maptools::RwVector ends(windSpeed, windDirectionDeg);
-
-    // Collect runway ends and wind conditions =======================================
-    for(const SqlRecord& rec : *recVector)
+    const SqlRecordVector *recVector = infoQuery->getRunwayInformation(airport.id);
+    if(recVector != nullptr)
     {
-      int length = rec.valueInt("length");
-      QString surface = rec.valueStr("surface");
-      const SqlRecord *recPrim = infoQuery->getRunwayEndInformation(rec.valueInt("primary_end_id"));
-      if(!recPrim->valueBool("has_closed_markings"))
-        ends.appendRwEnd(recPrim->valueStr("name"), surface, length, recPrim->valueFloat("heading"));
 
-      const SqlRecord *recSec = infoQuery->getRunwayEndInformation(rec.valueInt("secondary_end_id"));
-      if(!recSec->valueBool("has_closed_markings"))
-        ends.appendRwEnd(recSec->valueStr("name"), surface, length, recSec->valueFloat("heading"));
-    }
-
-    if(!ends.isEmpty())
-    {
-      // Sort by headwind =======================================
-      ends.sortRunwayEnds();
-
-      max = std::min(ends.size(), max);
-      QString rwTxt = ends.getTotalNumber() == 1 ? tr("Runway") : tr("Runways");
-
-      if(details)
+      // Collect runway ends and wind conditions =======================================
+      for(const SqlRecord& rec : *recVector)
       {
-        // Table header for detailed view
-        head(html, tr("Best %1 for wind").arg(rwTxt.toLower()));
-        html.table();
-        html.tr(QColor()).th(rwTxt).th(tr("Surface")).th(tr("Length")).th(tr("Headwind")).th(tr("Crosswind")).trEnd();
-      }
+        int length = rec.valueInt("length");
+        QString surface = rec.valueStr("surface");
+        const SqlRecord *recPrim = infoQuery->getRunwayEndInformation(rec.valueInt("primary_end_id"));
+        if(!recPrim->valueBool("has_closed_markings"))
+          ends.appendRwEnd(recPrim->valueStr("name"), surface, length, recPrim->valueFloat("heading"));
 
-      // Create runway table for details =====================================
-
-      if(details)
-      {
-        // Table for detailed view
-        int num = 0;
-        for(const maptools::RwEnd& end : ends)
-        {
-          // Stop at maximum number - tailwind is alread sorted out
-          if(num > max)
-            break;
-
-          QString lengthTxt;
-          if(end.minlength == end.maxlength)
-            lengthTxt = Unit::distShortFeet(end.minlength);
-          else
-            // Grouped runways have a min and max length
-            lengthTxt = tr("%1-%2").
-                        arg(Unit::distShortFeet(end.minlength, false, false)).
-                        arg(Unit::distShortFeet(end.maxlength));
-
-          // Table entry ==================
-          html.tr(QColor()).
-          td(end.names.join(tr(", ")), ahtml::BOLD).
-          td(end.soft ? tr("Soft") : tr("Hard")).
-          td(lengthTxt, ahtml::ALIGN_RIGHT).
-          td(formatter::windInformationHead(end.head), ahtml::ALIGN_RIGHT).
-          td(Unit::speedKts(end.cross), ahtml::ALIGN_RIGHT).
-          trEnd();
-          num++;
-        }
-        html.tableEnd();
-      }
-      else
-      {
-        // Simple runway list for tooltips only with headwind > 2
-        QStringList runways;
-        for(const maptools::RwEnd& end : ends)
-        {
-          if(end.head <= 2)
-            break;
-          runways.append(end.names);
-        }
-
-        if(!runways.isEmpty())
-          html.br().b(tr(" Prefers %1: ").arg(rwTxt)).text(runways.mid(0, 4).join(tr(", ")));
+        const SqlRecord *recSec = infoQuery->getRunwayEndInformation(rec.valueInt("secondary_end_id"));
+        if(!recSec->valueBool("has_closed_markings"))
+          ends.appendRwEnd(recSec->valueStr("name"), surface, length, recSec->valueFloat("heading"));
       }
     }
-    else if(details)
-      // Either crosswind is equally strong and/or headwind too low
-      head(html, tr("All runways good for landing or takeoff."));
-
   }
+
+  if(!ends.isEmpty())
+  {
+    // Sort by headwind =======================================
+    ends.sortRunwayEnds();
+
+    max = std::min(ends.size(), max);
+    QString rwTxt = ends.getTotalNumber() == 1 ? tr("Runway") : tr("Runways");
+
+    if(details)
+    {
+      // Table header for detailed view
+      head(html, tr("Best %1 for wind").arg(rwTxt.toLower()));
+      html.table();
+      html.tr(QColor()).th(rwTxt).th(tr("Surface")).th(tr("Length")).th(tr("Headwind")).th(tr("Crosswind")).trEnd();
+    }
+
+    // Create runway table for details =====================================
+
+    if(details)
+    {
+      // Table for detailed view
+      int num = 0;
+      for(const maptools::RwEnd& end : ends)
+      {
+        // Stop at maximum number - tailwind is alread sorted out
+        if(num > max)
+          break;
+
+        QString lengthTxt;
+        if(end.minlength == end.maxlength)
+          lengthTxt = Unit::distShortFeet(end.minlength);
+        else
+          // Grouped runways have a min and max length
+          lengthTxt = tr("%1-%2").
+                      arg(Unit::distShortFeet(end.minlength, false, false)).
+                      arg(Unit::distShortFeet(end.maxlength));
+
+        // Table entry ==================
+        html.tr(QColor()).
+        td(end.names.join(tr(", ")), ahtml::BOLD).
+        td(end.soft ? tr("Soft") : tr("Hard")).
+        td(lengthTxt, ahtml::ALIGN_RIGHT).
+        td(formatter::windInformationHead(end.head), ahtml::ALIGN_RIGHT).
+        td(Unit::speedKts(end.cross), ahtml::ALIGN_RIGHT).
+        trEnd();
+        num++;
+      }
+      html.tableEnd();
+    }
+    else
+    {
+      // Simple runway list for tooltips only with headwind > 2
+      QStringList runways;
+      for(const maptools::RwEnd& end : ends)
+      {
+        if(end.head <= 2)
+          break;
+        runways.append(end.names);
+      }
+
+      if(!runways.isEmpty())
+        html.br().b(tr(" Prefers %1: ").arg(rwTxt)).text(runways.mid(0, 4).join(tr(", ")));
+    }
+  }
+  else if(details)
+    // Either crosswind is equally strong and/or headwind too low or no directional wind
+    head(html, tr("All runways good for landing or takeoff."));
 }
 
 void HtmlInfoBuilder::runwayText(const MapAirport& airport, HtmlBuilder& html, bool details, bool soft) const
@@ -1627,7 +1630,7 @@ void HtmlInfoBuilder::weatherText(const map::WeatherContext& context, const MapA
       decodedMetars(html, context.ivaoMetar, airport, tr("IVAO"), src == WEATHER_SOURCE_IVAO && weatherShown);
     } // if(flags & optsw::WEATHER_INFO_ALL)
     else
-      html.p().b(tr("No weather display selected in options dialog."));
+      html.p().b(tr("No weather display selected in options dialog in page \"Weather\"."));
   } // if(info)
 }
 
@@ -1856,7 +1859,8 @@ void HtmlInfoBuilder::decodedMetar(HtmlBuilder& html, const map::MapAirport& air
   if(!parsed.getUnusedData().isEmpty())
     html.p().text(tr("Additional information:"), ahtml::BOLD).br().text(parsed.getUnusedData()).pEnd();
 
-  bestRunwaysText(airport, html, windSpeedKts, parsed.getWindDir(), 8 /* max entries */, true /* details */);
+  // bestRunwaysText(airport, html, windSpeedKts, parsed.getWindDir(), 8 /* max entries */, true /* details */);
+  bestRunwaysText(airport, html, parsed, 8 /* max entries */, true /* details */);
 
 #ifdef DEBUG_INFORMATION
   html.p().small(tr("Source: %1").arg(metar.getMetar())).br();
@@ -2031,6 +2035,27 @@ void HtmlInfoBuilder::holdText(const Hold& hold, HtmlBuilder& html) const
               arg(Unit::speedKts(hold.speedKts)).
               arg(minTxt).
               arg(minTxt == "1" ? tr("minute") : tr("minutes")));
+
+  html.br();
+}
+
+void HtmlInfoBuilder::rangeMarkerText(const RangeMarker& marker, atools::util::HtmlBuilder& html) const
+{
+  html.b(marker.ranges.size() > 1 ? tr("Range Rings") : tr("Range Ring"));
+  if(!marker.text.isEmpty())
+    html.brText(marker.text);
+
+  if(marker.ranges.isEmpty() || (marker.ranges.size() == 1 && marker.ranges.first() == 0))
+    html.brText(tr("No distance"));
+  else
+  {
+    QStringList distStr;
+    for(int dist : marker.ranges)
+      distStr.append(Unit::distNm(dist, false));
+
+    html.brText((marker.ranges.size() > 1 ? tr("Distances: %1 %2") : tr("Distance: %1 %2")).
+                arg(distStr.join(tr(", "))).arg(Unit::getUnitDistStr()));
+  }
 
   html.br();
 }
@@ -3645,6 +3670,9 @@ void HtmlInfoBuilder::aircraftProgressText(const atools::fs::sc::SimConnectAircr
     if(userAircaft->getWindowIcePercent() >= 1.f)
       ice.append(tr("Window ") + locale.toString(userAircaft->getWindowIcePercent(), 'f', 0) + tr(" %"));
 
+    if(userAircaft->getCarbIcePercent() >= 1.f)
+      ice.append(tr("Carb. ") + locale.toString(userAircaft->getCarbIcePercent(), 'f', 0) + tr(" %"));
+
     if(ice.isEmpty())
       html.row2(tr("Ice:"), tr("None"));
     else
@@ -4176,9 +4204,9 @@ void HtmlInfoBuilder::addMetarLine(atools::util::HtmlBuilder& html, const QStrin
   if(!metar.isEmpty())
   {
     Metar m(metar, station, timestamp, fsMetar);
-    const atools::fs::weather::MetarParser& pm = m.getParsedMetar();
+    const atools::fs::weather::MetarParser& parsed = m.getParsedMetar();
 
-    if(!pm.isValid())
+    if(!parsed.isValid())
       qWarning() << "Metar is not valid";
 
     HtmlBuilder whtml = html.cleared();
@@ -4198,7 +4226,7 @@ void HtmlInfoBuilder::addMetarLine(atools::util::HtmlBuilder& html, const QStrin
       whtml.smallEnd();
 
     // Add METAR suffix for tooltip
-    bestRunwaysText(airport, whtml, pm.getWindSpeedKts(), pm.getWindDir(), 4 /* max entries */, false /* details */);
+    bestRunwaysText(airport, whtml, parsed, 4 /* max entries */, false /* details */);
     html.row2(header + (info ? tr(":") : tr(" METAR:")), whtml);
 
   }
@@ -4229,7 +4257,7 @@ void HtmlInfoBuilder::routeWindText(HtmlBuilder& html, const Route& route, int i
   if(index >= 0)
   {
     // Wind text is always shown independent of barb status at route
-    if(NavApp::getWindReporter()->isWindSourceEnabled() && route.hasValidProfile())
+    if(NavApp::getWindReporter()->hasWindData() && route.hasValidProfile())
     {
       const RouteAltitudeLeg& altLeg = route.getAltitudeLegAt(index);
       if(altLeg.getLineString().getPos2().getAltitude() > MIN_WIND_BARB_ALTITUDE && !altLeg.isMissed() &&

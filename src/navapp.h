@@ -84,6 +84,7 @@ class Metar;
 namespace sc {
 class SimConnectUserAircraft;
 class SimConnectAircraft;
+class SimConnectData;
 }
 
 namespace userdata {
@@ -154,9 +155,11 @@ public:
   static bool isConnectedNetwork();
   static bool isSimConnect();
   static bool isConnectedAndAircraft();
+  static bool isConnectedAndAircraftFlying();
   static bool isUserAircraftValid();
 
   static const atools::fs::sc::SimConnectUserAircraft& getUserAircraft();
+  static const atools::fs::sc::SimConnectData& getSimConnectData();
   static const atools::geo::Pos& getUserAircraftPos();
 
   static const QVector<atools::fs::sc::SimConnectAircraft>& getAiAircraft();
@@ -240,7 +243,7 @@ public:
 
   static void updateWindowTitle();
   static void updateErrorLabels();
-  static void setStatusMessage(const QString& message);
+  static void setStatusMessage(const QString& message, bool addToLog = false);
 
   /* Get main window in different variations to avoid including it */
   static QWidget *getQMainWidget();

@@ -313,21 +313,29 @@ void MapPaintWidget::setShowMapPois(bool show)
 
 void MapPaintWidget::setShowMapFeatures(map::MapObjectTypes type, bool show)
 {
+  bool curShow = (paintLayer->getShownMapObjects() & type) == type;
   paintLayer->setShowMapObjects(type, show);
 
-  if(type & map::AIRWAYV || type & map::AIRWAYJ || type & map::TRACK)
+  // Update screen coordinate caches if display options have changed
+
+  if(type & map::AIRWAY_ALL && show != curShow)
     screenIndex->updateAirwayScreenGeometry(getCurrentViewBoundingBox());
 
-  if(type & map::AIRSPACE)
+  if(type & map::AIRSPACE && show != curShow)
     screenIndex->updateAirspaceScreenGeometry(getCurrentViewBoundingBox());
 
-  if(type & map::ILS)
+  if(type & map::ILS && show != curShow)
     screenIndex->updateIlsScreenGeometry(getCurrentViewBoundingBox());
 }
 
 void MapPaintWidget::setShowMapFeaturesDisplay(map::MapObjectDisplayTypes type, bool show)
 {
+  bool curShow = (paintLayer->getShownMapObjectDisplayTypes() & type) == type;
   paintLayer->setShowMapObjectsDisplay(type, show);
+
+  // Update screen coordinate cache if display options have changed
+  if(type & map::LOGBOOK_ALL && show != curShow)
+    screenIndex->updateLogEntryScreenGeometry(getCurrentViewBoundingBox());
 }
 
 void MapPaintWidget::setShowMapAirspaces(map::MapAirspaceFilter types)
@@ -908,6 +916,11 @@ void MapPaintWidget::changeAirwayHighlights(const QList<QList<map::MapAirway> >&
   update();
 }
 
+void MapPaintWidget::updateLogEntryScreenGeometry()
+{
+  screenIndex->updateLogEntryScreenGeometry(getCurrentViewBoundingBox());
+}
+
 void MapPaintWidget::changeSearchHighlights(const map::MapSearchResult& newHighlights)
 {
   screenIndex->changeSearchHighlights(newHighlights);
@@ -1038,6 +1051,11 @@ QList<map::Hold>& MapPaintWidget::getHolds()
 const atools::fs::sc::SimConnectUserAircraft& MapPaintWidget::getUserAircraft() const
 {
   return screenIndex->getUserAircraft();
+}
+
+const atools::fs::sc::SimConnectData& MapPaintWidget::getSimConnectData() const
+{
+  return screenIndex->getSimConnectData();
 }
 
 const QVector<atools::fs::sc::SimConnectAircraft>& MapPaintWidget::getAiAircraft() const
