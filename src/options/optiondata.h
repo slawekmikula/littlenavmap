@@ -22,6 +22,8 @@
 #include <QFlags>
 #include <QVector>
 
+class QFont;
+
 namespace opts {
 enum Flag
 {
@@ -528,13 +530,13 @@ public:
   /* Get locale name like "en_US" or "de" for user interface language */
   const QString& getLanguage() const
   {
-    return language;
+    return guiLanguage;
   }
 
   /* Get short user interface language code name like "en" or "de" suitable for help URLs */
   QString getLanguageShort() const
   {
-    return language.section('_', 0, 0).section('-', 0, 0);
+    return guiLanguage.section('_', 0, 0).section('-', 0, 0);
   }
 
   opts::UnitDist getUnitDist() const
@@ -1038,6 +1040,9 @@ public:
     return flagsWeather;
   }
 
+  /* Get selected font for map. Falls back to GUI font and then back to system font. */
+  QFont getMapFont() const;
+
 private:
   friend class OptionsDialog;
 
@@ -1065,7 +1070,7 @@ private:
 
   opts2::Flags2 flags2 = opts2::MAP_AIRPORT_TEXT_BACKGROUND | opts2::MAP_ROUTE_TEXT_BACKGROUND |
                          opts2::MAP_ROUTE_DIM_PASSED | opts2::MAP_AIRPORT_DIAGRAM |
-                         opts2::MAP_ALLOW_UNDOCK | opts2::MAP_AVOID_BLURRED_MAP | opts2::ONLINE_AIRSPACE_BY_FILE |
+                         opts2::MAP_AVOID_BLURRED_MAP | opts2::ONLINE_AIRSPACE_BY_FILE |
                          opts2::ONLINE_AIRSPACE_BY_NAME | opts2::RAISE_WINDOWS | opts2::MAP_EMPTY_AIRPORTS_3D |
                          opts2::HIGH_DPI_DISPLAY_SUPPORT | opts2::ROUTE_CENTER_ACTIVE_LEG |
                          opts2::ROUTE_CENTER_ACTIVE_LEG | opts2::ROUTE_AUTOZOOM | opts2::ROUTE_NO_FOLLOW_ON_MOVE;
@@ -1146,7 +1151,7 @@ private:
   // ui->spinBoxOptionsRouteGroundBuffer
   int routeGroundBuffer = 1000;
 
-  QString language;
+  QString guiLanguage;
 
   // comboBoxOptionsUnitDistance
   opts::UnitDist unitDist = opts::DIST_NM;
@@ -1325,6 +1330,8 @@ private:
 
   /* X-Plane GRIB file or NOAA GRIB base URL */
   QString weatherXplaneWind, weatherNoaaWindBaseUrl = "https://nomads.ncep.noaa.gov/cgi-bin/filter_gfs_1p00.pl";
+
+  QString guiFont, mapFont;
 };
 
 #endif // LITTLENAVMAP_OPTIONDATA_H

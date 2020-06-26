@@ -161,16 +161,31 @@ MainWindow::MainWindow()
     ui->setupUi(this);
     setAcceptDrops(true);
 
+    // Avoid short popping up on startup
+    ui->dockWidgetRouteCalc->hide();
+
     // Show tooltips also for inactive windows (e.g. if a floating window is active)
     setAttribute(Qt::WA_AlwaysShowToolTips);
 
+    // Create misc GUI handlers ============================================
     dialog = new atools::gui::Dialog(this);
     errorHandler = new atools::gui::ErrorHandler(this);
     helpHandler = new atools::gui::HelpHandler(this, aboutMessage, GIT_REVISION);
-    dockHandler = new atools::gui::DockWidgetHandler(this, {ui->dockWidgetLegend, ui->dockWidgetAircraft,
-                                                            ui->dockWidgetSearch, ui->dockWidgetProfile,
-                                                            ui->dockWidgetInformation, ui->dockWidgetRoute,
-                                                            ui->dockWidgetRouteCalc});
+
+    // Create dock and mainwindow handler ============================================
+    atools::settings::Settings& settings = atools::settings::Settings::instance();
+    dockHandler =
+      new atools::gui::DockWidgetHandler(this,
+                                         // Add all available dock widgets here ==========================
+                                         {ui->dockWidgetLegend, ui->dockWidgetAircraft,
+                                          ui->dockWidgetSearch, ui->dockWidgetProfile,
+                                          ui->dockWidgetInformation, ui->dockWidgetRoute,
+                                          ui->dockWidgetRouteCalc},
+                                         // Add all available toolbars  here =============================
+                                         {ui->toolBarMain, ui->toolBarMap, ui->toolbarMapOptions,
+                                          ui->toolBarRoute, ui->toolBarView, ui->toolBarAirspaces,
+                                          ui->toolBarMapThemeProjection},
+                                         settings.getAndStoreValue(lnm::OPTIONS_DOCKHANDLER_DEBUG, false).toBool());
 
     marbleAbout = new Marble::MarbleAboutDialog(this);
     marbleAbout->setApplicationTitle(QApplication::applicationName());
@@ -288,7 +303,7 @@ MainWindow::MainWindow()
     qDebug() << Q_FUNC_INFO << "Creating PrintSupport";
     printSupport = new PrintSupport(this);
 
-    setStatusMessage(tr("Started."), true /* addToLog */);
+    setStatusMessage(tr("Started."));
 
     qDebug() << Q_FUNC_INFO << "Connecting slots";
     connectAllSlots();
@@ -304,6 +319,7 @@ MainWindow::MainWindow()
     qDebug() << Q_FUNC_INFO << "Reading settings";
     restoreStateMain();
 
+    allowDockingWindows();
     updateActionStates();
     updateMarkActionStates();
     updateHighlightActionStates();
@@ -430,10 +446,8 @@ MainWindow::~MainWindow()
   delete actionGroupMapWeatherSource;
   qDebug() << Q_FUNC_INFO << "delete actionGroupMapWeatherWindSource";
   delete actionGroupMapWeatherWindSource;
-
   qDebug() << Q_FUNC_INFO << "delete currentWeatherContext";
   delete currentWeatherContext;
-
   qDebug() << Q_FUNC_INFO << "delete routeExport";
   delete routeExport;
 
@@ -746,9 +760,6 @@ void MainWindow::setupUi()
   ui->dockWidgetRouteCalc->toggleViewAction()->setToolTip(tr("Open or show the %1 dock window").
                                                           arg(ui->dockWidgetRouteCalc->windowTitle()));
   ui->dockWidgetRouteCalc->toggleViewAction()->setStatusTip(ui->dockWidgetRouteCalc->toggleViewAction()->toolTip());
-  ui->dockWidgetRouteCalc->setAllowedAreas(Qt::NoDockWidgetArea);
-  ui->dockWidgetRouteCalc->setFloating(true);
-  ui->dockWidgetRouteCalc->setVisible(false); // Hide on first start - is superseded by restore state later
 
   ui->dockWidgetInformation->toggleViewAction()->setIcon(QIcon(":/littlenavmap/resources/icons/infodock.svg"));
   ui->dockWidgetInformation->toggleViewAction()->setShortcut(QKeySequence(tr("Alt+4")));
@@ -863,6 +874,7 @@ void MainWindow::setupUi()
 #endif
   timeLabel->setToolTip(tr("Day of month and UTC time."));
   ui->statusBar->addPermanentWidget(timeLabel);
+  connect(ui->statusBar, &QStatusBar::messageChanged, this, &MainWindow::statusMessageChanged);
 }
 
 void MainWindow::clearProcedureCache()
@@ -1157,6 +1169,8 @@ void MainWindow::connectAllSlots()
 
   // Windows menu ============================================================
   connect(ui->actionShowFloatingWindows, &QAction::triggered, this, &MainWindow::raiseFloatingWindows);
+  connect(ui->actionShowAllowDocking, &QAction::toggled, this, &MainWindow::allowDockingWindows);
+  connect(ui->actionShowFullscreenMap, &QAction::toggled, this, &MainWindow::fullScreenMapToggle);
 
   // File menu ============================================================
   connect(ui->actionExit, &QAction::triggered, this, &MainWindow::close);
@@ -1250,6 +1264,8 @@ void MainWindow::connectAllSlots()
 
   connect(mapWidget, &MapWidget::editLogEntryFromMap,
           NavApp::getLogdataController(), &LogdataController::editLogEntryFromMap);
+  connect(mapWidget, &MapWidget::exitFullScreenPressed,
+          this, &MainWindow::exitFullScreenPressed);
 
   // Connect toolbar combo boxes
   void (QComboBox::*indexChangedPtr)(int) = &QComboBox::currentIndexChanged;
@@ -2813,7 +2829,6 @@ void MainWindow::resetMessages()
   s.setValue(lnm::ACTIONS_SHOWROUTE_WARNING, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_WARNING_MULTI, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_ERROR, true);
-  s.setValue(lnm::ACTIONS_SHOWROUTE_PROC_ERROR, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_ALTERNATE_ERROR, true);
   s.setValue(lnm::ACTIONS_SHOWROUTE_START_CHANGED, true);
   s.setValue(lnm::OPTIONS_DIALOG_WARN_STYLE, true);
@@ -2851,7 +2866,7 @@ void MainWindow::setStatusMessage(const QString& message, bool addToLog)
     while(statusMessages.size() > 20)
       statusMessages.removeFirst();
 
-    QStringList msg(tr("Background tasks:"));
+    QStringList msg(tr("Messages:"));
     for(int i = 0; i < statusMessages.size(); i++)
       msg.append(tr("%1: %2").
                  arg(QLocale().toString(statusMessages.at(i).first, tr("hh:mm:ss"))).
@@ -2860,6 +2875,20 @@ void MainWindow::setStatusMessage(const QString& message, bool addToLog)
   }
 
   ui->statusBar->showMessage(message);
+}
+
+void MainWindow::statusMessageChanged(const QString& text)
+{
+  if(text.isEmpty())
+  {
+    // Field is cleared. Show number of messages in otherwise empty field.
+    if(statusMessages.isEmpty())
+      ui->statusBar->showMessage(tr("No Messages"));
+    else
+      ui->statusBar->showMessage(tr("%1 %2").
+                                 arg(statusMessages.size()).
+                                 arg(statusMessages.size() > 1 ? tr("Messages") : tr("Message")));
+  }
 }
 
 void MainWindow::setDetailLabelText(const QString& text)
@@ -2874,6 +2903,9 @@ void MainWindow::mainWindowShown()
 
   // Enable dock handler
   dockHandler->setHandleDockViews(true);
+
+  // Switch to fullscreen now after applying normal layout to avoid a distorted layout
+  enableDelayedFullscreen();
 
   qDebug() << Q_FUNC_INFO << "UI font" << font();
 
@@ -3019,8 +3051,88 @@ void MainWindow::mainWindowShown()
   qDebug() << Q_FUNC_INFO << "leave";
 }
 
+void MainWindow::exitFullScreenPressed()
+{
+  qDebug() << Q_FUNC_INFO;
+
+  // Let the action pass a signal to toggle fs off
+  ui->actionShowFullscreenMap->setChecked(false);
+}
+
+bool MainWindow::isFullScreen() const
+{
+  return dockHandler->isFullScreen();
+}
+
+void MainWindow::enableDelayedFullscreen()
+{
+  if(dockHandler->isDelayedFullscreen())
+  {
+    // Started with normal screen layout but was saved as fullscreen - restore full now
+    dockHandler->fullscreenStateToWindow();
+
+    if(centralWidget() != ui->dockWidgetMap)
+      // Hide the map window title bar if map is undockable
+      ui->dockWidgetMap->setTitleBarWidget(new QWidget(ui->dockWidgetMap));
+
+    // Update action
+    ui->actionShowFullscreenMap->blockSignals(true);
+    ui->actionShowFullscreenMap->setChecked(dockHandler->isFullScreen());
+    ui->actionShowFullscreenMap->blockSignals(false);
+
+    mapWidget->addFullScreenExitButton();
+    mapWidget->setFocus();
+  }
+}
+
+void MainWindow::fullScreenOn()
+{
+  qDebug() << Q_FUNC_INFO << "setFullScreenOn";
+
+  // Hide toolbars and docks initially - user can open again if needed and state is saved then
+  dockHandler->setFullScreenOn(atools::gui::HIDE_TOOLBARS | atools::gui::HIDE_DOCKS);
+
+  if(centralWidget() != ui->dockWidgetMap)
+    // Add a dummy widget to erase the title bar if map is inside a dock widget
+    ui->dockWidgetMap->setTitleBarWidget(new QWidget(ui->dockWidgetMap));
+
+  mapWidget->addFullScreenExitButton();
+  mapWidget->setFocus();
+}
+
+void MainWindow::fullScreenOff()
+{
+  qDebug() << Q_FUNC_INFO << "setFullScreenOff";
+  mapWidget->removeFullScreenExitButton();
+
+  dockHandler->setFullScreenOff();
+
+  if(centralWidget() != ui->dockWidgetMap)
+  {
+    // Delete dummy widget to restore title bar
+    QWidget *oldTitleBar = ui->dockWidgetMap->titleBarWidget();
+    ui->dockWidgetMap->setTitleBarWidget(nullptr);
+    delete oldTitleBar;
+  }
+}
+
+void MainWindow::fullScreenMapToggle()
+{
+  if(ui->actionShowFullscreenMap->isChecked())
+    fullScreenOn();
+  else
+    fullScreenOff();
+}
+
+void MainWindow::allowDockingWindows()
+{
+  qDebug() << Q_FUNC_INFO;
+  dockHandler->setDockingAllowed(ui->actionShowAllowDocking->isChecked());
+}
+
 void MainWindow::raiseFloatingWindows()
 {
+  qDebug() << Q_FUNC_INFO;
   dockHandler->raiseFloatingWindows();
 
   // Map window is not used by dockHandler
@@ -3212,25 +3324,22 @@ void MainWindow::resetWindowLayout()
 {
   qDebug() << Q_FUNC_INFO;
 
-  setWindowState(windowState() & ~Qt::WindowMinimized);
-  setWindowState(windowState() & ~Qt::WindowMaximized);
-  setWindowState(windowState() & ~Qt::WindowFullScreen);
+  mapWidget->removeFullScreenExitButton();
 
-  resize(lnm::DEFAULT_MAINWINDOW_SIZE);
-  // QRect screenSize = QApplication::desktop()->availableGeometry(this);
-  // move((screenSize.width() - lnm::DEFAULT_MAINWINDOW_SIZE.width()) / 2,
-  // (screenSize.height() - lnm::DEFAULT_MAINWINDOW_SIZE.height()) / 2);
+  bool allowUndockMap = OptionData::instance().getFlags2().testFlag(opts2::MAP_ALLOW_UNDOCK);
+  dockHandler->resetWindowState(lnm::DEFAULT_MAINWINDOW_SIZE,
+                                QString(":/littlenavmap/resources/config/mainwindow_state_%1.bin").
+                                arg(allowUndockMap ? "dock" : "nodock"));
 
-  restoreState(lnm::DEFAULT_MAINWINDOW_STATE, lnm::MAINWINDOW_STATE_VERSION);
-
-  if(!(OptionData::instance().getFlags2() & opts2::MAP_ALLOW_UNDOCK))
-    ui->dockWidgetMap->hide();
-  else
-    ui->dockWidgetMap->show();
+  ui->dockWidgetMap->setVisible(allowUndockMap);
 
   NavApp::getRouteTabHandler()->reset();
   infoController->resetWindowLayout();
   searchController->resetWindowLayout();
+
+  ui->actionShowFullscreenMap->blockSignals(true);
+  ui->actionShowFullscreenMap->setChecked(false);
+  ui->actionShowFullscreenMap->blockSignals(false);
 }
 
 /* Read settings for all windows, docks, controller and manager classes */
@@ -3243,51 +3352,47 @@ void MainWindow::restoreStateMain()
 
   Settings& settings = Settings::instance();
 
-  if(settings.contains(lnm::MAINWINDOW_WIDGET_STATE))
+  if(settings.contains(lnm::MAINWINDOW_WIDGET_DOCKHANDLER))
   {
-    restoreState(settings.valueVar(lnm::MAINWINDOW_WIDGET_STATE).toByteArray(), lnm::MAINWINDOW_STATE_VERSION);
+    dockHandler->restoreState(settings.valueVar(lnm::MAINWINDOW_WIDGET_DOCKHANDLER).toByteArray());
 
-    move(settings.valueVar(lnm::MAINWINDOW_WIDGET_STATE_POS, QPoint(0, 0)).toPoint());
-    resize(settings.valueVar(lnm::MAINWINDOW_WIDGET_STATE_SIZE, lnm::DEFAULT_MAINWINDOW_SIZE).toSize());
-
-#if !defined(Q_OS_MACOS)
-    if(settings.valueVar(lnm::MAINWINDOW_WIDGET_STATE_FULLSCREEN, false).toBool())
-    {
-      qDebug() << Q_FUNC_INFO << "Full screen";
-      setWindowState(windowState() & ~Qt::WindowMinimized);
-      setWindowState(windowState() & ~Qt::WindowMaximized);
-      setWindowState(windowState() | Qt::WindowFullScreen);
-    }
-    else
-#endif
-    if(settings.valueVar(lnm::MAINWINDOW_WIDGET_STATE_MAXIMIZED, false).toBool())
-    {
-      qDebug() << Q_FUNC_INFO << "Maximized";
-      setWindowState(windowState() & ~Qt::WindowMinimized);
-      setWindowState(windowState() | Qt::WindowMaximized);
-      setWindowState(windowState() & ~Qt::WindowFullScreen);
-    }
-    else
-    {
-      qDebug() << Q_FUNC_INFO << "Normal";
-      setWindowState(windowState() & ~Qt::WindowMinimized);
-      setWindowState(windowState() & ~Qt::WindowMaximized);
-      setWindowState(windowState() & ~Qt::WindowFullScreen);
-    }
+    // Start with normal state - apply fullscreen later to avoid layout mess up
+    dockHandler->normalStateToWindow();
+    ui->actionShowFullscreenMap->blockSignals(true);
+    ui->actionShowFullscreenMap->setChecked(dockHandler->isFullScreen());
+    ui->actionShowFullscreenMap->blockSignals(false);
   }
   else
     // Use default state saved in application
     resetWindowLayout();
 
-  const QRect geo = QApplication::desktop()->availableGeometry(this);
+  QRect desktop = QApplication::desktop()->availableGeometry(this);
 
   // Check if window if off screen
-  qDebug() << "Screen geometry" << geo << "Win geometry" << frameGeometry();
-  if(!geo.intersects(frameGeometry()))
+  qDebug() << "Screen geometry" << desktop << "Win geometry" << frameGeometry();
+  QRect intersected = desktop.intersected(frameGeometry());
+  if(intersected.width() < 10 || intersected.height() < 10)
   {
     qDebug() << Q_FUNC_INFO << "Getting window back on screen";
-    move(geo.topLeft());
+    move(desktop.topLeft());
   }
+
+  // Enable tooltips for all menus
+  // QList<QAction *> stack;
+  // stack.append(ui->menuBar->actions().first());
+  // while(!stack.isEmpty())
+  // {
+  // QAction *action = stack.takeLast();
+  // if(action->menu() != nullptr)
+  // {
+  // action->menu()->setToolTipsVisible(true);
+  // for(QAction *sub : action->menu()->actions())
+  // {
+  // if(sub->menu() != nullptr)
+  // stack.append(sub);
+  // }
+  // }
+  // }
 
   // Need to be loaded in constructor first since it reads all options
   // optionsDialog->restoreState();
@@ -3365,7 +3470,8 @@ void MainWindow::restoreStateMain()
                        ui->actionMapShowHillshading, ui->actionRouteEditMode,
                        ui->actionRouteSaveSidStarWaypoints, ui->actionRouteSaveApprWaypoints,
                        ui->actionRouteSaveAirwayWaypoints, ui->actionLogdataCreateLogbook, ui->actionMapShowSunShading,
-                       ui->actionMapShowAirportWeather, ui->actionMapShowMinimumAltitude, ui->actionRunWebserver});
+                       ui->actionMapShowAirportWeather, ui->actionMapShowMinimumAltitude, ui->actionRunWebserver,
+                       ui->actionShowAllowDocking});
   widgetState.setBlockSignals(false);
 
   // Load status and allow to send signals
@@ -3401,17 +3507,17 @@ void MainWindow::saveStateMain()
   qDebug() << Q_FUNC_INFO;
 
 #ifdef DEBUG_CREATE_WINDOW_STATE
-  // Print the main window state as binary for inclusion into the program =====================
-  qDebug() << "===============================================================================";
-  QStringList hexStr;
-  QByteArray state = saveState();
-  for(char i : state)
-    hexStr.append("0x" + QString::number(static_cast<unsigned char>(i), 16));
-  qDebug().noquote().nospace() << "\n\nconst static unsigned char mainWindowState["
-                               << state.size() << "] ="
-                               << "{" << hexStr.join(",") << "};\n";
-  qDebug() << "===============================================================================";
-  #endif
+  // Save the state into a binary file to be used for reset window layout
+  // One state is needed with undockable map window and one without
+  QFile stateFile(QString("mainwindow_state_%1.bin").
+                  arg(OptionData::instance().getFlags2().testFlag(opts2::MAP_ALLOW_UNDOCK) ? "dock" : "nodock"));
+  if(stateFile.open(QFile::WriteOnly))
+  {
+    stateFile.write(saveState());
+    stateFile.close();
+  }
+
+#endif
 
 #ifdef DEBUG_DUMP_SHORTCUTS
   // Print all main menu and sub menu shortcuts ==============================================
@@ -3571,14 +3677,7 @@ void MainWindow::saveMainWindowStates()
   widgetState.save(ui->statusBar);
 
   Settings& settings = Settings::instance();
-  settings.setValueVar(lnm::MAINWINDOW_WIDGET_STATE, saveState(lnm::MAINWINDOW_STATE_VERSION));
-  settings.setValueVar(lnm::MAINWINDOW_WIDGET_STATE_POS, pos());
-  settings.setValueVar(lnm::MAINWINDOW_WIDGET_STATE_SIZE, size());
-  settings.setValueVar(lnm::MAINWINDOW_WIDGET_STATE_MAXIMIZED, isMaximized());
-  settings.setValueVar(lnm::MAINWINDOW_WIDGET_STATE_FULLSCREEN, isFullScreen());
-
-  qDebug() << Q_FUNC_INFO << "pos" << pos() << "size" << size()
-           << "maximized" << isMaximized() << "fullscreen" << isFullScreen();
+  settings.setValueVar(lnm::MAINWINDOW_WIDGET_DOCKHANDLER, dockHandler->saveState());
 
   // Save profile dock size separately since it is sometimes resized by other docks
   // settings.setValue(lnm::MAINWINDOW_WIDGET_STATE + "ProfileDockHeight", ui->dockWidgetContentsProfile->height());
@@ -3602,8 +3701,8 @@ void MainWindow::saveActionStates()
                     ui->actionMapShowMinimumAltitude, ui->actionRouteEditMode, ui->actionWorkOffline,
                     ui->actionRouteSaveSidStarWaypoints, ui->actionRouteSaveApprWaypoints,
                     ui->actionRouteSaveAirwayWaypoints, ui->actionLogdataCreateLogbook, ui->actionRunWebserver,
-                    ui->actionSearchLogdataShowDirect, ui->actionSearchLogdataShowRoute, ui->actionSearchLogdataShowTrack
-                   });
+                    ui->actionSearchLogdataShowDirect, ui->actionSearchLogdataShowRoute,
+                    ui->actionSearchLogdataShowTrack, ui->actionShowAllowDocking});
   Settings::instance().syncSettings();
 }
 
@@ -3954,24 +4053,49 @@ void MainWindow::dropEvent(QDropEvent *event)
   }
 }
 
+#ifdef DEBUG_SIZE_INFORMATION
+
+void MainWindow::resizeEvent(QResizeEvent *event)
+{
+  qDebug() << event->size();
+}
+
+#endif
+
 void MainWindow::updateErrorLabels()
 {
-  QString toolTipTxt, statusTipTxt;
-  QString err;
-  // Show only if route is valid, there are errors and nothing is collecting performance
-  bool showError = NavApp::getRoute().getSizeWithoutAlternates() >= 2 && NavApp::getAltitudeLegs().hasErrors();
-  if(showError)
-    err = atools::util::HtmlBuilder::errorMessage(NavApp::getAltitudeLegs().getErrorStrings(toolTipTxt, statusTipTxt));
+  using atools::util::HtmlBuilder;
 
-  ui->labelRouteError->setVisible(showError);
-  ui->labelRouteError->setText(err);
-  ui->labelRouteError->setToolTip(toolTipTxt);
-  ui->labelRouteError->setStatusTip(statusTipTxt);
+  const RouteAltitude& altitudeLegs = NavApp::getAltitudeLegs();
+  const RouteController& routeController = *NavApp::getRouteController();
 
-  ui->labelProfileError->setVisible(showError);
-  ui->labelProfileError->setText(err);
-  ui->labelProfileError->setToolTip(toolTipTxt);
-  ui->labelProfileError->setStatusTip(statusTipTxt);
+  QStringList toolTipTxtRoute, toolTipTxtProfile, errRoute, errProfile;
+  QString hintText = tr("<br/>Hover mouse over this message for details.");
+
+  // Do not show error for single waypoint plans since it is obvious that there is no profile
+  if(NavApp::getRoute().getSizeWithoutAlternates() >= 2 && altitudeLegs.hasErrors())
+    errProfile.append(altitudeLegs.getErrorStrings(toolTipTxtProfile));
+
+  if(routeController.hasErrors())
+    errRoute.append(routeController.getErrorStrings(toolTipTxtRoute));
+
+  errRoute.append(errProfile);
+  toolTipTxtRoute.append(toolTipTxtProfile);
+
+  if(!errRoute.isEmpty())
+    errRoute.append(hintText);
+  if(!errProfile.isEmpty())
+    errProfile.append(hintText);
+
+  ui->labelRouteError->setVisible(!errRoute.isEmpty());
+  ui->labelRouteError->setText(HtmlBuilder::errorMessage(errRoute.join(tr(" "))));
+  ui->labelRouteError->setToolTip(toolTipTxtRoute.join("\n"));
+  ui->labelRouteError->setStatusTip(tr("Error reading flight plan."));
+
+  ui->labelProfileError->setVisible(!errProfile.isEmpty());
+  ui->labelProfileError->setText(HtmlBuilder::errorMessage(errProfile.join(tr(" "))));
+  ui->labelProfileError->setToolTip(toolTipTxtProfile.join("\n"));
+  ui->labelProfileError->setStatusTip(tr("Error calculating profile."));
 }
 
 map::MapThemeComboIndex MainWindow::getMapThemeIndex() const

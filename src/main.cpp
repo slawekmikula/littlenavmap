@@ -41,6 +41,7 @@
 #include "fs/weather/metarparser.h"
 #include "userdata/userdataicons.h"
 #include "routeexport/routeexportformat.h"
+#include "gui/dockwidgethandler.h"
 
 #include <QCommandLineParser>
 #include <QDebug>
@@ -51,7 +52,6 @@
 #include <QMessageBox>
 #include <QLibrary>
 #include <QPixmapCache>
-#include <QFontDatabase>
 #include <QSettings>
 #include <QScreen>
 
@@ -72,14 +72,13 @@ int main(int argc, char *argv[])
   Q_INIT_RESOURCE(atools);
 
   // Register all types to allow conversion from/to QVariant and thus reading/writing into settings
-  qRegisterMetaTypeStreamOperators<atools::geo::Pos>();
+  atools::geo::registerMetaTypes();
+  atools::fs::sc::registerMetaTypes();
+  atools::gui::MapPosHistory::registerMetaTypes();
+  atools::gui::DockWidgetHandler::registerMetaTypes();
+
   qRegisterMetaTypeStreamOperators<FsPathType>();
-
-  qRegisterMetaTypeStreamOperators<atools::fs::FsPaths::SimulatorType>();
   qRegisterMetaTypeStreamOperators<SimulatorTypeMap>();
-
-  qRegisterMetaTypeStreamOperators<atools::gui::MapPosHistoryEntry>();
-  qRegisterMetaTypeStreamOperators<QList<atools::gui::MapPosHistoryEntry> >();
 
   qRegisterMetaTypeStreamOperators<map::DistanceMarker>();
   qRegisterMetaTypeStreamOperators<QList<map::DistanceMarker> >();
@@ -100,12 +99,6 @@ int main(int argc, char *argv[])
   qRegisterMetaTypeStreamOperators<RouteExportFormatMap>();
 
   qRegisterMetaTypeStreamOperators<map::MapAirspaceFilter>();
-
-  // Needed to send SimConnectData through queued connections
-  qRegisterMetaType<atools::fs::sc::SimConnectData>();
-  qRegisterMetaType<atools::fs::sc::SimConnectReply>();
-  qRegisterMetaType<atools::fs::sc::SimConnectStatus>();
-  qRegisterMetaType<atools::fs::sc::WeatherRequest>();
 
   // Tasks that have to be done before creating the application object and logging system =================
   QStringList messages;
@@ -251,32 +244,17 @@ int main(int argc, char *argv[])
       QPixmapCache::setCacheLimit(pixmapCache);
     }
 
-    // Load font file from the configuration if desired
-    QString fontfile = settings.valueStr(lnm::OPTIONS_FONT_FILE, QString());
-    if(!fontfile.isEmpty())
+    // Load font from options settings ========================================
+    QString fontStr = settings.valueStr(lnm::OPTIONS_DIALOG_FONT, QString());
+    QFont font;
+    if(!fontStr.isEmpty())
     {
-      int id = QFontDatabase::addApplicationFont(fontfile);
-      qInfo() << "Loaded font" << fontfile << "result" << id;
-    }
+      font.fromString(fontStr);
 
-    // Set font family from configuration if given
-    QString fontfamily = settings.valueStr(lnm::OPTIONS_FONT_FAMILY, QString());
-    if(!fontfamily.isEmpty())
-    {
-      QFont font(fontfamily);
-      app.setFont(font);
-      qInfo() << "Set font" << font.family();
+      if(font != QApplication::font())
+        app.setFont(font);
     }
-
-    // Set default font size since manually selected families are too large
-    int fontSize = settings.valueInt(lnm::OPTIONS_FONT_PIXEL_SIZE, 0);
-    if(fontSize > 0)
-    {
-      QFont font = app.font();
-      font.setPixelSize(fontSize);
-      app.setFont(font);
-      qInfo() << "Set font size" << fontSize;
-    }
+    qInfo() << "Loaded font" << font.toString() << "from options. Stored font info" << fontStr;
 
     // Load available translations ============================================
     qInfo() << "Loading translations for" << OptionsDialog::getLocale();

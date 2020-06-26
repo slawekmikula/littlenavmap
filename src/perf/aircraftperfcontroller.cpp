@@ -274,20 +274,14 @@ void AircraftPerfController::restartCollection(bool quiet)
   }
 }
 
-bool AircraftPerfController::calculateFuelAndTimeTo(float& fuelLbsToDest, float& fuelGalToDest,
-                                                    float& fuelLbsToTod, float& fuelGalToTod,
-                                                    float& timeToDest, float& timeToTod,
-                                                    float distanceToDest, int activeLeg) const
+void AircraftPerfController::calculateFuelAndTimeTo(FuelTimeResult& result, float distanceToDest, float distanceToNext,
+                                                    int activeLeg) const
 {
 
   const atools::fs::sc::SimConnectUserAircraft& ac = NavApp::getUserAircraft();
-  return NavApp::getAltitudeLegs().calculateFuelAndTimeTo(fuelLbsToDest, fuelGalToDest,
-                                                          fuelLbsToTod, fuelGalToTod,
-                                                          timeToDest, timeToTod,
-                                                          distanceToDest, *perf,
-                                                          ac.getFuelFlowPPH(), ac.getFuelFlowGPH(),
-                                                          ac.getGroundSpeedKts(),
-                                                          activeLeg);
+  NavApp::getAltitudeLegs().calculateFuelAndTimeTo(result, distanceToDest, distanceToNext, *perf,
+                                                   ac.getFuelFlowPPH(), ac.getFuelFlowGPH(),
+                                                   ac.getGroundSpeedKts(), activeLeg);
 }
 
 void AircraftPerfController::mergeCollected()
@@ -420,14 +414,30 @@ bool AircraftPerfController::saveAsStr(const QString& string) const
   return retval;
 }
 
-QString AircraftPerfController::saveAsFileDialog(const QString& filepath) const
+QString AircraftPerfController::saveAsFileDialog(const QString& filepath, bool *oldFormat) const
 {
-  return atools::gui::Dialog(mainWindow).saveFileDialog(
+  QString nameFilter;
+
+  if(oldFormat != nullptr)
+    nameFilter = tr("Aircraft Performance Files %1;;Aircraft Performance Files old Format %2;;All Files (*)").
+                 arg(lnm::FILE_PATTERN_AIRCRAFT_PERF).arg(lnm::FILE_PATTERN_AIRCRAFT_PERF_INI);
+  else
+    nameFilter = tr("Aircraft Performance Files %1;;All Files (*)").
+                 arg(lnm::FILE_PATTERN_AIRCRAFT_PERF);
+
+  int nameFilterIndex = 0;
+  QString file = atools::gui::Dialog(mainWindow).saveFileDialog(
     tr("Save Aircraft Performance File"),
-    tr("Aircraft Performance Files %1;;All Files (*)").arg(lnm::FILE_PATTERN_AIRCRAFT_PERF),
+    nameFilter,
     "lnmperf", "AircraftPerformance/",
     QString(), filepath,
-    false /* confirm overwrite */, OptionData::instance().getFlags2() & opts2::PROPOSE_FILENAME);
+    false /* confirm overwrite */, OptionData::instance().getFlags2() & opts2::PROPOSE_FILENAME,
+    &nameFilterIndex);
+
+  if(oldFormat != nullptr)
+    *oldFormat = nameFilterIndex == 1;
+
+  return file;
 }
 
 QString AircraftPerfController::openFileDialog() const
@@ -445,13 +455,17 @@ bool AircraftPerfController::saveAs()
 
   try
   {
+    bool oldFormat = false;
     QString perfFile = saveAsFileDialog(currentFilepath.isEmpty() ?
                                         atools::cleanFilename(perf->getName()) + ".lnmperf" :
-                                        QFileInfo(currentFilepath).fileName());
+                                        QFileInfo(currentFilepath).fileName(), &oldFormat);
     if(!perfFile.isEmpty())
     {
       currentFilepath = perfFile;
-      perf->saveXml(perfFile);
+      if(oldFormat)
+        perf->saveIni(perfFile);
+      else
+        perf->saveXml(perfFile);
       changed = false;
       retval = true;
       fileHistory->addFile(perfFile);

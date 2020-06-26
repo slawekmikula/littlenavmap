@@ -38,6 +38,7 @@ class QSpinBox;
 class UnitStringTool;
 class QListWidgetItem;
 class QListWidget;
+class QFontDialog;
 
 /* Takes care about loading, changing and saving of global options.
  * All default options are defined in the widgets in the options.ui file.
@@ -154,6 +155,9 @@ private:
   template<typename TYPE>
   void displayOptWidgetToOptionData(TYPE& type, const QHash<TYPE, QTreeWidgetItem *>& index) const;
 
+  void updateFontFromData();
+  void updateMapFontLabel();
+  void updateGuiFontLabel();
   void updateButtonColors();
   void updateCacheElevationStates();
   void updateCacheUserAirspaceStates();
@@ -191,14 +195,19 @@ private:
 
   void mapClickAirportProcsToggled();
 
-  void udpdateLanguageComboBox(const QString& language);
+  void udpdateLanguageComboBox(const QString& guiLanguage);
   void languageChanged(int);
+  void selectGuiFontClicked();
+  void resetGuiFontClicked();
+  void selectMapFontClicked();
+  void resetMapFontClicked();
+  void buildFontDialog();
 
   void flightplanPatterShortClicked();
   void flightplanPatterLongClicked();
   void updateFlightplanExample();
 
-  QString language;
+  QString guiLanguage, guiFont, mapFont;
   QColor flightplanColor, flightplanProcedureColor, flightplanActiveColor, trailColor, flightplanPassedColor;
 
   Ui::Options *ui;
@@ -217,6 +226,7 @@ private:
 
   UnitStringTool *units = nullptr;
 
+  QFontDialog *fontDialog = nullptr;
 };
 
 #endif // LITTLENAVMAP_OPTIONSDIALOG_H

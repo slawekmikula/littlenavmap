@@ -75,7 +75,6 @@ const QLatin1Literal ACTIONS_SHOWROUTE_WARNING("Actions/ShowRouteWarning");
 const QLatin1Literal ACTIONS_SHOWROUTE_WARNING_MULTI("Actions/ShowRouteWarningMulti");
 const QLatin1Literal ACTIONS_SHOWROUTE_NO_CYCLE_WARNING("Actions/ShowRouteNoCycleWarning");
 const QLatin1Literal ACTIONS_SHOWROUTE_ERROR("Actions/ShowRouteError");
-const QLatin1Literal ACTIONS_SHOWROUTE_PROC_ERROR("Actions/ShowRouteProcedureError");
 const QLatin1Literal ACTIONS_SHOWROUTE_ALTERNATE_ERROR("Actions/ShowRouteAlternateError");
 const QLatin1Literal ACTIONS_SHOWROUTE_START_CHANGED("Actions/ShowRouteStartChanged");
 const QLatin1Literal ACTIONS_SHOW_UPDATE_FAILED("Actions/ShowUpdateFailed");
@@ -120,11 +119,7 @@ const QLatin1Literal INFOWINDOW_WIDGET_AIRCRAFT_TABS("InfoWindow/WidgetAircraftT
 const QLatin1Literal INFOWINDOW_MORE_LESS_PROGRESS("InfoWindow/MoreLessProgress");
 const QLatin1Literal MAINWINDOW_FIRSTAPPLICATIONSTART("MainWindow/FirstApplicationStart");
 const QLatin1Literal MAINWINDOW_WIDGET("MainWindow/Widget");
-const QLatin1Literal MAINWINDOW_WIDGET_STATE("MainWindow/WidgetState");
-const QLatin1Literal MAINWINDOW_WIDGET_STATE_POS("MainWindow/WidgetStatePosition");
-const QLatin1Literal MAINWINDOW_WIDGET_STATE_SIZE("MainWindow/WidgetStateSize");
-const QLatin1Literal MAINWINDOW_WIDGET_STATE_MAXIMIZED("MainWindow/WidgetStateMaximized");
-const QLatin1Literal MAINWINDOW_WIDGET_STATE_FULLSCREEN("MainWindow/WidgetStateFullScreen");
+const QLatin1Literal MAINWINDOW_WIDGET_DOCKHANDLER("MainWindow/WidgetDockHandler");
 const QLatin1Literal MAINWINDOW_PRINT_SIZE("MainWindow/PrintPreviewSize");
 const QLatin1Literal MAP_DETAILFACTOR("Map/DetailFactor");
 const QLatin1Literal MAP_DISTANCEMARKERS("Map/DistanceMarkers");
@@ -254,12 +249,12 @@ const QLatin1Literal OPTIONS_DIALOG_WEB_DOCROOT_DLG("OptionsDialog/WebDocroot");
 
 /* Other options that are only accessible in the configuration file */
 const QLatin1Literal OPTIONS_DIALOG_LANGUAGE("OptionsDialog/Language");
+const QLatin1Literal OPTIONS_DIALOG_FONT("OptionsDialog/Font");
+const QLatin1Literal OPTIONS_DIALOG_MAP_FONT("OptionsDialog/MapFont");
 const QLatin1Literal OPTIONS_PIXMAP_CACHE("Options/PixmapCache");
-const QLatin1Literal OPTIONS_FONT_FAMILY("Options/GuiFontFamily");
-const QLatin1Literal OPTIONS_FONT_PIXEL_SIZE("Options/GuiFontPixelSize");
-const QLatin1Literal OPTIONS_FONT_FILE("Options/GuiFontFile");
 const QLatin1Literal OPTIONS_MARBLE_DEBUG("Options/MarbleDebug");
 const QLatin1Literal OPTIONS_CONNECTCLIENT_DEBUG("Options/ConnectClientDebug");
+const QLatin1Literal OPTIONS_DOCKHANDLER_DEBUG("Options/DockHandlerDebug");
 const QLatin1Literal OPTIONS_WHAZZUP_PARSER_DEBUG("Options/WhazzupParserDebug");
 const QLatin1Literal OPTIONS_DATAREADER_DEBUG("Options/DataReaderDebug");
 const QLatin1Literal OPTIONS_WEATHER_DEBUG("Options/WeatherDebug");
@@ -305,6 +300,7 @@ const QLatin1Literal FILE_PATTERN_USER_FIX_DAT("(user_fix.dat)");
 const QLatin1Literal FILE_PATTERN_USER_WPT("(user.wpt)");
 const QLatin1Literal FILE_PATTERN_BGL_XML("(*.xml)");
 const QLatin1Literal FILE_PATTERN_AIRCRAFT_PERF("(*.lnmperf)");
+const QLatin1Literal FILE_PATTERN_AIRCRAFT_PERF_INI("(*.lnmperf)");
 const QLatin1Literal FILE_PATTERN_GRIB("(*.grib)");
 
 const QString FILE_PATTERN_AS_SNAPSHOT("(current_wx_snapshot.txt)");
@@ -331,10 +327,7 @@ const QString NETWORKS_CONFIG = ":/littlenavmap/resources/config/networks.cfg";
 /* Configuration for online networks */
 const QString URLS_CONFIG = ":/littlenavmap/resources/config/urls.cfg";
 
-const int MAINWINDOW_STATE_VERSION = 0;
-
 /* Main window state for first startup. Generated in MainWindow::writeSettings() */
-extern const QByteArray DEFAULT_MAINWINDOW_STATE;
 extern const QSize DEFAULT_MAINWINDOW_SIZE;
 
 /*
