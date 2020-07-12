@@ -608,10 +608,8 @@ void RouteController::aircraftPerformanceChanged()
 
     updateModelHighlights();
     highlightNextWaypoint(route.getActiveLegIndexCorrected());
-    updateErrorLabel();
   }
   updateWindowLabel();
-  NavApp::updateWindowTitle();
 
   // Emit also for empty route to catch performance changes
   emit routeChanged(false);
@@ -630,7 +628,6 @@ void RouteController::windUpdated()
 
     updateModelHighlights();
     highlightNextWaypoint(route.getActiveLegIndexCorrected());
-    updateErrorLabel();
   }
   updateWindowLabel();
 
@@ -667,7 +664,6 @@ void RouteController::routeAltChangedDelayed()
   updateModelRouteTimeFuel();
   updateModelHighlights();
 
-  updateErrorLabel();
   updateWindowLabel();
 
   // Delay change to avoid hanging spin box when profile updates
@@ -822,6 +818,8 @@ void RouteController::newFlightplan()
   qDebug() << "newFlightplan";
   clearRoute();
 
+  clearAllErrors();
+
   // Avoid warning when saving
   route.getFlightplan().setLnmFormat(true);
 
@@ -835,8 +833,6 @@ void RouteController::newFlightplan()
 
   updateTableModel();
   updateMoveAndDeleteActions();
-  NavApp::updateWindowTitle();
-  updateErrorLabel();
   remarksFlightPlanToWidget();
 
   emit routeChanged(true /* geometry changed */, true /* new flight plan */);
@@ -850,6 +846,8 @@ void RouteController::loadFlightplan(atools::fs::pln::Flightplan flightplan, ato
 #ifdef DEBUG_INFORMATION
   qDebug() << flightplan;
 #endif
+
+  clearAllErrors();
 
   if(format == atools::fs::pln::FLP)
   {
@@ -961,8 +959,6 @@ void RouteController::loadFlightplan(atools::fs::pln::Flightplan flightplan, ato
   remarksFlightPlanToWidget();
   updateTableModel();
   updateMoveAndDeleteActions();
-  updateErrorLabel();
-  NavApp::updateWindowTitle();
   routeWindow->setCruisingAltitudeFt(route.getCruisingAltitudeFeet());
 
 #ifdef DEBUG_INFORMATION
@@ -1242,7 +1238,6 @@ bool RouteController::insertFlightplan(const QString& filename, int insertBefore
     updateTableModel();
 
     postChange(undoCommand);
-    NavApp::updateWindowTitle();
 
     // Select newly imported flight plan legs
     if(afterDestAppend)
@@ -1256,7 +1251,6 @@ bool RouteController::insertFlightplan(const QString& filename, int insertBefore
 
     updateMoveAndDeleteActions();
 
-    updateErrorLabel();
     emit routeChanged(true);
   }
   catch(atools::Exception& e)
@@ -1363,8 +1357,6 @@ void RouteController::calculateDirect()
   updateTableModel();
   updateMoveAndDeleteActions();
   postChange(undoCommand);
-  NavApp::updateWindowTitle();
-  updateErrorLabel();
   emit routeChanged(true);
   NavApp::setStatusMessage(tr("Calculated direct flight plan."));
 }
@@ -1643,7 +1635,7 @@ bool RouteController::calculateRouteInternal(atools::routing::RouteFinder *route
       qDebug() << flightplan;
 #endif
 
-      updateErrorLabel();
+      NavApp::updateErrorLabels();
 
       if(calcRange)
       {
@@ -1700,7 +1692,7 @@ void RouteController::adjustFlightplanAltitude()
     postChange(undoCommand);
 
     NavApp::updateWindowTitle();
-    updateErrorLabel();
+    NavApp::updateErrorLabels();
 
     if(!route.isEmpty())
       emit routeAltitudeChanged(route.getCruisingAltitudeFeet());
@@ -1751,8 +1743,6 @@ void RouteController::reverseRoute()
   updateMoveAndDeleteActions();
 
   postChange(undoCommand);
-  NavApp::updateWindowTitle();
-  updateErrorLabel();
   emit routeChanged(true);
   NavApp::setStatusMessage(tr("Reversed flight plan."));
 }
@@ -1798,7 +1788,7 @@ void RouteController::postDatabaseLoad()
   updateTableModel();
   updateMoveAndDeleteActions();
 
-  updateErrorLabel();
+  NavApp::updateErrorLabels();
   routeAltChangedDelayed();
   updateRouteCycleMetadata();
 
@@ -2051,6 +2041,7 @@ void RouteController::tableContextMenu(const QPoint& pos)
   }
 
   QMenu menu;
+  menu.setToolTipsVisible(NavApp::isMenuToolTipsVisible());
 
   updateMoveAndDeleteActions();
 
@@ -2419,8 +2410,6 @@ void RouteController::editUserWaypointName(int index)
       updateMoveAndDeleteActions();
 
       postChange(undoCommand);
-      updateErrorLabel();
-      NavApp::updateWindowTitle();
       emit routeChanged(true);
       NavApp::setStatusMessage(tr("Changed waypoint in flight plan."));
     }
@@ -2563,8 +2552,6 @@ void RouteController::changeRouteUndoRedo(const atools::fs::pln::Flightplan& new
 
   updateTableModel();
   updateMoveAndDeleteActions();
-  updateErrorLabel();
-  NavApp::updateWindowTitle();
   emit routeChanged(true);
 }
 
@@ -2735,8 +2722,6 @@ void RouteController::moveSelectedLegsInternal(MoveDirection direction)
     updateMoveAndDeleteActions();
 
     postChange(undoCommand);
-    NavApp::updateWindowTitle();
-    updateErrorLabel();
     emit routeChanged(true);
     NavApp::setStatusMessage(tr("Moved flight plan legs."));
   }
@@ -2751,13 +2736,22 @@ void RouteController::eraseAirway(int row)
   }
 }
 
+void RouteController::routeDelete(int index)
+{
+  deleteSelectedLegsInternal({index});
+}
+
 /* Called by action */
 void RouteController::deleteSelectedLegs()
 {
-  // Get selected rows
   QList<int> rows;
+  // Get selected rows
   getSelectedRows(rows, true /* reverse */);
+  deleteSelectedLegsInternal(rows);
+}
 
+void RouteController::deleteSelectedLegsInternal(const QList<int>& rows)
+{
   qDebug() << Q_FUNC_INFO << rows;
 
   if(!rows.isEmpty())
@@ -2773,6 +2767,7 @@ void RouteController::deleteSelectedLegs()
 
     if(view->selectionModel() != nullptr)
       view->selectionModel()->clear();
+
     for(int row : rows)
     {
       route.getFlightplan().getEntries().removeAt(row);
@@ -2796,6 +2791,7 @@ void RouteController::deleteSelectedLegs()
       route.updateProcedureLegs(entryBuilder, true /* clear old procedure properties */, true /* cleanup route */);
     }
 
+    route.updateIndicesAndOffsets();
     if(route.getSizeWithoutAlternates() == 0)
     {
       // Remove alternates too if last leg was deleted
@@ -2823,8 +2819,6 @@ void RouteController::deleteSelectedLegs()
     updateMoveAndDeleteActions();
 
     postChange(undoCommand);
-    NavApp::updateWindowTitle();
-    updateErrorLabel();
     emit routeChanged(true);
     NavApp::setStatusMessage(tr("Removed flight plan legs."));
   }
@@ -2931,9 +2925,7 @@ void RouteController::routeSetParking(const map::MapParking& parking)
   updateTableModel();
   updateMoveAndDeleteActions();
 
-  updateErrorLabel();
   postChange(undoCommand);
-  NavApp::updateWindowTitle();
   emit routeChanged(true);
 
   NavApp::setStatusMessage(tr("Departure set to %1 parking %2.").arg(route.getDepartureAirportLeg().getIdent()).
@@ -2979,8 +2971,6 @@ void RouteController::routeSetStartPosition(map::MapStart start)
   updateMoveAndDeleteActions();
 
   postChange(undoCommand);
-  updateErrorLabel();
-  NavApp::updateWindowTitle();
   emit routeChanged(true);
 
   NavApp::setStatusMessage(tr("Departure set to %1 start position %2.").arg(route.getDepartureAirportLeg().getIdent()).
@@ -3011,8 +3001,6 @@ void RouteController::routeSetDeparture(map::MapAirport airport)
   updateMoveAndDeleteActions();
 
   postChange(undoCommand);
-  updateErrorLabel();
-  NavApp::updateWindowTitle();
   emit routeChanged(true);
   NavApp::setStatusMessage(tr("Departure set to %1.").arg(route.getDepartureAirportLeg().getIdent()));
 }
@@ -3081,8 +3069,6 @@ void RouteController::routeSetDestination(map::MapAirport airport)
   updateMoveAndDeleteActions();
 
   postChange(undoCommand);
-  updateErrorLabel();
-  NavApp::updateWindowTitle();
   emit routeChanged(true);
   NavApp::setStatusMessage(tr("Destination set to %1.").arg(airport.ident));
 }
@@ -3121,8 +3107,6 @@ void RouteController::routeAddAlternate(map::MapAirport airport)
   updateTableModel();
 
   postChange(undoCommand);
-  updateErrorLabel();
-  NavApp::updateWindowTitle();
   emit routeChanged(true);
   NavApp::setStatusMessage(tr("Alternate %1 added.").arg(airport.ident));
 }
@@ -3248,6 +3232,9 @@ void RouteController::routeAddProcedure(proc::MapProcedureLegs legs, const QStri
   if(route.isEmpty())
     NavApp::showFlightPlan();
 
+  // Inserting new ones does not produce errors - only loading
+  procedureErrors.clear();
+
   // Airport id in legs is from nav database - convert to simulator database
   map::MapAirport airportSim;
   if(legs.isCustom())
@@ -3310,8 +3297,6 @@ void RouteController::routeAddProcedure(proc::MapProcedureLegs legs, const QStri
   updateMoveAndDeleteActions();
 
   postChange(undoCommand);
-  NavApp::updateWindowTitle();
-  updateErrorLabel();
 
   qDebug() << Q_FUNC_INFO << route.getFlightplan().getProperties();
 
@@ -3330,11 +3315,6 @@ void RouteController::routeAdd(int id, atools::geo::Pos userPos, map::MapObjectT
 
   int insertIndex = calculateInsertIndex(entry.getPosition(), legIndex);
 
-  routeAddInternal(entry, insertIndex);
-}
-
-void RouteController::routeAddInternal(const FlightplanEntry& entry, int insertIndex)
-{
   qDebug() << Q_FUNC_INFO << "insertIndex" << insertIndex;
 
   RouteCommand *undoCommand = preChange(tr("Add Waypoint"));
@@ -3356,7 +3336,13 @@ void RouteController::routeAddInternal(const FlightplanEntry& entry, int insertI
 
   route.insert(insertIndex, routeLeg);
 
-  proc::MapProcedureTypes procs = affectedProcedures({insertIndex});
+  proc::MapProcedureTypes procs = proc::PROCEDURE_NONE;
+
+  if(legIndex == map::INVALID_INDEX_VALUE)
+    procs = proc::PROCEDURE_ARRIVAL_ALL;
+  else
+    procs = affectedProcedures({insertIndex});
+
   route.removeProcedureLegs(procs);
 
   // Reload procedures from the database after deleting a transition.
@@ -3378,8 +3364,6 @@ void RouteController::routeAddInternal(const FlightplanEntry& entry, int insertI
   updateMoveAndDeleteActions();
 
   postChange(undoCommand);
-  NavApp::updateWindowTitle();
-  updateErrorLabel();
 
   emit routeChanged(true);
 
@@ -3455,49 +3439,8 @@ void RouteController::routeReplace(int id, atools::geo::Pos userPos, map::MapObj
   updateMoveAndDeleteActions();
 
   postChange(undoCommand);
-  updateErrorLabel();
-  NavApp::updateWindowTitle();
   emit routeChanged(true);
   NavApp::setStatusMessage(tr("Replaced waypoint in flight plan."));
-}
-
-void RouteController::routeDelete(int index)
-{
-  qDebug() << Q_FUNC_INFO << index;
-
-  RouteCommand *undoCommand = preChange(tr("Delete"));
-
-  route.getFlightplan().getEntries().removeAt(index);
-
-  route.removeAt(index);
-  eraseAirway(index);
-
-  if(index == route.getDestinationAirportLegIndex())
-    route.removeProcedureLegs(proc::PROCEDURE_ARRIVAL_ALL);
-
-  if(index == 0)
-    route.removeProcedureLegs(proc::PROCEDURE_DEPARTURE);
-
-  route.updateAll();
-  route.updateAirwaysAndAltitude(false /* adjustRouteAltitude */);
-  route.updateLegAltitudes();
-
-  // Force update of start if departure airport was removed
-  updateStartPositionBestRunway(index == 0 /* force */, false /* undo */);
-  routeToFlightPlan();
-  // Get type and cruise altitude from widgets
-  updateFlightplanFromWidgets();
-
-  updateTableModel();
-  updateMoveAndDeleteActions();
-
-  postChange(undoCommand);
-  NavApp::updateWindowTitle();
-  updateErrorLabel();
-
-  emit routeChanged(true);
-
-  NavApp::setStatusMessage(tr("Removed waypoint from flight plan."));
 }
 
 int RouteController::calculateInsertIndex(const atools::geo::Pos& pos, int legIndex)
@@ -4587,6 +4530,7 @@ bool RouteController::updateStartPositionBestRunway(bool force, bool undo)
 
 proc::MapProcedureTypes RouteController::affectedProcedures(const QList<int>& indexes)
 {
+  qDebug() << Q_FUNC_INFO << indexes;
   proc::MapProcedureTypes types = proc::PROCEDURE_NONE;
 
   for(int index : indexes)
@@ -4595,9 +4539,14 @@ proc::MapProcedureTypes RouteController::affectedProcedures(const QList<int>& in
       // Delete SID if departure airport is affected
       types |= proc::PROCEDURE_DEPARTURE;
 
-    if(index == route.getDestinationAirportLegIndex())
-      // Delete all arrival procedures if destination airport is affected or an new leg is appended after
-      types |= proc::PROCEDURE_ARRIVAL_ALL;
+    if(index >= route.getDestinationAirportLegIndex())
+    {
+      int altIndex = route.getAlternateLegsOffset();
+      // Check if trying to delete an alternate
+      if(altIndex == map::INVALID_INDEX_VALUE || index < altIndex)
+        // Delete all arrival procedures if destination airport is affected or an new leg is appended after
+        types |= proc::PROCEDURE_ARRIVAL_ALL;
+    }
 
     if(index >= 0 && index < route.getDestinationAirportLegIndex())
     {
@@ -4674,11 +4623,6 @@ void RouteController::updateRemarkWidget()
   NavApp::getMainUi()->plainTextEditRouteRemarks->setDisabled(route.isEmpty());
 }
 
-void RouteController::updateErrorLabel()
-{
-  NavApp::updateErrorLabels();
-}
-
 QStringList RouteController::getRouteColumns() const
 {
   QStringList colums;
@@ -4690,6 +4634,13 @@ QStringList RouteController::getRouteColumns() const
                   replace("-\n", "-").replace("\n", " "));
 
   return colums;
+}
+
+void RouteController::clearAllErrors()
+{
+  procedureErrors.clear();
+  alternateErrors.clear();
+  errors.clear();
 }
 
 #ifdef DEBUG_NETWORK_INFORMATION

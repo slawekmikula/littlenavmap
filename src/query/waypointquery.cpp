@@ -19,11 +19,11 @@
 
 #include "common/constants.h"
 #include "common/maptypesfactory.h"
+#include "common/mapresult.h"
 #include "common/maptools.h"
-#include "query/querytypes.h"
 #include "mapgui/maplayer.h"
-#include "navapp.h"
 #include "settings/settings.h"
+#include "sql/sqlutil.h"
 
 using namespace Marble;
 using namespace atools::sql;
@@ -188,6 +188,7 @@ void WaypointQuery::initQueries()
 {
   QString table = trackDatabase ? "trackpoint" : "waypoint";
   QString id = trackDatabase ? "trackpoint_id" : "waypoint_id";
+  QString artificial = trackDatabase ? QString() : "artificial";
 
   // Common where clauses
   static const QString whereRect("lonx between :leftx and :rightx and laty between :bottomy and :topy");
@@ -196,6 +197,9 @@ void WaypointQuery::initQueries()
 
   // Common select statements
   QString waypointQueryBase(id + ", ident, region, type, num_victor_airway, num_jet_airway, mag_var, lonx, laty ");
+
+  if(atools::sql::SqlUtil(dbNav).hasTableAndColumn("waypoint", "artificial"))
+    waypointQueryBase.append(", artificial");
 
   deInitQueries();
 

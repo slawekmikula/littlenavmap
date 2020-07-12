@@ -58,6 +58,8 @@
 const int MAX_RANGE_RING_SIZE = 4000;
 const int MAX_RANGE_RINGS = 10;
 
+const int MIN_ONLINE_UPDATE = 120;
+
 using atools::settings::Settings;
 using atools::gui::HelpHandler;
 using atools::util::HtmlBuilder;
@@ -278,10 +280,14 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
      ui->checkBoxDisplayOnlineFileLookup,
      ui->checkBoxOptionsMapEmptyAirports,
      ui->checkBoxOptionsMapEmptyAirports3D,
+     ui->checkBoxOptionsMapTooltipUserAircraft,
+     ui->checkBoxOptionsMapTooltipAiAircraft,
      ui->checkBoxOptionsMapTooltipAirport,
      ui->checkBoxOptionsMapTooltipNavaid,
      ui->checkBoxOptionsMapTooltipAirspace,
      ui->checkBoxOptionsMapTooltipWind,
+     ui->checkBoxOptionsMapClickUserAircraft,
+     ui->checkBoxOptionsMapClickAiAircraft,
      ui->checkBoxOptionsMapClickAirport,
      ui->checkBoxOptionsMapClickAirportProcs,
      ui->checkBoxOptionsMapClickNavaid,
@@ -376,6 +382,10 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
      ui->spinBoxOptionsDisplayTextSizeCompassRose,
      ui->spinBoxOptionsDisplayTextSizeRangeDistance,
 
+     ui->checkBoxOptionsMapAirwayText,
+     ui->spinBoxOptionsDisplayTextSizeAirway,
+     ui->spinBoxOptionsDisplayThicknessAirway,
+
      ui->spinBoxOptionsDisplayTextSizeMora,
      ui->spinBoxOptionsDisplayTransparencyMora,
      ui->spinBoxOptionsMapNavTouchArea,
@@ -398,6 +408,7 @@ OptionsDialog::OptionsDialog(QMainWindow *parentWindow)
      ui->checkBoxOptionsMapFlightplanText,
      ui->checkBoxOptionsMapAirportBoundary,
      ui->checkBoxOptionsMapAirportDiagram,
+     ui->checkBoxOptionsMapAirportRunways,
      ui->checkBoxOptionsMapFlightplanDimPassed,
      ui->checkBoxOptionsSimDoNotFollowOnScroll,
      ui->checkBoxOptionsSimCenterLeg,
@@ -693,6 +704,40 @@ void OptionsDialog::onlineDisplayRangeClicked()
   ui->spinBoxDisplayOnlineTower->setEnabled(!ui->checkBoxDisplayOnlineTowerRange->isChecked());
 }
 
+void OptionsDialog::checkOfficialOnlineUrls()
+{
+  if(ui->spinBoxOptionsOnlineUpdate->value() < MIN_ONLINE_UPDATE)
+  {
+    QUrl url;
+    if(ui->radioButtonOptionsOnlineCustom->isChecked())
+      // Custom whazzup.txt
+      url = QUrl(ui->lineEditOptionsOnlineWhazzupUrl->text());
+    else if(ui->radioButtonOptionsOnlineCustomStatus->isChecked())
+      // Custom status.txt
+      url = QUrl(ui->lineEditOptionsOnlineStatusUrl->text());
+
+    if(!url.isEmpty() && !url.isLocalFile())
+    {
+      QString host = url.host().toLower();
+      if(host.endsWith("ivao.aero") || host.endsWith("vatsim.net") || host.endsWith("littlenavmap.org") ||
+         host.endsWith("pilotedge.net"))
+      {
+        qWarning() << Q_FUNC_INFO << "Update of" << ui->spinBoxOptionsOnlineUpdate->value()
+                   << "s for url" << url << "host" << host;
+        NavApp::deleteSplashScreen();
+        QMessageBox::warning(this, QApplication::applicationName(),
+                             tr("Do not use an update period smaller than %1 seconds "
+                                "for official networks like VATSIM, IVAO or PilotEdge.\n\n"
+                                "Resetting update period back to %1 seconds.").arg(MIN_ONLINE_UPDATE));
+
+        // Reset both widget and data
+        ui->spinBoxOptionsOnlineUpdate->setValue(MIN_ONLINE_UPDATE);
+        OptionData::instanceInternal().onlineReloadSeconds = MIN_ONLINE_UPDATE;
+      }
+    }
+  }
+}
+
 void OptionsDialog::onlineTestStatusUrlClicked()
 {
   onlineTestUrl(ui->lineEditOptionsOnlineStatusUrl->text(), true);
@@ -816,6 +861,9 @@ void OptionsDialog::buttonBoxClicked(QAbstractButton *button)
 
   if(button == ui->buttonBoxOptions->button(QDialogButtonBox::Apply))
   {
+    // Test if user uses a too low update rate for well known URLs of official networks
+    checkOfficialOnlineUrls();
+
     widgetsToOptionData();
     saveState();
     emit optionsChanged();
@@ -828,6 +876,9 @@ void OptionsDialog::buttonBoxClicked(QAbstractButton *button)
   }
   else if(button == ui->buttonBoxOptions->button(QDialogButtonBox::Ok))
   {
+    // Test if user uses a too low update rate for well known URLs of official networks
+    checkOfficialOnlineUrls();
+
     widgetsToOptionData();
     saveState();
     updateWidgetUnits();
@@ -1471,9 +1522,11 @@ void OptionsDialog::widgetsToOptionData()
 
   toFlags2(ui->checkBoxOptionsMapAirportText, opts2::MAP_AIRPORT_TEXT_BACKGROUND);
   toFlags2(ui->checkBoxOptionsMapNavaidText, opts2::MAP_NAVAID_TEXT_BACKGROUND);
+  toFlags2(ui->checkBoxOptionsMapAirwayText, opts2::MAP_AIRWAY_TEXT_BACKGROUND);
   toFlags2(ui->checkBoxOptionsMapFlightplanText, opts2::MAP_ROUTE_TEXT_BACKGROUND);
   toFlags2(ui->checkBoxOptionsMapAirportBoundary, opts2::MAP_AIRPORT_BOUNDARY);
   toFlags2(ui->checkBoxOptionsMapAirportDiagram, opts2::MAP_AIRPORT_DIAGRAM);
+  toFlags2(ui->checkBoxOptionsMapAirportRunways, opts2::MAP_AIRPORT_RUNWAYS);
   toFlags2(ui->checkBoxOptionsMapFlightplanDimPassed, opts2::MAP_ROUTE_DIM_PASSED);
   toFlags2(ui->checkBoxOptionsSimDoNotFollowOnScroll, opts2::ROUTE_NO_FOLLOW_ON_MOVE);
   toFlags2(ui->checkBoxOptionsSimCenterLeg, opts2::ROUTE_AUTOZOOM);
@@ -1488,10 +1541,17 @@ void OptionsDialog::widgetsToOptionData()
   data.cacheUserAirspacePath = ui->lineEditCacheUserAirspacePath->text();
   data.cacheUserAirspaceExtensions = ui->lineEditCacheUserAirspaceExtensions->text();
 
+  data.displayTooltipOptions.setFlag(optsd::TOOLTIP_AIRCRAFT_USER,
+                                     ui->checkBoxOptionsMapTooltipUserAircraft->isChecked());
+  data.displayTooltipOptions.setFlag(optsd::TOOLTIP_AIRCRAFT_AI, ui->checkBoxOptionsMapTooltipAiAircraft->isChecked());
+
   data.displayTooltipOptions.setFlag(optsd::TOOLTIP_AIRPORT, ui->checkBoxOptionsMapTooltipAirport->isChecked());
   data.displayTooltipOptions.setFlag(optsd::TOOLTIP_NAVAID, ui->checkBoxOptionsMapTooltipNavaid->isChecked());
   data.displayTooltipOptions.setFlag(optsd::TOOLTIP_AIRSPACE, ui->checkBoxOptionsMapTooltipAirspace->isChecked());
   data.displayTooltipOptions.setFlag(optsd::TOOLTIP_WIND, ui->checkBoxOptionsMapTooltipWind->isChecked());
+
+  data.displayClickOptions.setFlag(optsd::CLICK_AIRCRAFT_USER, ui->checkBoxOptionsMapClickUserAircraft->isChecked());
+  data.displayClickOptions.setFlag(optsd::CLICK_AIRCRAFT_AI, ui->checkBoxOptionsMapClickAiAircraft->isChecked());
 
   data.displayClickOptions.setFlag(optsd::CLICK_AIRPORT, ui->checkBoxOptionsMapClickAirport->isChecked());
   data.displayClickOptions.setFlag(optsd::CLICK_AIRPORT_PROC, ui->checkBoxOptionsMapClickAirportProcs->isChecked());
@@ -1557,6 +1617,8 @@ void OptionsDialog::widgetsToOptionData()
   data.displayTextSizeAircraftAi = ui->spinBoxOptionsDisplayTextSizeAircraftAi->value();
   data.displaySymbolSizeNavaid = ui->spinBoxOptionsDisplaySymbolSizeNavaid->value();
   data.displayTextSizeNavaid = ui->spinBoxOptionsDisplayTextSizeNavaid->value();
+  data.displayThicknessAirway = ui->spinBoxOptionsDisplayThicknessAirway->value();
+  data.displayTextSizeAirway = ui->spinBoxOptionsDisplayTextSizeAirway->value();
   data.displayThicknessFlightplan = ui->spinBoxOptionsDisplayThicknessFlightplan->value();
   data.displaySymbolSizeAirport = ui->spinBoxOptionsDisplaySymbolSizeAirport->value();
   data.displaySymbolSizeAirportWeather = ui->spinBoxOptionsDisplaySymbolSizeAirportWeather->value();
@@ -1712,9 +1774,11 @@ void OptionsDialog::optionDataToWidgets(const OptionData& data)
 
   fromFlags2(data, ui->checkBoxOptionsMapAirportText, opts2::MAP_AIRPORT_TEXT_BACKGROUND);
   fromFlags2(data, ui->checkBoxOptionsMapNavaidText, opts2::MAP_NAVAID_TEXT_BACKGROUND);
+  fromFlags2(data, ui->checkBoxOptionsMapAirwayText, opts2::MAP_AIRWAY_TEXT_BACKGROUND);
   fromFlags2(data, ui->checkBoxOptionsMapFlightplanText, opts2::MAP_ROUTE_TEXT_BACKGROUND);
   fromFlags2(data, ui->checkBoxOptionsMapAirportBoundary, opts2::MAP_AIRPORT_BOUNDARY);
   fromFlags2(data, ui->checkBoxOptionsMapAirportDiagram, opts2::MAP_AIRPORT_DIAGRAM);
+  fromFlags2(data, ui->checkBoxOptionsMapAirportRunways, opts2::MAP_AIRPORT_RUNWAYS);
   fromFlags2(data, ui->checkBoxOptionsMapFlightplanDimPassed, opts2::MAP_ROUTE_DIM_PASSED);
   fromFlags2(data, ui->checkBoxOptionsSimDoNotFollowOnScroll, opts2::ROUTE_NO_FOLLOW_ON_MOVE);
   fromFlags2(data, ui->checkBoxOptionsSimCenterLeg, opts2::ROUTE_AUTOZOOM);
@@ -1820,6 +1884,8 @@ void OptionsDialog::optionDataToWidgets(const OptionData& data)
   ui->spinBoxOptionsDisplayTextSizeAircraftAi->setValue(data.displayTextSizeAircraftAi);
   ui->spinBoxOptionsDisplaySymbolSizeNavaid->setValue(data.displaySymbolSizeNavaid);
   ui->spinBoxOptionsDisplayTextSizeNavaid->setValue(data.displayTextSizeNavaid);
+  ui->spinBoxOptionsDisplayThicknessAirway->setValue(data.displayThicknessAirway);
+  ui->spinBoxOptionsDisplayTextSizeAirway->setValue(data.displayTextSizeAirway);
   ui->spinBoxOptionsDisplayThicknessFlightplan->setValue(data.displayThicknessFlightplan);
   ui->spinBoxOptionsDisplaySymbolSizeAirport->setValue(data.displaySymbolSizeAirport);
   ui->spinBoxOptionsDisplaySymbolSizeAirportWeather->setValue(data.displaySymbolSizeAirportWeather);

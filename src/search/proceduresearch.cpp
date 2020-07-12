@@ -315,6 +315,11 @@ void ProcedureSearch::updateHeaderLabel()
   ui->labelProcedureSearch->setStatusTip(tooltip);
   treeWidget->setToolTip(tooltip);
   treeWidget->setStatusTip(tooltip);
+
+#ifdef DEBUG_INFORMATION
+  ui->labelProcedureSearch->setText(ui->labelProcedureSearch->text() + (errors ? " ***ERRORS*** " : " ---OK---"));
+
+#endif
 }
 
 QString ProcedureSearch::approachAndTransitionText(const QTreeWidgetItem *item)
@@ -913,6 +918,7 @@ void ProcedureSearch::contextMenu(const QPoint& pos)
 
   // Create menu ===================================================================================
   QMenu menu;
+  menu.setToolTipsVisible(NavApp::isMenuToolTipsVisible());
   menu.addAction(ui->actionInfoApproachShow);
   menu.addSeparator();
 
@@ -944,9 +950,24 @@ void ProcedureSearch::contextMenu(const QPoint& pos)
   QAction *action = menu.exec(menuPos);
   if(action == ui->actionInfoApproachExpandAll)
   {
+#ifdef DEBUG_INFORMATION
+    const QTreeWidgetItem *root = treeWidget->invisibleRootItem();
+    for(int i = 0; i < root->childCount(); ++i)
+    {
+      QTreeWidgetItem *item = root->child(i);
+      item->setExpanded(true);
+      for(int j = 0; j < item->childCount(); ++j)
+        item->child(j)->setExpanded(true);
+    }
+
+    if(errors)
+      updateHeaderLabel();
+
+#else
     const QTreeWidgetItem *root = treeWidget->invisibleRootItem();
     for(int i = 0; i < root->childCount(); ++i)
       root->child(i)->setExpanded(true);
+#endif
   }
   else if(action == ui->actionSearchResetView)
   {
@@ -1000,7 +1021,7 @@ void ProcedureSearch::showInformationSelected()
     map::MapAirport airportSim = NavApp::getMapQuery()->getAirportSim(currentAirportNav);
     map::MapSearchResult result;
     result.airports.append(airportSim);
-    emit showInformation(result, map::AIRPORT);
+    emit showInformation(result);
   }
 }
 
@@ -1053,6 +1074,7 @@ void ProcedureSearch::attachApproach(QString runway)
     if(!procData.sidStarRunways.isEmpty() && runway.isEmpty())
     {
       QMenu menu;
+      menu.setToolTipsVisible(NavApp::isMenuToolTipsVisible());
       QVector<QAction *> runwayActions = buildRunwaySubmenu(menu, procData, false /* only runway items */);
       QAction *action = menu.exec(treeWidget->mapToGlobal(QPoint(0, 0)));
       if(action != nullptr)
@@ -1101,10 +1123,9 @@ QVector<QAction *> ProcedureSearch::buildRunwaySubmenu(QMenu& menu, const ProcDa
   QMenu *sub = nullptr;
   if(submenu)
   {
-    sub = new QMenu(ui->actionInfoApproachAttach->text(), mainWindow);
+    sub = menu.addMenu(ui->actionInfoApproachAttach->text());
     sub->setIcon(ui->actionInfoApproachAttach->icon());
     sub->setStatusTip(ui->actionInfoApproachAttach->statusTip());
-    menu.addMenu(sub);
   }
 
   int index = 1;
@@ -1337,6 +1358,7 @@ void ProcedureSearch::setItemStyle(QTreeWidgetItem *item, const MapProcedureLeg&
     {
       item->setFont(i, invalidLegFont);
       item->setForeground(i, Qt::red);
+      errors = true;
     }
   }
 }

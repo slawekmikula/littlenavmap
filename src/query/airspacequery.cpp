@@ -19,22 +19,14 @@
 
 #include "common/constants.h"
 #include "common/maptypesfactory.h"
-#include "common/maptools.h"
-#include "fs/common/binarygeometry.h"
-#include "sql/sqlquery.h"
-#include "sql/sqlrecord.h"
+#include "mapgui/maplayer.h"
 #include "sql/sqlutil.h"
-#include "query/airportquery.h"
 #include "fs/common/binarygeometry.h"
-#include "navapp.h"
 #include "common/maptools.h"
 #include "settings/settings.h"
-#include "fs/common/xpgeometry.h"
 #include "db/databasemanager.h"
 
-#include <QDataStream>
 #include <QFileInfo>
-#include <QRegularExpression>
 
 using namespace Marble;
 using namespace atools::sql;
@@ -212,6 +204,14 @@ const QList<map::MapAirspace> *AirspaceQuery::getAirspaces(const GeoDataLatLonBo
             if(ids.contains(query->valueInt("boundary_id")))
               continue;
 
+            if(hasFirUir)
+            {
+              // Database has new FIR/UIR types - filter out the old deprecated centers
+              QString name = query->valueStr("name");
+              if(name.contains("(FIR)") || name.contains("(UIR)") || name.contains("(FIR/UIR)"))
+                continue;
+            }
+
             map::MapAirspace airspace;
             mapTypesFactory->fillAirspace(query->record(), airspace, source);
             airspaceCache.list.append(airspace);
@@ -353,6 +353,16 @@ void AirspaceQuery::updateAirspaceStatus()
     hasAirspaces = SqlUtil(db).hasTableAndRows("atc");
   else
     hasAirspaces = SqlUtil(db).hasTableAndRows("boundary");
+
+  if(source & map::AIRSPACE_SRC_NAV && hasAirspaces)
+  {
+    // Check if the database contains the new FIR/UIR types which are preferred before FIR/UIR center types
+    SqlQuery query("select count(1) from boundary where type in ('FIR', 'UIR')", db);
+    query.exec();
+    hasFirUir = query.next() && query.valueInt(0) > 0;
+  }
+  else
+    hasFirUir = false;
 }
 
 void AirspaceQuery::initQueries()

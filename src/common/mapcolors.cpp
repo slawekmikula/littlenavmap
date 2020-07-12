@@ -56,10 +56,10 @@ QColor ilsTextColor(0, 30, 0);
 
 QColor waypointSymbolColor(200, 0, 200);
 
-QPen airwayVictorPen(QColor("#969696"), 1.);
-QPen airwayJetPen(QColor("#000080"), 1.);
-QPen airwayBothPen(QColor("#646464"), 1.);
-QPen airwayTrackPen(QColor("#101010"), 1.5);
+QColor airwayVictorColor("#969696"); // 1.
+QColor airwayJetColor("#000080"); // 1.
+QColor airwayBothColor("#646464"); // 1.
+QColor airwayTrackColor("#101010"); // 1.5
 QColor airwayTextColor(80, 80, 80);
 
 QColor rangeRingColor(Qt::red);
@@ -301,14 +301,18 @@ const QColor& colorForSurface(const QString& surface)
   static const QColor unknown("#ffffff");
   static const QColor transparent("#ffffff");
 
-  if(surface == "C")
-    return concrete;
+  if(surface == "A")
+    return asphalt;
   else if(surface == "G")
     return grass;
+  else if(surface == "D")
+    return dirt;
+  else if(surface == "C")
+    return concrete;
+  else if(surface == "GR")
+    return gravel;
   else if(surface == "W")
     return water;
-  else if(surface == "A")
-    return asphalt;
   else if(surface == "CE")
     return cement;
   else if(surface == "CL")
@@ -317,12 +321,8 @@ const QColor& colorForSurface(const QString& surface)
     return snow;
   else if(surface == "I")
     return ice;
-  else if(surface == "D")
-    return dirt;
   else if(surface == "CR")
     return coral;
-  else if(surface == "GR")
-    return gravel;
   else if(surface == "OT")
     return oilTreated;
   else if(surface == "SM")
@@ -377,6 +377,8 @@ static QHash<map::MapAirspaceTypes, QColor> airspaceFillColors(
     {map::CLASS_E, QColor("#30cc5060")},
     {map::CLASS_F, QColor("#307d8000")},
     {map::CLASS_G, QColor("#30cc8040")},
+    {map::FIR, QColor("#30606080")},
+    {map::UIR, QColor("#30404080")},
     {map::TOWER, QColor("#300000f0")},
     {map::CLEARANCE, QColor("#3060808a")},
     {map::GROUND, QColor("#30000000")},
@@ -410,6 +412,8 @@ static QHash<map::MapAirspaceTypes, QPen> airspacePens(
     {map::CLASS_E, QPen(QColor("#cc5060"), 2)},
     {map::CLASS_F, QPen(QColor("#7d8000"), 2)},
     {map::CLASS_G, QPen(QColor("#cc8040"), 2)},
+    {map::FIR, QPen(QColor("#606080"), 1.5)},
+    {map::UIR, QPen(QColor("#404080"), 1.5)},
     {map::TOWER, QPen(QColor("#6000a0"), 2)},
     {map::CLEARANCE, QPen(QColor("#60808a"), 2)},
     {map::GROUND, QPen(QColor("#000000"), 2)},
@@ -442,6 +446,8 @@ static QHash<QString, map::MapAirspaceTypes> airspaceConfigNames(
     {"ClassE", map::CLASS_E},
     {"ClassF", map::CLASS_F},
     {"ClassG", map::CLASS_G},
+    {"FIR", map::FIR},
+    {"UIR", map::UIR},
     {"Tower", map::TOWER},
     {"Clearance", map::CLEARANCE},
     {"Ground", map::GROUND},
@@ -474,9 +480,9 @@ const QPen& penForAirspace(const map::MapAirspace& airspace)
   return airspacePens[airspace.type];
 }
 
-const QPen& penForAirwayTrack(const map::MapAirway& airway)
+const QColor& colorForAirwayTrack(const map::MapAirway& airway)
 {
-  static QPen EMPTY_PEN;
+  static QColor EMPTY_COLOR;
 
   switch(airway.type)
   {
@@ -486,18 +492,18 @@ const QPen& penForAirwayTrack(const map::MapAirway& airway)
     case map::TRACK_NAT:
     case map::TRACK_PACOTS:
     case map::TRACK_AUSOTS:
-      return airwayTrackPen;
+      return airwayTrackColor;
 
     case map::AIRWAY_VICTOR:
-      return airwayVictorPen;
+      return airwayVictorColor;
 
     case map::AIRWAY_JET:
-      return airwayJetPen;
+      return airwayJetColor;
 
     case map::AIRWAY_BOTH:
-      return airwayBothPen;
+      return airwayBothColor;
   }
-  return EMPTY_PEN;
+  return EMPTY_COLOR;
 }
 
 /* Read ARGB color if value exists in settings or update in settings with given value */
@@ -560,6 +566,7 @@ void syncPen(QSettings& settings, const QString& key, QPen& pen)
 
 void syncColors()
 {
+#ifndef DEBUG_DISABLE_SYNC_COLORS
   QString filename = atools::settings::Settings::instance().getConfigFilename("_mapstyle.ini");
 
   QSettings colorSettings(filename, QSettings::IniFormat);
@@ -588,10 +595,10 @@ void syncColors()
   colorSettings.endGroup();
 
   colorSettings.beginGroup("Airway");
-  syncPen(colorSettings, "VictorPen", airwayVictorPen);
-  syncPen(colorSettings, "JetPen", airwayJetPen);
-  syncPen(colorSettings, "BothPen", airwayBothPen);
-  syncPen(colorSettings, "TrackPen", airwayTrackPen);
+  syncColor(colorSettings, "VictorColor", airwayVictorColor);
+  syncColor(colorSettings, "JetColor", airwayJetColor);
+  syncColor(colorSettings, "BothColor", airwayBothColor);
+  syncColor(colorSettings, "TrackColor", airwayTrackColor);
   syncColor(colorSettings, "TextColor", airwayTextColor);
   colorSettings.endGroup();
 
@@ -668,6 +675,7 @@ void syncColors()
   colorSettings.endGroup();
 
   colorSettings.sync();
+#endif
 }
 
 void adjustPenForCircleToLand(QPainter *painter)

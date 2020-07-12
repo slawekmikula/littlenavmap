@@ -315,7 +315,10 @@ private:
   void addCoordinates(const atools::geo::Pos& pos, atools::util::HtmlBuilder& html) const;
 
   /* Bearing to simulator aircraft if connected */
-  void bearingText(const atools::geo::Pos& pos, float magVar, atools::util::HtmlBuilder& html) const;
+  void bearingToUserText(const atools::geo::Pos& pos, float magVar, atools::util::HtmlBuilder& html) const;
+
+  /* Distance to last flight plan waypoint */
+  void distanceToRouteText(const atools::geo::Pos& pos, atools::util::HtmlBuilder& html) const;
 
   void navaidTitle(atools::util::HtmlBuilder& html, const QString& text) const;
 
@@ -364,7 +367,6 @@ private:
   QString filepathTextShow(const QString& filepath, const QString& prefix = QString()) const;
   QString filepathTextOpen(const QFileInfo& filepath, bool showPath) const;
 
-  QString airplaneType(const atools::fs::sc::SimConnectAircraft& aircraft) const;
   void airportRow(const map::MapAirport& ap, atools::util::HtmlBuilder& html) const;
 
   void addFlightRulesSuffix(atools::util::HtmlBuilder& html, const atools::fs::weather::Metar& metar,

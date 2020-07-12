@@ -108,6 +108,8 @@
 
 static const int WEATHER_UPDATE_MS = 15000;
 
+static const int MAX_STATUS_MESSAGES = 20;
+
 // All known map themes
 static const QStringList STOCK_MAP_THEMES({"clouds", "hillshading", "openstreetmap", "opentopomap", "plain",
                                            "political", "srtm", "srtm2", "stamenterrain", "cartodark", "cartolight"});
@@ -252,6 +254,7 @@ MainWindow::MainWindow()
     qDebug() << Q_FUNC_INFO << "Creating FileHistoryHandler for flight plans";
     routeFileHistory = new FileHistoryHandler(this, lnm::ROUTE_FILENAMESRECENT, ui->menuRecentRoutes,
                                               ui->actionRecentRoutesClear);
+    ui->menuRecentRoutes->setToolTipsVisible(true);
 
     qDebug() << Q_FUNC_INFO << "Creating RouteController";
     routeController = new RouteController(this, ui->tableViewRoute);
@@ -259,6 +262,7 @@ MainWindow::MainWindow()
     qDebug() << Q_FUNC_INFO << "Creating FileHistoryHandler for KML files";
     kmlFileHistory = new FileHistoryHandler(this, lnm::ROUTE_FILENAMESKMLRECENT, ui->menuRecentKml,
                                             ui->actionClearKmlMenu);
+    ui->menuRecentKml->setToolTipsVisible(true);
 
     // Create map widget and replace dummy widget in window
     qDebug() << Q_FUNC_INFO << "Creating MapWidget";
@@ -987,6 +991,10 @@ void MainWindow::connectAllSlots()
   connect(routeController, &RouteController::routeChanged, this, &MainWindow::updateActionStates);
   connect(routeController, &RouteController::routeInsert, this, &MainWindow::routeInsert);
 
+  connect(routeController, &RouteController::routeChanged, NavApp::updateErrorLabels);
+  connect(routeController, &RouteController::routeChanged, NavApp::updateWindowTitle);
+  connect(routeController, &RouteController::routeAltitudeChanged, NavApp::updateErrorLabels);
+
   // Airport search ===================================================================================
   AirportSearch *airportSearch = searchController->getAirportSearch();
   connect(airportSearch, &SearchBaseTable::showRect, mapWidget, &MapPaintWidget::showRect);
@@ -1435,8 +1443,6 @@ void MainWindow::connectAllSlots()
   connect(ui->actionMapLessDetails, &QAction::triggered, mapWidget, &MapWidget::decreaseMapDetail);
   connect(ui->actionMapDefaultDetails, &QAction::triggered, mapWidget, &MapWidget::defaultMapDetail);
 
-  connect(ui->actionMapSetHome, &QAction::triggered, mapWidget, &MapWidget::changeHome);
-
   connect(mapWidget->getHistory(), &MapPosHistory::historyChanged, this, &MainWindow::updateMapHistoryActions);
 
   connect(routeController, &RouteController::routeSelectionChanged, this, &MainWindow::routeSelectionChanged);
@@ -1733,7 +1739,7 @@ void MainWindow::changeMapProjection(int index)
   ui->actionMapProjectionMercator->setChecked(proj == Marble::Mercator);
   ui->actionMapProjectionSpherical->setChecked(proj == Marble::Spherical);
 
-  setStatusMessage(tr("Map projection changed to %1").arg(mapProjectionComboBox->currentText()));
+  setStatusMessage(tr("Map projection changed to %1.").arg(mapProjectionComboBox->currentText()));
 }
 
 /* Called by the toolbar combo box */
@@ -1754,7 +1760,7 @@ void MainWindow::changeMapTheme()
 
   updateLegend();
 
-  setStatusMessage(tr("Map theme changed to %1").arg(mapThemeComboBox->currentText()));
+  setStatusMessage(tr("Map theme changed to %1.").arg(mapThemeComboBox->currentText()));
 }
 
 void MainWindow::updateLegend()
@@ -2667,7 +2673,7 @@ void MainWindow::searchSelectionChanged(const SearchBaseTable *source, int selec
   {
     type = tr("Clients");
     QString lastUpdate = tr(" Last Update: %1").
-                         arg(NavApp::getOnlinedataController()->getLastUpdateTime().toString(Qt::SystemLocaleShortDate));
+                         arg(NavApp::getOnlinedataController()->getLastUpdateTime().toString(Qt::DefaultLocaleShortDate));
     ui->labelOnlineClientSearchStatus->setText(selectionLabelText.
                                                arg(selected).arg(total).arg(type).arg(visible).
                                                arg(lastUpdate));
@@ -2676,7 +2682,7 @@ void MainWindow::searchSelectionChanged(const SearchBaseTable *source, int selec
   {
     type = tr("Centers");
     QString lastUpdate = tr(" Last Update: %1").
-                         arg(NavApp::getOnlinedataController()->getLastUpdateTime().toString(Qt::SystemLocaleShortDate));
+                         arg(NavApp::getOnlinedataController()->getLastUpdateTime().toString(Qt::DefaultLocaleShortDate));
     ui->labelOnlineCenterSearchStatus->setText(selectionLabelText.
                                                arg(selected).arg(total).arg(type).arg(visible).
                                                arg(lastUpdate));
@@ -2853,6 +2859,10 @@ void MainWindow::resetMessages()
   s.setValue(lnm::ACTIONS_SHOW_TRACK_DOWNLOAD_SUCCESS, true);
   s.setValue(lnm::ACTIONS_SHOW_LOGBOOK_CONVERSION, true);
   s.setValue(lnm::ACTIONS_SHOW_USER_AIRSPACE_NOTE, true);
+  s.setValue(lnm::ACTIONS_SHOW_SSL_WARNING_ONLINE, true);
+  s.setValue(lnm::ACTIONS_SHOW_SSL_WARNING_WIND, true);
+  s.setValue(lnm::ACTIONS_SHOW_SSL_WARNING_TRACK, true);
+  s.setValue(lnm::ACTIONS_SHOW_SSL_WARNING_WEATHER, true);
 
   setStatusMessage(tr("All message dialogs reset."));
 }
@@ -2860,10 +2870,10 @@ void MainWindow::resetMessages()
 /* Set a general status message */
 void MainWindow::setStatusMessage(const QString& message, bool addToLog)
 {
-  if(addToLog)
+  if(addToLog && !message.isEmpty())
   {
     statusMessages.append(std::make_pair(QTime::currentTime(), message));
-    while(statusMessages.size() > 20)
+    while(statusMessages.size() > MAX_STATUS_MESSAGES)
       statusMessages.removeFirst();
 
     QStringList msg(tr("Messages:"));
@@ -2900,6 +2910,9 @@ void MainWindow::setDetailLabelText(const QString& text)
 void MainWindow::mainWindowShown()
 {
   qDebug() << Q_FUNC_INFO << "enter";
+
+  // Set empty to disable arbitrary messages from map view changes
+  setStatusMessage(QString());
 
   // Enable dock handler
   dockHandler->setHandleDockViews(true);
@@ -3025,6 +3038,8 @@ void MainWindow::mainWindowShown()
 
   // Check for updates once main window is visible
   NavApp::checkForUpdates(OptionData::instance().getUpdateChannels(), false /* manually triggered */);
+
+  optionsDialog->checkOfficialOnlineUrls();
 
   // Start regular download of online network files
   NavApp::getOnlinedataController()->startProcessing();
@@ -3377,22 +3392,24 @@ void MainWindow::restoreStateMain()
     move(desktop.topLeft());
   }
 
+#ifdef DEBUG_MENU_TOOLTIPS
   // Enable tooltips for all menus
-  // QList<QAction *> stack;
-  // stack.append(ui->menuBar->actions().first());
-  // while(!stack.isEmpty())
-  // {
-  // QAction *action = stack.takeLast();
-  // if(action->menu() != nullptr)
-  // {
-  // action->menu()->setToolTipsVisible(true);
-  // for(QAction *sub : action->menu()->actions())
-  // {
-  // if(sub->menu() != nullptr)
-  // stack.append(sub);
-  // }
-  // }
-  // }
+  QList<QAction *> stack;
+  stack.append(ui->menuBar->actions());
+  while(!stack.isEmpty())
+  {
+    QMenu *menu = stack.takeLast()->menu();
+    if(menu != nullptr)
+    {
+      menu->setToolTipsVisible(true);
+      for(QAction *sub : menu->actions())
+      {
+        if(sub->menu() != nullptr)
+          stack.append(sub);
+      }
+    }
+  }
+#endif
 
   // Need to be loaded in constructor first since it reads all options
   // optionsDialog->restoreState();

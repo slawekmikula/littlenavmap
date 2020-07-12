@@ -311,8 +311,13 @@ enum Flag2
   RAISE_DOCK_WINDOWS = 1 << 21,
 
   /* checkBoxOptionsGuiRaiseMainWindow */
-  RAISE_MAIN_WINDOW = 1 << 22
+  RAISE_MAIN_WINDOW = 1 << 22,
 
+  /* ui->checkBoxOptionsMapAirwayText */
+  MAP_AIRWAY_TEXT_BACKGROUND = 1 << 23,
+
+  /* ui->checkBoxOptionsMapAirportRunways */
+  MAP_AIRPORT_RUNWAYS = 1 << 24,
 };
 
 Q_DECLARE_FLAGS(Flags2, Flag2);
@@ -478,7 +483,9 @@ enum DisplayTooltipOption
   TOOLTIP_AIRPORT = 1 << 1,
   TOOLTIP_NAVAID = 1 << 2,
   TOOLTIP_AIRSPACE = 1 << 3,
-  TOOLTIP_WIND = 1 << 4
+  TOOLTIP_WIND = 1 << 4,
+  TOOLTIP_AIRCRAFT_AI = 1 << 5,
+  TOOLTIP_AIRCRAFT_USER = 1 << 6
 };
 
 Q_DECLARE_FLAGS(DisplayTooltipOptions, DisplayTooltipOption);
@@ -490,7 +497,9 @@ enum DisplayClickOption
   CLICK_AIRPORT = 1 << 1,
   CLICK_NAVAID = 1 << 2,
   CLICK_AIRSPACE = 1 << 3,
-  CLICK_AIRPORT_PROC = 1 << 4
+  CLICK_AIRPORT_PROC = 1 << 4,
+  CLICK_AIRCRAFT_AI = 1 << 5,
+  CLICK_AIRCRAFT_USER = 1 << 6
 };
 
 Q_DECLARE_FLAGS(DisplayClickOptions, DisplayClickOption);
@@ -794,6 +803,16 @@ public:
     return displaySymbolSizeNavaid;
   }
 
+  int getDisplayTextSizeAirway() const
+  {
+    return displayTextSizeAirway;
+  }
+
+  int getDisplayThicknessAirway() const
+  {
+    return displayThicknessAirway;
+  }
+
   const QColor& getFlightplanColor() const
   {
     return flightplanColor;
@@ -1069,7 +1088,7 @@ private:
     optsw::WEATHER_TOOLTIP_NOAA;
 
   opts2::Flags2 flags2 = opts2::MAP_AIRPORT_TEXT_BACKGROUND | opts2::MAP_ROUTE_TEXT_BACKGROUND |
-                         opts2::MAP_ROUTE_DIM_PASSED | opts2::MAP_AIRPORT_DIAGRAM |
+                         opts2::MAP_ROUTE_DIM_PASSED | opts2::MAP_AIRPORT_DIAGRAM | opts2::MAP_AIRPORT_RUNWAYS |
                          opts2::MAP_AVOID_BLURRED_MAP | opts2::ONLINE_AIRSPACE_BY_FILE |
                          opts2::ONLINE_AIRSPACE_BY_NAME | opts2::RAISE_WINDOWS | opts2::MAP_EMPTY_AIRPORTS_3D |
                          opts2::HIGH_DPI_DISPLAY_SUPPORT | opts2::ROUTE_CENTER_ACTIVE_LEG |
@@ -1081,7 +1100,7 @@ private:
   QString weatherActiveSkyPath, // ui->lineEditOptionsWeatherAsnPath
           weatherXplanePath, // lineEditOptionsWeatherXplanePath
           weatherNoaaUrl = "https://tgftp.nws.noaa.gov/data/observations/metar/cycles/%1Z.TXT",
-          weatherVatsimUrl = "http://metar.vatsim.net/metar.php?id=ALL",
+          weatherVatsimUrl = "https://metar.vatsim.net/metar.php?id=ALL",
           weatherIvaoUrl = "http://wx.ivao.aero/metar.php";
 
   QString cacheOfflineElevationPath, cacheUserAirspacePath, cacheUserAirspaceExtensions = "*.txt";
@@ -1201,6 +1220,12 @@ private:
   // spinBoxOptionsDisplaySymbolSizeNavaid
   int displaySymbolSizeNavaid = 100;
 
+  // spinBoxOptionsDisplayTextSizeAirway
+  int displayTextSizeAirway = 100;
+
+  // spinBoxOptionsDisplayThicknessAirway
+  int displayThicknessAirway = 100;
+
   // spinBoxOptionsDisplayTextSizeFlightplan
   int displayTextSizeFlightplan = 100;
 
@@ -1300,9 +1325,11 @@ private:
 
   optsd::DisplayOptionsRoute displayOptionsRoute = optsd::ROUTE_DISTANCE | optsd::ROUTE_MAG_COURSE_GC;
 
-  optsd::DisplayTooltipOptions displayTooltipOptions = optsd::TOOLTIP_AIRPORT | optsd::TOOLTIP_AIRSPACE |
+  optsd::DisplayTooltipOptions displayTooltipOptions = optsd::TOOLTIP_AIRCRAFT_USER | optsd::TOOLTIP_AIRCRAFT_AI |
+                                                       optsd::TOOLTIP_AIRPORT | optsd::TOOLTIP_AIRSPACE |
                                                        optsd::TOOLTIP_NAVAID | optsd::TOOLTIP_WIND;
-  optsd::DisplayClickOptions displayClickOptions = optsd::CLICK_AIRPORT | optsd::CLICK_AIRPORT_PROC |
+  optsd::DisplayClickOptions displayClickOptions = optsd::CLICK_AIRCRAFT_USER | optsd::CLICK_AIRCRAFT_AI |
+                                                   optsd::CLICK_AIRPORT | optsd::CLICK_AIRPORT_PROC |
                                                    optsd::CLICK_AIRSPACE | optsd::CLICK_NAVAID;
 
   opts::UpdateRate updateRate = opts::DAILY;

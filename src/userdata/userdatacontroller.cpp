@@ -229,7 +229,7 @@ QStringList UserdataController::getAllTypes() const
 void UserdataController::addUserpointFromMap(const map::MapSearchResult& result, atools::geo::Pos pos)
 {
   qDebug() << Q_FUNC_INFO;
-  if(result.isEmpty(map::AIRPORT | map::VOR | map::NDB | map::WAYPOINT))
+  if(result.isEmpty(map::AIRPORT | map::VOR | map::NDB | map::WAYPOINT | map::USERPOINT))
     // No prefill start empty dialog of with last added data
     addUserpoint(-1, pos);
   else
@@ -239,7 +239,6 @@ void UserdataController::addUserpointFromMap(const map::MapSearchResult& result,
     if(result.hasAirports())
     {
       const map::MapAirport& ap = result.airports.first();
-
       prefill.appendFieldAndValue("ident", ap.ident)
       .appendFieldAndValue("name", ap.name)
       .appendFieldAndValue("type", "Airport")
@@ -249,9 +248,23 @@ void UserdataController::addUserpointFromMap(const map::MapSearchResult& result,
     else if(result.hasVor())
     {
       const map::MapVor& vor = result.vors.first();
+
+      // Determine default type
+      QString type = "VOR";
+      if(vor.tacan)
+        type = "TACAN";
+      else if(vor.vortac)
+        type = "VORTAC";
+      else if(vor.dmeOnly)
+        type = "DME";
+      else if(vor.hasDme)
+        type = "VORDME";
+      else
+        type = "VOR";
+
       prefill.appendFieldAndValue("ident", vor.ident)
       .appendFieldAndValue("name", map::vorText(vor))
-      .appendFieldAndValue("type", "Waypoint")
+      .appendFieldAndValue("type", type)
       .appendFieldAndValue("region", vor.region);
       pos = vor.position;
     }
@@ -260,7 +273,7 @@ void UserdataController::addUserpointFromMap(const map::MapSearchResult& result,
       const map::MapNdb& ndb = result.ndbs.first();
       prefill.appendFieldAndValue("ident", ndb.ident)
       .appendFieldAndValue("name", map::ndbText(ndb))
-      .appendFieldAndValue("type", "Waypoint")
+      .appendFieldAndValue("type", "NDB")
       .appendFieldAndValue("region", ndb.region);
       pos = ndb.position;
     }
@@ -272,6 +285,18 @@ void UserdataController::addUserpointFromMap(const map::MapSearchResult& result,
       .appendFieldAndValue("type", "Waypoint")
       .appendFieldAndValue("region", wp.region);
       pos = wp.position;
+    }
+    else if(result.hasUserpoints())
+    {
+      const map::MapUserpoint& up = result.userpoints.first();
+      prefill.appendFieldAndValue("ident", up.ident)
+      .appendFieldAndValue("name", up.name)
+      .appendFieldAndValue("type", up.type)
+      .appendFieldAndValue("region", up.region)
+      // .appendFieldAndValue("description", up.description)
+      // .appendFieldAndValue("tags", up.tags)
+      ;
+      pos = up.position;
     }
     else
       prefill.appendFieldAndValue("type", UserdataDialog::DEFAULT_TYPE);
@@ -716,7 +741,7 @@ QString UserdataController::garminGtnUserWptPath()
 {
   QString path;
 #ifdef Q_OS_WIN32
-  QString gtnPath(qgetenv("GTNSIMDATA"));
+  QString gtnPath(QProcessEnvironment::systemEnvironment().value("GTNSIMDATA"));
   path = gtnPath.isEmpty() ? "C:\\ProgramData\\Garmin\\Trainers\\GTN" : gtnPath;
 #elif DEBUG_INFORMATION
   path = atools::buildPath({atools::documentsDir(), "Garmin", "Trainers", "GTN"});

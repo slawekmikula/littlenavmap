@@ -112,9 +112,9 @@ public:
 
   static void fillAircraftFromClient(atools::fs::sc::SimConnectAircraft& ac, const atools::sql::SqlRecord& record);
 
-  /* Removes the online aircraft from the result which also have a simulator shadow in the result */
-  void filterOnlineShadowAircraft(QList<atools::fs::sc::SimConnectAircraft>& onlineAircraft,
-                                  const QList<atools::fs::sc::SimConnectAircraft>& simAircraft);
+  /* Removes the online aircraft from onlineAircraft which also have a simulator shadow in simAircraft */
+  void filterOnlineShadowAircraft(QList<map::MapOnlineAircraft>& onlineAircraft,
+                                  const QList<map::MapAiAircraft>& simAircraft);
 
   /* Get client record with all field values */
   atools::sql::SqlRecord getClientRecordById(int clientId);
@@ -128,7 +128,7 @@ public:
   int getNumClients() const;
 
   /* Get an online network aircraft that has the same registration as the simulator aircraft and is close by */
-  bool getShadowAircraft(atools::fs::sc::SimConnectAircraft& aircraft,
+  bool getShadowAircraft(atools::fs::sc::SimConnectAircraft& onlineClient,
                          const atools::fs::sc::SimConnectAircraft& simAircraft);
 
   /* True if there is an online network aircraft that has the same registration as the simulator aircraft and is close.
@@ -147,6 +147,7 @@ private:
   /* HTTP download signal slots */
   void downloadFinished(const QByteArray& data, QString url);
   void downloadFailed(const QString& error, int errorCode, QString url);
+  void downloadSslErrors(const QStringList& errors, const QString& downloadUrl);
   void statusBarMessage();
 
   void startDownloadInternal();

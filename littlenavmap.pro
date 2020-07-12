@@ -237,6 +237,7 @@ SOURCES += \
   src/common/jumpback.cpp \
   src/common/mapcolors.cpp \
   src/common/mapflags.cpp \
+  src/common/mapresult.cpp \
   src/common/maptools.cpp \
   src/common/maptypes.cpp \
   src/common/maptypesfactory.cpp \
@@ -274,6 +275,7 @@ SOURCES += \
   src/main.cpp \
   src/mapgui/aprongeometrycache.cpp \
   src/mapgui/imageexportdialog.cpp \
+  src/mapgui/mapcontextmenu.cpp \
   src/mapgui/mapfunctions.cpp \
   src/mapgui/maplayer.cpp \
   src/mapgui/maplayersettings.cpp \
@@ -394,6 +396,7 @@ HEADERS  += \
   src/common/jumpback.h \
   src/common/mapcolors.h \
   src/common/mapflags.h \
+  src/common/mapresult.h \
   src/common/maptools.h \
   src/common/maptypes.h \
   src/common/maptypesfactory.h \
@@ -430,6 +433,7 @@ HEADERS  += \
   src/logbook/logstatisticsdialog.h \
   src/mapgui/aprongeometrycache.h \
   src/mapgui/imageexportdialog.h \
+  src/mapgui/mapcontextmenu.h \
   src/mapgui/mapfunctions.h \
   src/mapgui/maplayer.h \
   src/mapgui/maplayersettings.h \

@@ -19,6 +19,7 @@
 #define LNM_AIRSPACECONTROLLER_H
 
 #include "common/maptypes.h"
+#include "fs/fspaths.h"
 
 #include <QObject>
 
@@ -70,7 +71,8 @@ public:
 
   /* Get airspaces from all enabled sources for map display */
   void getAirspaces(AirspaceVector& airspaces, const Marble::GeoDataLatLonBox& rect, const MapLayer *mapLayer,
-                    map::MapAirspaceFilter filter, float flightPlanAltitude, bool lazy, map::MapAirspaceSources src);
+                    map::MapAirspaceFilter filter, float flightPlanAltitude, bool lazy,
+                    map::MapAirspaceSources sources);
 
   /* Get Geometry for any airspace and source database */
   const atools::geo::LineString *getAirspaceGeometry(map::MapAirspaceId id);

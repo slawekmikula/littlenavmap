@@ -301,7 +301,7 @@ signals:
   void routeAltitudeChanged(float altitudeFeet);
 
   /* Show information about the airports or navaids in the search result */
-  void showInformation(map::MapSearchResult result, map::MapObjectTypes preferredType = map::NONE);
+  void showInformation(map::MapSearchResult result);
 
   /* Show approach information about the airport */
   void showProcedures(map::MapAirport airport);
@@ -352,6 +352,7 @@ private:
   void moveSelectedLegsUp();
   void moveSelectedLegsInternal(MoveDirection direction);
   void deleteSelectedLegs();
+  void deleteSelectedLegsInternal(const QList<int>& rows);
   void getSelectedRows(QList<int>& selectedRows, bool reverseRoute);
 
   void selectList(const QList<int>& selectedRows, int offset);
@@ -434,7 +435,6 @@ private:
   void updateFlightplanEntryAirway(int airwayId, atools::fs::pln::FlightplanEntry& entry);
   QIcon iconForLeg(const RouteLeg& leg, int size) const;
 
-  void routeAddInternal(const atools::fs::pln::FlightplanEntry& entry, int insertIndex);
   int calculateInsertIndex(const atools::geo::Pos& pos, int legIndex);
   proc::MapProcedureTypes affectedProcedures(const QList<int>& indexes);
 
@@ -447,7 +447,6 @@ private:
   void contextMenu(const QPoint& pos);
 
   void updateUnits();
-  void updateErrorLabel();
 
   void editUserWaypointTriggered();
 
@@ -460,6 +459,9 @@ private:
   void scrollToActive();
 
   void viewScrolled(int);
+
+  /* Remove all errors from lists */
+  void clearAllErrors();
 
   /* Selected rows in table. Updated on selection change. */
   QList<int> selectedRows;

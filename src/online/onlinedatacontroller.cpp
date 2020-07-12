@@ -82,6 +82,7 @@ OnlinedataController::OnlinedataController(atools::fs::online::OnlinedataManager
 
   connect(downloader, &HttpDownloader::downloadFinished, this, &OnlinedataController::downloadFinished);
   connect(downloader, &HttpDownloader::downloadFailed, this, &OnlinedataController::downloadFailed);
+  connect(downloader, &HttpDownloader::downloadSslErrors, this, &OnlinedataController::downloadSslErrors);
 
   // Recurring downloads
   connect(&downloadTimer, &QTimer::timeout, this, &OnlinedataController::startDownloadInternal);
@@ -160,6 +161,13 @@ void OnlinedataController::startProcessing()
 void OnlinedataController::startDownloadInternal()
 {
   qDebug() << Q_FUNC_INFO;
+
+  if(downloader->isDownloading() || currentState != NONE)
+  {
+    qWarning() << Q_FUNC_INFO;
+    return;
+  }
+
   stopAllProcesses();
 
   const OptionData& od = OptionData::instance();
@@ -265,7 +273,9 @@ void OnlinedataController::downloadFinished(const QByteArray& data, QString url)
                                 manager->getLastUpdateTimeFromWhazzup()))
     {
       // Get all callsigns and positions from online list to allow deduplication
+      clientCallsignAndPosMap.clear();
       manager->getClientCallsignAndPosMap(clientCallsignAndPosMap);
+      qDebug() << Q_FUNC_INFO << clientCallsignAndPosMap.size();
 
       QString whazzupVoiceUrlFromStatus = manager->getWhazzupVoiceUrlFromStatus();
       if(!whazzupVoiceUrlFromStatus.isEmpty() &&
@@ -330,13 +340,30 @@ void OnlinedataController::downloadFailed(const QString& error, int errorCode, Q
   qWarning() << Q_FUNC_INFO << "Failed" << error << errorCode << url;
   stopAllProcesses();
 
-  mainWindow->setOnlineConnectionStatusMessageText(tr("Failed"),
+  mainWindow->setOnlineConnectionStatusMessageText(tr("Online Network Failed"),
                                                    tr("Download from\n\"%1\"\nfailed. "
                                                       "Reason:\n%2\nRetrying again in three minutes.").
                                                    arg(url).arg(error));
 
   // Delay next download for three minutes to give the user a chance to correct the URLs
   QTimer::singleShot(180 * 1000, this, &OnlinedataController::startProcessing);
+}
+
+void OnlinedataController::downloadSslErrors(const QStringList& errors, const QString& downloadUrl)
+{
+  int result = atools::gui::Dialog(mainWindow).
+               showQuestionMsgBox(lnm::ACTIONS_SHOW_SSL_WARNING_ONLINE,
+                                  tr("<p>Errors while trying to establish an encrypted connection "
+                                       "to download online network data:</p>"
+                                       "<p>URL: %1</p>"
+                                         "<p>Error messages:<br/>%2</p>"
+                                           "<p>Continue?</p>").
+                                  arg(downloadUrl).
+                                  arg(atools::strJoin(errors, tr("<br/>"))),
+                                  tr("Do not show this again and ignore errors in the future"),
+                                  QMessageBox::Cancel | QMessageBox::Yes,
+                                  QMessageBox::Cancel, QMessageBox::Yes);
+  downloader->setIgnoreSslErrors(result == QMessageBox::Yes);
 }
 
 void OnlinedataController::statusBarMessage()
@@ -350,7 +377,7 @@ void OnlinedataController::stopAllProcesses()
   downloadTimer.stop();
   currentState = NONE;
   simulatorAiRegistrations.clear();
-  clientCallsignAndPosMap.clear();
+  // clientCallsignAndPosMap.clear(); // Do not clear these until the download is finished
 }
 
 void OnlinedataController::showMessageDialog()
@@ -531,7 +558,7 @@ const QList<atools::fs::sc::SimConnectAircraft> *OnlinedataController::getAircra
   return &aircraftCache.list;
 }
 
-bool OnlinedataController::getShadowAircraft(atools::fs::sc::SimConnectAircraft& aircraft,
+bool OnlinedataController::getShadowAircraft(atools::fs::sc::SimConnectAircraft& onlineClient,
                                              const atools::fs::sc::SimConnectAircraft& simAircraft)
 {
   if(isShadowAircraft(simAircraft))
@@ -540,7 +567,10 @@ bool OnlinedataController::getShadowAircraft(atools::fs::sc::SimConnectAircraft&
 
     if(!clients.isEmpty())
     {
-      fillAircraftFromClient(aircraft, clients.first());
+      fillAircraftFromClient(onlineClient, clients.first());
+
+      // Update to real simulator position including altitude for shadows
+      onlineClient.getPosition() = simAircraft.getPosition();
       return true;
     }
     else
@@ -552,7 +582,6 @@ bool OnlinedataController::getShadowAircraft(atools::fs::sc::SimConnectAircraft&
 bool OnlinedataController::isShadowAircraft(const atools::fs::sc::SimConnectAircraft& simAircraft)
 {
   const atools::geo::Pos pos = clientCallsignAndPosMap.value(simAircraft.getAirplaneRegistration());
-
   return simAircraft.isOnlineShadow() ||
          (pos.isValid() && pos.distanceMeterTo(simAircraft.getPosition()) < MIN_DISTANCE_DUPLICATE_M);
 }
@@ -568,25 +597,24 @@ void OnlinedataController::fillAircraftFromClient(atools::fs::sc::SimConnectAirc
   OnlinedataManager::fillFromClient(ac, record);
 }
 
-/* Removes the online aircraft from the result which also have a simulator shadow in the result */
-void OnlinedataController::filterOnlineShadowAircraft(QList<SimConnectAircraft>& onlineAircraft,
-                                                      const QList<SimConnectAircraft>& simAircraft)
+void OnlinedataController::filterOnlineShadowAircraft(QList<map::MapOnlineAircraft>& onlineAircraft,
+                                                      const QList<map::MapAiAircraft>& simAircraft)
 {
   // Collect simulator shadow aircraft
   QHash<QString, Pos> registrations;
-  for(const SimConnectAircraft& ac : simAircraft)
+  for(const map::MapAiAircraft& ac : simAircraft)
   {
-    if(ac.isOnlineShadow() && !ac.getAirplaneRegistration().isEmpty() &&
-       simulatorAiRegistrations.contains(ac.getAirplaneRegistration()))
-      registrations.insert(ac.getAirplaneRegistration(), ac.getPosition());
+    if(ac.getAircraft().isOnlineShadow() && !ac.getAircraft().getAirplaneRegistration().isEmpty() &&
+       simulatorAiRegistrations.contains(ac.getAircraft().getAirplaneRegistration()))
+      registrations.insert(ac.getAircraft().getAirplaneRegistration(), ac.getPosition());
   }
 
-  // Remove the shadow aircraft from the online list
-  QList<SimConnectAircraft>::iterator it = std::remove_if(onlineAircraft.begin(), onlineAircraft.end(), [registrations](
-                                                            const SimConnectAircraft& aircraft) -> bool
+  // Remove the shadowed aircraft from the online list which have a copy in simulator
+  auto it = std::remove_if(onlineAircraft.begin(), onlineAircraft.end(), [registrations](
+                             const map::MapOnlineAircraft& aircraft) -> bool
   {
-    return registrations.contains(aircraft.getAirplaneRegistration()) &&
-    aircraft.getPosition().distanceMeterTo(registrations.value(aircraft.getAirplaneRegistration())) <=
+    return registrations.contains(aircraft.getAircraft().getAirplaneRegistration()) &&
+    aircraft.getPosition().distanceMeterTo(registrations.value(aircraft.getAircraft().getAirplaneRegistration())) <=
     MIN_DISTANCE_DUPLICATE_M;
   });
 

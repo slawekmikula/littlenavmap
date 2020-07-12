@@ -66,7 +66,7 @@ enum MapObjectType
   AIRWAYV = 1 << 11,
   AIRWAYJ = 1 << 12,
   // 13
-  AIRCRAFT = 1 << 14, /* Simulator aircraft */
+  AIRCRAFT = 1 << 14, /* Simulator user aircraft */
   AIRCRAFT_AI = 1 << 15, /* AI or multiplayer simulator aircraft */
   AIRCRAFT_AI_SHIP = 1 << 16, /* AI or multiplayer simulator ship */
   AIRCRAFT_TRACK = 1 << 17, /* Simulator aircraft track */
@@ -76,7 +76,7 @@ enum MapObjectType
   INVALID = 1 << 21, /* Flight plan waypoint not found in database */
   MISSED_APPROACH = 1 << 22, /* Only procedure type that can be hidden */
   PROCEDURE = 1 << 23, /* General procedure leg */
-  AIRSPACE = 1 << 24, /* General airspace boundary */
+  AIRSPACE = 1 << 24, /* General airspace boundary, online or offline */
   HELIPAD = 1 << 25, /* Helipads on airports */
   // 26
   USERPOINT = 1 << 27, /* A user defined waypoint - not used to define if should be drawn or not */
@@ -84,6 +84,7 @@ enum MapObjectType
   AIRCRAFT_ONLINE = 1 << 29, /* Online network client/aircraft */
 
   LOGBOOK = 1 << 30, /* Logbook entry */
+  // LAST = 1 << 31,
 
   /* All online, AI and multiplayer aircraft */
   AIRCRAFT_ALL = AIRCRAFT | AIRCRAFT_AI | AIRCRAFT_AI_SHIP | AIRCRAFT_ONLINE,
@@ -182,28 +183,29 @@ enum MapAirspaceType
 
   ONLINE_OBSERVER = 1 << 26, // VATSIM or IVAO observer
 
-  AIRSPACE_ICAO = CLASS_A | CLASS_B | CLASS_C | CLASS_D | CLASS_E,
-  AIRSPACE_FIR = CLASS_F | CLASS_G,
+  FIR = 1 << 27, // New FIR region instead of center
+  UIR = 1 << 28, // New UIR region instead of center
+
+  AIRSPACE_CLASS_ICAO = CLASS_A | CLASS_B | CLASS_C | CLASS_D | CLASS_E,
+  AIRSPACE_CLASS_FG = CLASS_F | CLASS_G,
+  AIRSPACE_FIR_UIR = FIR | UIR,
   AIRSPACE_CENTER = CENTER,
   AIRSPACE_RESTRICTED = RESTRICTED | PROHIBITED | GLIDERPROHIBITED | MOA | DANGER,
   AIRSPACE_SPECIAL = WARNING | ALERT | TRAINING | CAUTION,
   AIRSPACE_OTHER = TOWER | CLEARANCE | GROUND | DEPARTURE | APPROACH | MODEC | RADAR | NATIONAL_PARK | WAVEWINDOW |
                    ONLINE_OBSERVER,
 
-  AIRSPACE_FOR_VFR = CLASS_B | CLASS_C | CLASS_D | CLASS_E | AIRSPACE_FIR,
-  AIRSPACE_FOR_IFR = CLASS_A | CLASS_B | CLASS_C | CLASS_D | CLASS_E | CENTER,
-
-  AIRSPACE_ALL = AIRSPACE_ICAO | AIRSPACE_FIR | AIRSPACE_CENTER | AIRSPACE_RESTRICTED | AIRSPACE_SPECIAL |
-                 AIRSPACE_OTHER,
+  AIRSPACE_ALL = AIRSPACE_CLASS_ICAO | AIRSPACE_CLASS_FG | AIRSPACE_FIR_UIR | AIRSPACE_CENTER | AIRSPACE_RESTRICTED |
+                 AIRSPACE_SPECIAL | AIRSPACE_OTHER,
 
   // Default value on first start
-  AIRSPACE_DEFAULT = AIRSPACE_ICAO | AIRSPACE_RESTRICTED
+  AIRSPACE_DEFAULT = AIRSPACE_CLASS_ICAO | AIRSPACE_RESTRICTED
 };
 
 Q_DECLARE_FLAGS(MapAirspaceTypes, MapAirspaceType);
 Q_DECLARE_OPERATORS_FOR_FLAGS(map::MapAirspaceTypes);
 
-Q_DECL_CONSTEXPR int MAP_AIRSPACE_TYPE_BITS = 27;
+Q_DECL_CONSTEXPR int MAP_AIRSPACE_TYPE_BITS = 29;
 
 /* Source database for airspace */
 enum MapAirspaceSource
